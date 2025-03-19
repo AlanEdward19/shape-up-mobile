@@ -17,11 +17,7 @@ class Main extends StatelessWidget {
 
             children: [
 
-              SvgPicture.asset(
-                'assets/icons/shape_up.svg',
-                height: 270,
-                fit: BoxFit.contain,
-              ),
+              _shapeUpLogo(),
 
               SizedBox(height: 45),
 
@@ -47,20 +43,7 @@ class Main extends StatelessWidget {
 
               SizedBox(height: 130),
 
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF159CD5), // Cor de fundo vermelha
-                  foregroundColor: Colors.white, // Cor do texto branca
-                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  fixedSize: const Size(260, 40),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-
-                ),
-                onPressed: () {
-                  print("Botão Login clicado");
-                },
-                child: const Text('Login'),
-              ),
+              _loginButton(),
 
               SizedBox(height: 30),
 
@@ -82,5 +65,30 @@ class Main extends StatelessWidget {
         ),
       )
     );
+  }
+
+  SvgPicture _shapeUpLogo() {
+    return SvgPicture.asset(
+              'assets/icons/shape_up.svg',
+              height: 270,
+              fit: BoxFit.contain,
+            );
+  }
+
+  ElevatedButton _loginButton() {
+    return ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF159CD5), // Cor de fundo vermelha
+                foregroundColor: Colors.white, // Cor do texto branca
+                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                fixedSize: const Size(260, 40),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+
+              ),
+              onPressed: () {
+                print("Botão Login clicado");
+              },
+              child: const Text('Login'),
+            );
   }
 }
