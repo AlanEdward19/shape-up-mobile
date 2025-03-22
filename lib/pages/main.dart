@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
+import '../components/shapeUpLogo.dart';
 import '../models/CarouselItem.dart';
 
 class Main extends StatelessWidget {
@@ -41,7 +42,7 @@ class Main extends StatelessWidget {
 
             children: [
 
-              _shapeUpLogo(),
+              shapeUpLogo(270),
 
               SizedBox(height: 45),
 
@@ -71,14 +72,6 @@ class Main extends StatelessWidget {
         ),
       )
     );
-  }
-
-  SvgPicture _shapeUpLogo() {
-    return SvgPicture.asset(
-              'assets/icons/shape_up.svg',
-              height: 270,
-              fit: BoxFit.contain,
-            );
   }
 
   ElevatedButton _loginButton() {
