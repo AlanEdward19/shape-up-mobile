@@ -29,11 +29,11 @@ class _LoginState extends State<Login> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 50),
+        padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 25),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(child: shapeUpLogo(210)),
+            Center(child: shapeUpLogo(200)),
             SizedBox(height: 45),
             Text(
               'ShapeUp',
@@ -106,9 +106,7 @@ class _LoginState extends State<Login> {
                 ),
               ),
             ),
-
             SizedBox(height: 35),
-
             Center(
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -136,11 +134,8 @@ class _LoginState extends State<Login> {
                 ),
               ),
             ),
-
             Padding(
-              padding: EdgeInsets.only(
-                top: 5,
-              ),
+              padding: EdgeInsets.only(top: 5),
               child: Center(
                 child: TextButton(
                   onPressed: null,
@@ -152,6 +147,101 @@ class _LoginState extends State<Login> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                ),
+              ),
+            ),
+
+            SizedBox(height: 20),
+
+            Row(
+              children: [
+                Expanded(child: Divider(color: Color(0xFF6D717A))),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    'Ou entre com',
+                    style: TextStyle(color: Color(0xFF6D717A)),
+                  ),
+                ),
+                Expanded(child: Divider(color: Color(0xFF6D717A))),
+              ],
+            ),
+            SizedBox(height: 20),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    color: Colors.white,
+                  ),
+                  child: IconButton(
+                    onPressed: () {
+                      print("Botão do Facebook clicado");
+                    },
+                    icon: Icon(
+                      Icons.facebook,
+                      size: 30,
+                      color: Color(0xFF191F2B),
+                    ),
+                    splashRadius: 20,
+                  ),
+                ),
+
+                SizedBox(width: 20),
+
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    color: Colors.white,
+                  ),
+                  child: IconButton(
+                    onPressed: () {
+                      print("Botão do Google clicado");
+                    },
+                    icon: Icon(
+                      Icons.g_mobiledata_rounded,
+                      size: 30,
+                      color: Color(0xFF191F2B),
+                    ),
+                    splashRadius: 20,
+                  ),
+                ),
+              ],
+            ),
+
+            SizedBox(width: 20),
+
+            Padding(
+              padding: EdgeInsets.only(top: 5),
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Não possui uma conta?',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF6D717A),
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
+
+                    TextButton(
+                      onPressed: () {
+                        print("Botão de criar conta clicado!");
+                      },
+                      child: Text(
+                        'Crie uma aqui!',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
