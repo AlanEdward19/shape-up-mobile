@@ -31,13 +31,10 @@ class _LoginState extends State<Login> {
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 50),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(child:shapeUpLogo(210)),
-
+            Center(child: shapeUpLogo(210)),
             SizedBox(height: 45),
-
             Text(
               'ShapeUp',
               style: const TextStyle(
@@ -46,9 +43,7 @@ class _LoginState extends State<Login> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             SizedBox(height: 10),
-
             Text(
               'Transforme sua rotina, conecte-se com sua evolução. Nutrição, treinos e amizades em um só lugar.',
               style: const TextStyle(
@@ -57,9 +52,7 @@ class _LoginState extends State<Login> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             SizedBox(height: 30),
-
             Padding(
               padding: const EdgeInsets.only(),
               child: Text(
@@ -71,21 +64,17 @@ class _LoginState extends State<Login> {
                 ),
               ),
             ),
-
             TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
-
                 hintText: 'Digite seu e-mail',
                 border: UnderlineInputBorder(),
                 filled: true,
                 fillColor: Colors.white,
               ),
             ),
-
             SizedBox(height: 20),
-
             Padding(
               padding: const EdgeInsets.only(),
               child: Text(
@@ -97,12 +86,10 @@ class _LoginState extends State<Login> {
                 ),
               ),
             ),
-
             TextField(
               controller: _passwordController,
               obscureText: _obscureText,
               decoration: InputDecoration(
-
                 hintText: 'Digite sua senha',
                 border: UnderlineInputBorder(),
                 filled: true,
@@ -116,6 +103,55 @@ class _LoginState extends State<Login> {
                       _obscureText = !_obscureText;
                     });
                   },
+                ),
+              ),
+            ),
+
+            SizedBox(height: 35),
+
+            Center(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF159CD5),
+                  fixedSize: const Size(230, 40),
+                  foregroundColor: Colors.white,
+                  textStyle: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                onPressed: () {
+                  print("Botão Login clicado");
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.email, size: 30),
+                    SizedBox(width: 5),
+                    const Text('Continuar com e-mail'),
+                  ],
+                ),
+              ),
+            ),
+
+            Padding(
+              padding: EdgeInsets.only(
+                top: 5,
+              ),
+              child: Center(
+                child: TextButton(
+                  onPressed: null,
+                  child: Text(
+                    'Esqueceu sua senha?',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF159CD5),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ),

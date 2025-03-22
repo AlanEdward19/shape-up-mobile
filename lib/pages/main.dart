@@ -77,8 +77,8 @@ class Main extends StatelessWidget {
   ElevatedButton _loginButton() {
     return ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF159CD5), // Cor de fundo vermelha
-                foregroundColor: Colors.white, // Cor do texto branca
+                backgroundColor: Color(0xFF159CD5),
+                foregroundColor: Colors.white,
                 textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 fixedSize: const Size(260, 40),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
