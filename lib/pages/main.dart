@@ -2,7 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:shape_up_app/functions/changePage.dart';
+import 'package:shape_up_app/pages/login.dart';
 
+import '../components/shapeUpLogo.dart';
 import '../models/CarouselItem.dart';
 
 class Main extends StatelessWidget {
@@ -41,7 +44,7 @@ class Main extends StatelessWidget {
 
             children: [
 
-              _shapeUpLogo(),
+              shapeUpLogo(270),
 
               SizedBox(height: 45),
 
@@ -49,7 +52,7 @@ class Main extends StatelessWidget {
 
               SizedBox(height: 130),
 
-              _loginButton(),
+              _loginButton(context),
 
               SizedBox(height: 30),
 
@@ -73,19 +76,11 @@ class Main extends StatelessWidget {
     );
   }
 
-  SvgPicture _shapeUpLogo() {
-    return SvgPicture.asset(
-              'assets/icons/shape_up.svg',
-              height: 270,
-              fit: BoxFit.contain,
-            );
-  }
-
-  ElevatedButton _loginButton() {
+  ElevatedButton _loginButton(BuildContext context) {
     return ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF159CD5), // Cor de fundo vermelha
-                foregroundColor: Colors.white, // Cor do texto branca
+                backgroundColor: Color(0xFF159CD5),
+                foregroundColor: Colors.white,
                 textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 fixedSize: const Size(260, 40),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -93,6 +88,7 @@ class Main extends StatelessWidget {
               ),
               onPressed: () {
                 print("Botão Login clicado");
+                changePageStateful(context, Login());
               },
               child: const Text('Login'),
             );
