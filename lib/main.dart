@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shape_up_app/pages/login.dart';
 import 'package:shape_up_app/pages/main.dart';
 
 void main() {

@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:shape_up_app/functions/changePage.dart';
+import 'package:shape_up_app/pages/login.dart';
 
 import '../components/shapeUpLogo.dart';
 import '../models/CarouselItem.dart';
@@ -50,7 +52,7 @@ class Main extends StatelessWidget {
 
               SizedBox(height: 130),
 
-              _loginButton(),
+              _loginButton(context),
 
               SizedBox(height: 30),
 
@@ -74,7 +76,7 @@ class Main extends StatelessWidget {
     );
   }
 
-  ElevatedButton _loginButton() {
+  ElevatedButton _loginButton(BuildContext context) {
     return ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFF159CD5),
@@ -86,6 +88,7 @@ class Main extends StatelessWidget {
               ),
               onPressed: () {
                 print("Botão Login clicado");
+                changePageStateful(context, Login());
               },
               child: const Text('Login'),
             );
