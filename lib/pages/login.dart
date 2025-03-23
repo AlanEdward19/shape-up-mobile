@@ -1,10 +1,7 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 
+import '../components/backButton.dart';
 import '../components/shapeUpLogo.dart';
-import '../models/CarouselItem.dart';
 
 class Login extends StatefulWidget {
   Login({super.key});
@@ -17,6 +14,7 @@ class _LoginState extends State<Login> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscureText = true;
+  bool _rememberMe = false;
 
   @override
   void dispose() {
@@ -28,25 +26,16 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.white,),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-          backgroundColor: Colors.transparent, // Opcional: Remove a cor de fundo da AppBar
-          elevation: 0, // Opcional: Remove a sombra da AppBar
-        ),
+        appBar: backButton(context),
       body: Padding(
         padding: const EdgeInsets.only(left: 34, right: 34),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-
             Center(child: shapeUpLogo(200)),
+
             SizedBox(height: 30),
+
             Text(
               'ShapeUp',
               style: const TextStyle(
@@ -55,27 +44,22 @@ class _LoginState extends State<Login> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+
             SizedBox(height: 10),
+
             Text(
-              'Transforme sua rotina, conecte-se com sua evolução. Nutrição, treinos e amizades em um só lugar.',
+              'Transforme sua rotina, conecte-se com sua evolução. '
+                  'Nutrição, treinos e amizades em um só lugar.',
               style: const TextStyle(
                 fontSize: 13,
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
             ),
+
             SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.only(),
-              child: Text(
-                'E-mail',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+
+            _textFieldLabel('E-mail'),
             TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
@@ -89,17 +73,7 @@ class _LoginState extends State<Login> {
 
             SizedBox(height: 20),
 
-            Padding(
-              padding: const EdgeInsets.only(),
-              child: Text(
-                'Senha',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+            _textFieldLabel('Senha'),
             TextField(
               controller: _passwordController,
               obscureText: _obscureText,
@@ -121,51 +95,33 @@ class _LoginState extends State<Login> {
               ),
             ),
 
-            SizedBox(height: 35),
-
-            Center(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF159CD5),
-                  fixedSize: const Size(230, 40),
-                  foregroundColor: Colors.white,
-                  textStyle: const TextStyle(
-                    fontSize: 15,
+            Row(
+              children: [
+                Checkbox(
+                  checkColor: Colors.white,
+                  activeColor: Color(0xFF159CD5),
+                  value: _rememberMe,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      _rememberMe = value!;
+                    });
+                  },
+                  shape: CircleBorder(),
+                ),
+                Text(
+                  'Lembrar-me',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
                 ),
-                onPressed: () {
-                  print("Botão Login Continuar com e-mail");
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.email, size: 30),
-                    SizedBox(width: 5),
-                    const Text('Continuar com e-mail'),
-                  ],
-                ),
-              ),
+              ],
             ),
-            Padding(
-              padding: EdgeInsets.only(top: 5),
-              child: Center(
-                child: TextButton(
-                  onPressed: null,
-                  child: Text(
-                    'Esqueceu sua senha?',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF159CD5),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+
+            _loginButton(),
+
+            _forgotPasswordButton(),
 
             SizedBox(height: 20),
 
@@ -182,88 +138,168 @@ class _LoginState extends State<Login> {
                 Expanded(child: Divider(color: Color(0xFF6D717A))),
               ],
             ),
+
             SizedBox(height: 20),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(15),
-                    color: Colors.white,
-                  ),
-                  child: IconButton(
-                    onPressed: () {
-                      print("Botão do Facebook clicado");
-                    },
-                    icon: Icon(
-                      Icons.facebook,
-                      size: 30,
-                      color: Color(0xFF191F2B),
-                    ),
-                    splashRadius: 20,
-                  ),
-                ),
-
-                SizedBox(width: 20),
-
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(15),
-                    color: Colors.white,
-                  ),
-                  child: IconButton(
-                    onPressed: () {
-                      print("Botão do Google clicado");
-                    },
-                    icon: Icon(
-                      Icons.g_mobiledata_rounded,
-                      size: 30,
-                      color: Color(0xFF191F2B),
-                    ),
-                    splashRadius: 20,
-                  ),
-                ),
-              ],
-            ),
+            _loginWithSsoButton(),
 
             SizedBox(width: 20),
 
-            Padding(
-              padding: EdgeInsets.only(top: 5),
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Não possui uma conta?',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF6D717A),
-                        fontWeight: FontWeight.normal,
-                      ),
-                    ),
-
-                    TextButton(
-                      onPressed: () {
-                        print("Botão de criar conta clicado!");
-                      },
-                      child: Text(
-                        'Crie uma aqui!',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            _createAccountButton(),
           ],
         ),
       ),
     );
+  }
+
+  Padding _textFieldLabel(String text) {
+    return Padding(
+            padding: const EdgeInsets.only(),
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          );
+  }
+
+  Row _loginWithSsoButton() {
+    return Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _loginWithFacebookButton(),
+
+              SizedBox(width: 20),
+
+              _loginWithGoogleButton(),
+            ],
+          );
+  }
+
+  Padding _createAccountButton() {
+    return Padding(
+            padding: EdgeInsets.only(top: 5),
+            child: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Não possui uma conta?',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF6D717A),
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+
+                  TextButton(
+                    onPressed: () {
+                      print("Botão de criar conta clicado!");
+                    },
+                    child: Text(
+                      'Crie uma aqui!',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+  }
+
+  Container _loginWithFacebookButton() {
+    return Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  color: Colors.white,
+                ),
+                child: IconButton(
+                  onPressed: () {
+                    print("Botão do Facebook clicado");
+                  },
+                  icon: Icon(
+                    Icons.facebook,
+                    size: 30,
+                    color: Color(0xFF191F2B),
+                  ),
+                  splashRadius: 20,
+                ),
+              );
+  }
+
+  Container _loginWithGoogleButton() {
+    return Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  color: Colors.white,
+                ),
+                child: IconButton(
+                  onPressed: () {
+                    print("Botão do Google clicado");
+                  },
+                  icon: Icon(
+                    Icons.g_mobiledata_rounded,
+                    size: 30,
+                    color: Color(0xFF191F2B),
+                  ),
+                  splashRadius: 20,
+                ),
+              );
+  }
+
+  Padding _forgotPasswordButton() {
+    return Padding(
+            padding: EdgeInsets.only(top: 5),
+            child: Center(
+              child: TextButton(
+                onPressed: null,
+                child: Text(
+                  'Esqueceu sua senha?',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF159CD5),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          );
+  }
+
+  Center _loginButton() {
+    return Center(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF159CD5),
+                fixedSize: const Size(230, 40),
+                foregroundColor: Colors.white,
+                textStyle: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              onPressed: () {
+                print("Botão Login Continuar com e-mail");
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.email, size: 30),
+                  SizedBox(width: 5),
+                  const Text('Continuar com e-mail'),
+                ],
+              ),
+            ),
+          );
   }
 }
