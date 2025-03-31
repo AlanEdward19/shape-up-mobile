@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shape_up_app/pages/feed.dart';
 
 import '../components/backButton.dart';
 import '../components/shapeUpLogo.dart';
+import '../functions/changePage.dart';
 
 class Login extends StatefulWidget {
   Login({super.key});
@@ -290,6 +292,7 @@ class _LoginState extends State<Login> {
               ),
               onPressed: () {
                 print("Botão Login Continuar com e-mail");
+                changePageStateful(context, Feed());
               },
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
