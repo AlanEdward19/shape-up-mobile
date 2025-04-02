@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shape_up_app/pages/feed.dart';
+import 'package:shape_up_app/services/AuthenticationService.dart';
 
 import '../components/backButton.dart';
 import '../components/shapeUpLogo.dart';
@@ -28,7 +30,7 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: backButton(context),
+      appBar: backButton(context),
       body: Padding(
         padding: const EdgeInsets.only(left: 34, right: 34),
         child: Column(
@@ -51,7 +53,7 @@ class _LoginState extends State<Login> {
 
             Text(
               'Transforme sua rotina, conecte-se com sua evolução. '
-                  'Nutrição, treinos e amizades em um só lugar.',
+              'Nutrição, treinos e amizades em um só lugar.',
               style: const TextStyle(
                 fontSize: 13,
                 color: Colors.white,
@@ -156,153 +158,149 @@ class _LoginState extends State<Login> {
 
   Padding _textFieldLabel(String text) {
     return Padding(
-            padding: const EdgeInsets.only(),
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          );
+      padding: const EdgeInsets.only(),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 16,
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
   }
 
   Row _loginWithSsoButton() {
     return Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _loginWithFacebookButton(),
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _loginWithFacebookButton(),
 
-              SizedBox(width: 20),
+        SizedBox(width: 20),
 
-              _loginWithGoogleButton(),
-            ],
-          );
+        _loginWithGoogleButton(),
+      ],
+    );
   }
 
   Padding _createAccountButton() {
     return Padding(
-            padding: EdgeInsets.only(top: 5),
-            child: Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Não possui uma conta?',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF6D717A),
-                      fontWeight: FontWeight.normal,
-                    ),
-                  ),
-
-                  TextButton(
-                    onPressed: () {
-                      print("Botão de criar conta clicado!");
-                    },
-                    child: Text(
-                      'Crie uma aqui!',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+      padding: EdgeInsets.only(top: 5),
+      child: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Não possui uma conta?',
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF6D717A),
+                fontWeight: FontWeight.normal,
               ),
             ),
-          );
+
+            TextButton(
+              onPressed: () {
+                print("Botão de criar conta clicado!");
+              },
+              child: Text(
+                'Crie uma aqui!',
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Container _loginWithFacebookButton() {
     return Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  color: Colors.white,
-                ),
-                child: IconButton(
-                  onPressed: () {
-                    print("Botão do Facebook clicado");
-                  },
-                  icon: Icon(
-                    Icons.facebook,
-                    size: 30,
-                    color: Color(0xFF191F2B),
-                  ),
-                  splashRadius: 20,
-                ),
-              );
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        color: Colors.white,
+      ),
+      child: IconButton(
+        onPressed: () {
+          print("Botão do Facebook clicado");
+        },
+        icon: Icon(Icons.facebook, size: 30, color: Color(0xFF191F2B)),
+        splashRadius: 20,
+      ),
+    );
   }
 
   Container _loginWithGoogleButton() {
     return Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  color: Colors.white,
-                ),
-                child: IconButton(
-                  onPressed: () {
-                    print("Botão do Google clicado");
-                  },
-                  icon: Icon(
-                    Icons.g_mobiledata_rounded,
-                    size: 30,
-                    color: Color(0xFF191F2B),
-                  ),
-                  splashRadius: 20,
-                ),
-              );
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        color: Colors.white,
+      ),
+      child: IconButton(
+        onPressed: () {
+          print("Botão do Google clicado");
+        },
+        icon: Icon(
+          Icons.g_mobiledata_rounded,
+          size: 30,
+          color: Color(0xFF191F2B),
+        ),
+        splashRadius: 20,
+      ),
+    );
   }
 
   Padding _forgotPasswordButton() {
     return Padding(
-            padding: EdgeInsets.only(top: 5),
-            child: Center(
-              child: TextButton(
-                onPressed: null,
-                child: Text(
-                  'Esqueceu sua senha?',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF159CD5),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+      padding: EdgeInsets.only(top: 5),
+      child: Center(
+        child: TextButton(
+          onPressed: null,
+          child: Text(
+            'Esqueceu sua senha?',
+            style: const TextStyle(
+              fontSize: 13,
+              color: Color(0xFF159CD5),
+              fontWeight: FontWeight.bold,
             ),
-          );
+          ),
+        ),
+      ),
+    );
   }
 
   Center _loginButton() {
     return Center(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF159CD5),
-                fixedSize: const Size(230, 40),
-                foregroundColor: Colors.white,
-                textStyle: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              onPressed: () {
-                print("Botão Login Continuar com e-mail");
-                changePageStateful(context, Feed());
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.email, size: 30),
-                  SizedBox(width: 5),
-                  const Text('Continuar com e-mail'),
-                ],
-              ),
-            ),
-          );
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Color(0xFF159CD5),
+          fixedSize: const Size(230, 40),
+          foregroundColor: Colors.white,
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+        onPressed: () async {
+          if(_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
+            await AuthenticationService.loginWithEmailAndPassword(_emailController.text, _passwordController.text);
+
+            changePageStateful(context, Feed());
+          }
+        },
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.email, size: 30),
+            SizedBox(width: 5),
+            const Text('Continuar com e-mail'),
+          ],
+        ),
+      ),
+    );
   }
 }

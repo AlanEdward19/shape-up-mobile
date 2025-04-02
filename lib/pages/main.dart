@@ -6,7 +6,7 @@ import 'package:shape_up_app/functions/changePage.dart';
 import 'package:shape_up_app/pages/login.dart';
 
 import '../components/shapeUpLogo.dart';
-import '../models/CarouselItem.dart';
+import '../models/carouselItem.dart';
 
 class Main extends StatelessWidget {
   Main({super.key});
