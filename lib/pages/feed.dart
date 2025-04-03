@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:shape_up_app/components/imageCarouselWithIndicators.dart';
+import 'package:shape_up_app/models/socialServiceReponses.dart';
+
+import '../services/SocialService.dart';
 
 const Color kBackgroundColor = Color(0xFF191F2B);
 const Color kPlaceholderColor = Colors.white24;
-const EdgeInsets kDefaultPadding = EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0);
-const EdgeInsets kCardMargin = EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0); // Increased spacing
+const EdgeInsets kDefaultPadding = EdgeInsets.symmetric(
+  horizontal: 12.0,
+  vertical: 8.0,
+);
+const EdgeInsets kCardMargin = EdgeInsets.symmetric(
+  horizontal: 8.0,
+  vertical: 16.0,
+); // Increased spacing
 const double kStoryAvatarSize = 66.0;
 const double kStoryAvatarRadius = 30.0;
 const double kPostImageHeight = 250.0;
@@ -28,9 +38,7 @@ class PostModel {
   });
 }
 
-// --- Main Feed Widget ---
 class Feed extends StatefulWidget {
-  // Use const constructor for StatefulWidget if no params needed
   const Feed({super.key});
 
   @override
@@ -47,15 +55,21 @@ class _FeedState extends State<Feed> {
     false, // Perfil 4 (visto)
   ];
 
-  // List of posts using the PostModel
-  final List<PostModel> _posts = [
-    PostModel(id: 1, title: 'Lorem ipsum 1', likes: 20, comments: 200, shares: 187, selectedReaction: '👍'),
-    PostModel(id: 2, title: 'Lorem ipsum 2', likes: 15, comments: 150, shares: 100, selectedReaction: '👍'),
-    PostModel(id: 3, title: 'Lorem ipsum 3', likes: 25, comments: 85, shares: 3, selectedReaction: '👍'),
-    PostModel(id: 4, title: 'Lorem ipsum 4', likes: 1, comments: 0, shares: 0, selectedReaction: '👍'),
-  ];
+  Future<List<PostDto>>? _postsFuture;
 
-  // Method to show the reaction popup
+  @override
+  void initState() {
+    super.initState();
+
+    _postsFuture = _loadPosts();
+  }
+
+  Future<List<PostDto>> _loadPosts() async {
+    var posts = await SocialService.getActivityFeedAsync();
+
+    return posts;
+  }
+
   void _showReactionPopup(BuildContext context, int postIndex) {
     showDialog(
       context: context,
@@ -65,8 +79,7 @@ class _FeedState extends State<Feed> {
           child: ReactionPopup(
             onEmojiSelected: (String emoji) {
               setState(() {
-                _posts[postIndex].selectedReaction = emoji;
-
+                //_posts![postIndex]. = emoji;
               });
               Navigator.of(dialogContext).pop(); // Use the dialog's context
             },
@@ -94,32 +107,50 @@ class _FeedState extends State<Feed> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications, color: Colors.white),
-            onPressed: () { /* TODO: Implement notifications logic */ },
+            onPressed: () {
+              /* TODO: Implement notifications logic */
+            },
           ),
           IconButton(
             icon: const Icon(Icons.message, color: Colors.white),
-            onPressed: () { /* TODO: Implement messages logic */ },
+            onPressed: () {
+              /* TODO: Implement messages logic */
+            },
           ),
         ],
       ),
 
-      body: ListView.builder(
-        itemCount: _posts.length + 1, // +1 for StorySection
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            // Build Story Section
-            return StorySection(storyStatus: _storyStatus);
-          } else {
-            // Build Post Card
-            final postIndex = index - 1;
-            final post = _posts[postIndex];
-            return PostCard(
-              post: post,
-              // Pass callback to handle reaction tap
-              onReactionPressed: () => _showReactionPopup(context, postIndex),
-              // Pass callback for options menu tap
-              onOptionsPressed: () { /* TODO: Implement post options logic */ },
+      body: FutureBuilder<List<PostDto>>(
+        future: _postsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Erro: ${snapshot.error}'));
+          } else if (snapshot.hasData) {
+            final posts = snapshot.data!;
+            return ListView.builder(
+              itemCount: posts.length + 1, // +1 para a seção de stories
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return StorySection(storyStatus: _storyStatus);
+                } else {
+                  final postIndex = index - 1;
+                  final post =
+                      posts[postIndex]; // Acessa os posts da lista recebida
+                  return PostCard(
+                    post: post,
+                    onReactionPressed:
+                        () => _showReactionPopup(context, postIndex),
+                    onOptionsPressed: () {
+                      // ...
+                    },
+                  );
+                }
+              },
             );
+          } else {
+            return const Center(child: Text('Nenhum post encontrado'));
           }
         },
       ),
@@ -131,21 +162,27 @@ class _FeedState extends State<Feed> {
 class StorySection extends StatelessWidget {
   final List<bool> storyStatus;
 
-  const StorySection({
-    required this.storyStatus,
-    super.key,
-  });
+  const StorySection({required this.storyStatus, super.key});
 
   @override
   Widget build(BuildContext context) {
     // Example labels - in a real app, these would come from user data
-    final storyLabels = ['Seu Story', 'Perfil 1', 'Perfil 2', 'Perfil 3', 'Perfil 4'];
+    final storyLabels = [
+      'Seu Story',
+      'Perfil 1',
+      'Perfil 2',
+      'Perfil 3',
+      'Perfil 4',
+    ];
 
     return Container(
       height: 120, // Height adjusted previously
       color: kBackgroundColor, // Use constant
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0), // Add horizontal padding
+        padding: const EdgeInsets.symmetric(
+          vertical: 8.0,
+          horizontal: 4.0,
+        ), // Add horizontal padding
         scrollDirection: Axis.horizontal,
         itemCount: storyStatus.length,
         itemBuilder: (context, index) {
@@ -164,11 +201,7 @@ class StoryAvatar extends StatelessWidget {
   final String label;
   final bool isNotSeen;
 
-  const StoryAvatar({
-    required this.label,
-    required this.isNotSeen,
-    super.key,
-  });
+  const StoryAvatar({required this.label, required this.isNotSeen, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -185,7 +218,10 @@ class StoryAvatar extends StatelessWidget {
     );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0), // Slight adjustment
+      padding: const EdgeInsets.symmetric(
+        horizontal: 6.0,
+        vertical: 4.0,
+      ), // Slight adjustment
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -223,7 +259,7 @@ class StoryAvatar extends StatelessWidget {
 
 // --- Post Card Widget ---
 class PostCard extends StatelessWidget {
-  final PostModel post;
+  final PostDto post;
   final VoidCallback onReactionPressed;
   final VoidCallback onOptionsPressed;
 
@@ -244,28 +280,37 @@ class PostCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Section (Avatar, Title, Options)
+
           ListTile(
-            leading: const CircleAvatar(backgroundColor: Colors.grey), // Placeholder avatar
+            leading: CircleAvatar(
+              backgroundImage: Image.network(post.publisherImageUrl).image,
+              foregroundImage: Image.network(post.publisherImageUrl).image,
+            ),
             title: Text(
-              post.title, // Access model property
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              '${post.publisherFirstName} ${post.publisherLastName}', // Access model property
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             trailing: IconButton(
               icon: const Icon(Icons.more_horiz, color: Colors.white),
               onPressed: onOptionsPressed, // Use callback
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12.0), // Adjust padding if needed
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12.0,
+            ), // Adjust padding if needed
           ),
 
           // Image Section
-          Container(
-            height: kPostImageHeight, // Use constant
-            color: kPlaceholderColor, // Use constant placeholder color
-            // child: post.imageUrl != null
-            //     ? Image.network(post.imageUrl!, fit: BoxFit.cover)
-            //     : const Center(child: Text("No Image", style: TextStyle(color: Colors.grey))),
+          SizedBox(
+            height: 330, // Use constant
+            child: post.images != null && post.images.isNotEmpty
+                 ? ImageCarouselWithIndicator(imageUrls: post.images,)
+                 : const Center(child: Text("No Image", style: TextStyle(color: Colors.grey))),
           ),
+
+          SizedBox(height: 15),
 
           // Action Bar Section (Reactions, Comments, Shares)
           Padding(
@@ -279,21 +324,25 @@ class PostCard extends StatelessWidget {
                     GestureDetector(
                       onTap: onReactionPressed, // Use callback
                       child: Text(
-                        post.selectedReaction, // Access model property
+                        '', // Access model property
                         style: const TextStyle(fontSize: 24),
                       ),
                     ),
                     const SizedBox(width: 6),
                     // Combine icon/text for semantic grouping if needed
                     Text(
-                      '${post.likes}', // Access model property
+                      '${20}', // Access model property
                       style: const TextStyle(color: Colors.white),
                     ),
                     const SizedBox(width: 16),
-                    const Icon(Icons.chat_bubble_outline, color: Colors.white, size: 20),
+                    const Icon(
+                      Icons.chat_bubble_outline,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                     const SizedBox(width: 6),
                     Text(
-                      '${post.comments}', // Access model property
+                      '${2}', // Access model property
                       style: const TextStyle(color: Colors.white),
                     ),
                   ],
@@ -301,10 +350,14 @@ class PostCard extends StatelessWidget {
                 // Right side actions (Shares)
                 Row(
                   children: [
-                    const Icon(Icons.send_outlined, color: Colors.white, size: 20),
+                    const Icon(
+                      Icons.send_outlined,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                     const SizedBox(width: 6),
                     Text(
-                      '${post.shares}', // Access model property
+                      '${2}', // Access model property
                       style: const TextStyle(color: Colors.white),
                     ),
                   ],
@@ -315,10 +368,17 @@ class PostCard extends StatelessWidget {
 
           // Description Section
           Padding(
-            padding: const EdgeInsets.fromLTRB(12.0, 0, 12.0, 12.0), // Adjusted padding
+            padding: const EdgeInsets.fromLTRB(
+              12.0,
+              12.0,
+              12.0,
+              12.0,
+            ), // Adjusted padding
             child: Text(
-              "Descrição do post aqui...", // Placeholder description
-              style: TextStyle(color: Colors.white.withOpacity(0.7)), // Use opacity for subtlety
+              post.content, // Placeholder description
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+              ), // Use opacity for subtlety
             ),
           ),
         ],
@@ -326,7 +386,6 @@ class PostCard extends StatelessWidget {
     );
   }
 }
-
 
 // --- Reaction Popup Widget --- (Largely unchanged, already well-structured)
 class ReactionPopup extends StatefulWidget {
@@ -340,7 +399,14 @@ class ReactionPopup extends StatefulWidget {
 
 class _ReactionPopupState extends State<ReactionPopup> {
   // Could be made a constant if never changed
-  final List<String> _reactionEmojis = const ['👍', '❤️', '😂', '😮', '😢', '😡'];
+  final List<String> _reactionEmojis = const [
+    '👍',
+    '❤️',
+    '😂',
+    '😮',
+    '😢',
+    '😡',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -354,25 +420,24 @@ class _ReactionPopupState extends State<ReactionPopup> {
             color: Colors.black.withOpacity(0.15), // Softer shadow
             blurRadius: 15,
             spreadRadius: 1,
-          )
+          ),
         ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min, // Important for Dialog sizing
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: _reactionEmojis.map((emoji) {
-          return GestureDetector(
-            onTap: () => widget.onEmojiSelected(emoji), // Use arrow function
-            // Add InkWell or similar for visual feedback on tap if desired
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Text(
-                emoji,
-                style: const TextStyle(fontSize: 28),
-              ),
-            ),
-          );
-        }).toList(),
+        children:
+            _reactionEmojis.map((emoji) {
+              return GestureDetector(
+                onTap:
+                    () => widget.onEmojiSelected(emoji), // Use arrow function
+                // Add InkWell or similar for visual feedback on tap if desired
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(emoji, style: const TextStyle(fontSize: 28)),
+                ),
+              );
+            }).toList(),
       ),
     );
   }
