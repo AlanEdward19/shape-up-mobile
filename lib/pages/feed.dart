@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shape_up_app/components/bottomNavBar.dart';
 import 'package:shape_up_app/components/imageCarouselWithIndicators.dart';
 import 'package:shape_up_app/models/socialServiceReponses.dart';
 
@@ -119,7 +120,6 @@ class _FeedState extends State<Feed> {
           ),
         ],
       ),
-
       body: FutureBuilder<List<PostDto>>(
         future: _postsFuture,
         builder: (context, snapshot) {
