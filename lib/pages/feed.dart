@@ -14,7 +14,7 @@ const EdgeInsets kDefaultPadding = EdgeInsets.symmetric(
 const EdgeInsets kCardMargin = EdgeInsets.symmetric(
   horizontal: 8.0,
   vertical: 16.0,
-); // Increased spacing
+);
 const double kStoryAvatarSize = 66.0;
 const double kStoryAvatarRadius = 30.0;
 const double kPostImageHeight = 250.0;
@@ -22,11 +22,11 @@ const double kPostImageHeight = 250.0;
 class PostModel {
   final int id;
   final String title;
-  final String? imageUrl; // Nullable if no image
-  int likes; // Mutable state
-  int comments; // Mutable state
-  int shares; // Mutable state
-  String selectedReaction; // Mutable state
+  final String? imageUrl;
+  int likes;
+  int comments;
+  int shares;
+  String selectedReaction;
 
   PostModel({
     required this.id,

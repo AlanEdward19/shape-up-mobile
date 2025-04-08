@@ -3,6 +3,13 @@ import 'package:flutter/foundation.dart';
 
 enum Gender { male, female }
 
+enum FriendRequestStatus { Pending, PendingResponse }
+
+const Map<int, FriendRequestStatus> friendRequestStatusMap = {
+  0: FriendRequestStatus.Pending,
+  1: FriendRequestStatus.PendingResponse,
+};
+
 enum Visibility { public, friendsOnly, private }
 
 enum ReactionType {
@@ -24,6 +31,19 @@ const Map<int, Visibility> visibilityMap = {
   2: Visibility.private,
 };
 
+const Map<int, ReactionType> reactionTypeMap = {
+  0: ReactionType.like,
+  1: ReactionType.dislike,
+  2: ReactionType.love,
+  3: ReactionType.haha,
+  4: ReactionType.wow,
+  5: ReactionType.sad,
+  6: ReactionType.angry,
+  7: ReactionType.care,
+  8: ReactionType.support,
+  9: ReactionType.celebrate,
+};
+
 const Map<ReactionType, String> reactionEmojiMap = {
   ReactionType.like: "👍",
   ReactionType.dislike: "👎",
@@ -36,6 +56,138 @@ const Map<ReactionType, String> reactionEmojiMap = {
   ReactionType.support: "💪",
   ReactionType.celebrate: "🎉",
 };
+
+class PostReactionDto {
+  final String profileId;
+  final String createdAt;
+  final ReactionType reactionType;
+  final String postId;
+  final String id;
+
+  PostReactionDto(
+    this.profileId,
+    this.createdAt,
+    this.reactionType,
+    this.postId,
+    this.id,
+  );
+
+  factory PostReactionDto.fromJson(Map<String, dynamic> json) {
+    return PostReactionDto(
+      json['profileId'],
+      json['createdAt'],
+      reactionTypeMap.values.firstWhere((v) => v.name == json['reactionType']),
+      json['postId'],
+      json['id'],
+    );
+  }
+
+  static List<PostReactionDto> fromJsonList(List<dynamic> jsonList) {
+    return jsonList.map((json) => PostReactionDto.fromJson(json)).toList();
+  }
+}
+
+class PostCommentDto {
+  final String profileId;
+  final String profileFirstName;
+  final String profileLastName;
+  final String postId;
+  final String createdAt;
+  final String content;
+  final String id;
+
+  PostCommentDto(
+    this.profileId,
+    this.profileFirstName,
+    this.profileLastName,
+    this.postId,
+    this.createdAt,
+    this.content,
+    this.id,
+  );
+
+  factory PostCommentDto.fromJson(Map<String, dynamic> json) {
+    return PostCommentDto(
+      json['profileId'],
+      json['profileFirstName'],
+      json['profileLastName'],
+      json['postId'],
+      json['createdAt'],
+      json['content'],
+      json['id'],
+    );
+  }
+
+  static List<PostCommentDto> fromJsonList(List<dynamic> jsonList) {
+    return jsonList.map((json) => PostCommentDto.fromJson(json)).toList();
+  }
+}
+
+class ProfileSearchResultDto {
+  final String id;
+  final String firstName;
+  final String lastName;
+  final String imageUrl;
+
+  ProfileSearchResultDto(this.id, this.firstName, this.lastName, this.imageUrl);
+
+  factory ProfileSearchResultDto.fromJson(Map<String, dynamic> json) {
+    return ProfileSearchResultDto(
+      json['id'],
+      json['firstName'],
+      json['lastName'],
+      json['imageUrl'],
+    );
+  }
+
+  static List<ProfileSearchResultDto> fromJsonList(List<dynamic> jsonList) {
+    return jsonList
+        .map((json) => ProfileSearchResultDto.fromJson(json))
+        .toList();
+  }
+}
+
+class FriendRequestDto {
+  final String profileId;
+  final FriendRequestStatus status;
+  final String? message;
+
+  FriendRequestDto(this.profileId, this.status, this.message);
+
+  factory FriendRequestDto.fromJson(Map<String, dynamic> json) {
+    return FriendRequestDto(
+      json['profileId'],
+      friendRequestStatusMap.values.firstWhere((v) => v.name == json['status']),
+      json['message'],
+    );
+  }
+
+  static List<FriendRequestDto> fromJsonList(List<dynamic> jsonList) {
+    return jsonList.map((json) => FriendRequestDto.fromJson(json)).toList();
+  }
+}
+
+class FriendDto {
+  final String profileId;
+  final String firstName;
+  final String lastName;
+  final String imageUrl;
+
+  FriendDto(this.profileId, this.firstName, this.lastName, this.imageUrl);
+
+  factory FriendDto.fromJson(Map<String, dynamic> json) {
+    return FriendDto(
+      json['profileId'],
+      json['firstName'],
+      json['lastName'],
+      json['imageUrl'],
+    );
+  }
+
+  static List<FriendDto> fromJsonList(List<dynamic> jsonList) {
+    return jsonList.map((json) => FriendDto.fromJson(json)).toList();
+  }
+}
 
 class ProfileDto {
   final String id;

@@ -20,15 +20,32 @@ class SocialService {
     var token = await AuthenticationService.getToken();
 
     final response = await http.get(
-      Uri.parse('$baseUrl/v1/Profile/ViewProfile/id'.replaceAll('id', id)),
+      Uri.parse('$baseUrl/v1/Profile/ViewProfile/$id'),
       headers: createHeaders(token),
     );
 
     if (response.statusCode == 200) {
       return ProfileDto.fromJson(jsonDecode(response.body));
-    }
-    else {
+    } else {
       throw Exception("Erro ao carregar perfil");
+    }
+  }
+
+  static Future<void> editProfileAsync(
+    Gender? gender,
+    String? birthDate,
+    String? bio,
+  ) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.patch(
+      Uri.parse('$baseUrl/v1/Profile/EditProfile'),
+      headers: createHeaders(token),
+      body: jsonEncode({'Gender': gender, 'BirthDate': birthDate, 'Bio': bio}),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception("Erro ao editar perfil");
     }
   }
 
@@ -40,23 +57,14 @@ class SocialService {
     var token = await AuthenticationService.getToken();
 
     final response = await http.get(
-      Uri.parse(
-        '$baseUrl/v1/Follow/GetFollowers/id?Page={page}&Rows={rows}'
-            .replaceAll('id', profileId)
-            .replaceAll(
-              'page',
-              page.toString().replaceAll('rows', rows.toString()),
-            ),
-      ),
+      Uri.parse('$baseUrl/v1/Follow/GetFollowers/$profileId?Page=$page&Rows=$rows'),
       headers: createHeaders(token),
     );
 
     if (response.statusCode == 200) {
       List<dynamic> jsonList = jsonDecode(response.body);
       return FollowUserDto.fromJsonList(jsonList);
-    }
-
-    else {
+    } else {
       throw Exception("Erro ao carregar usuários");
     }
   }
@@ -69,24 +77,56 @@ class SocialService {
     var token = await AuthenticationService.getToken();
 
     final response = await http.get(
-      Uri.parse(
-        '$baseUrl/v1/Follow/GetFollowing/id?Page={page}&Rows={rows}'
-            .replaceAll('id', profileId)
-            .replaceAll(
-              'page',
-              page.toString().replaceAll('rows', rows.toString()),
-            ),
-      ),
+      Uri.parse('$baseUrl/v1/Follow/GetFollowing/$profileId?Page=$page&Rows=$rows'),
       headers: createHeaders(token),
     );
 
     if (response.statusCode == 200) {
       List<dynamic> jsonList = jsonDecode(response.body);
       return FollowUserDto.fromJsonList(jsonList);
-    }
-
-    else {
+    } else {
       throw Exception("Erro ao carregar usuários");
+    }
+  }
+
+  static Future<void> followUser(String profileId) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/v1/Follow/FollowUser/$profileId'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception("Erro ao seguir usuário");
+    }
+  }
+
+  static Future<void> unfollowUser(String profileId) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/v1/Follow/UnfollowUser/$profileId'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode != 204) {
+      throw Exception("Erro ao deixar de seguir usuário");
+    }
+  }
+
+  static Future<PostDto> getPostAsync(String postId) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/v1/Post/$postId'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode == 200) {
+      return PostDto.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception("Erro ao carregar post");
     }
   }
 
@@ -101,10 +141,257 @@ class SocialService {
     if (response.statusCode == 200) {
       List<dynamic> jsonList = jsonDecode(response.body);
       return PostDto.fromJsonList(jsonList);
-    }
-
-    else {
+    } else {
       throw Exception("Erro ao carregar posts");
+    }
+  }
+
+  static Future<PostDto> createPostAsync(
+    String content,
+    Visibility visibility,
+  ) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/v1/Post/CreatePost'),
+      headers: createHeaders(token),
+      body: jsonEncode({'Content': content, 'Visibility': visibility}),
+    );
+
+    if (response.statusCode == 201) {
+      return PostDto.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception("Erro ao criar post");
+    }
+  }
+
+  //TODO Subir função de chamar endpoint de upload de imagens
+
+  static Future<List<PostReactionDto>> getPostReactionsAsync(
+    String postId,
+  ) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/v1/Post/$postId/getReactions'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> jsonList = jsonDecode(response.body);
+      return PostReactionDto.fromJsonList(jsonList);
+    } else {
+      throw Exception("Erro ao carregar reações");
+    }
+  }
+
+  static Future<void> reactToPostAsync(
+    String postId,
+    ReactionType reactionType,
+  ) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/v1/Post/$postId/react'),
+      headers: createHeaders(token),
+      body: jsonEncode({'reactionType': reactionType}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Erro ao reagir ao post");
+    }
+  }
+
+  static Future<void> deleteReactionAsync(String postId) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/v1/Post/$postId/deleteReaction'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode != 204) {
+      throw Exception("Erro ao deletar reação");
+    }
+  }
+
+  static Future<List<PostCommentDto>> getPostCommentsAsync(
+    String postId,
+  ) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/v1/Post/$postId/getComments'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> jsonList = jsonDecode(response.body);
+      return PostCommentDto.fromJsonList(jsonList);
+    } else {
+      throw Exception("Erro ao carregar comentários");
+    }
+  }
+
+  static Future<void> commentOnPostAsync(String postId, String content) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/v1/Post/$postId/commentOnPost'),
+      headers: createHeaders(token),
+      body: jsonEncode({'content': content}),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception("Erro ao comentar no post");
+    }
+  }
+
+  static Future<void> deleteCommentAsync(String commentId) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/v1/Post/$commentId/deleteComment'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode != 204) {
+      throw Exception("Erro ao deletar comentário");
+    }
+  }
+
+  static Future<void> editPostAsync(String commentId, String content) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.patch(
+      Uri.parse('$baseUrl/v1/Post/$commentId/editComment'),
+      headers: createHeaders(token),
+      body: jsonEncode({'content': content}),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception("Erro ao editar post");
+    }
+  }
+
+  //TODO implementar rota de getFriendRecommendation
+
+  static Future<void> sendFriendRequestAsync(
+    String profileId,
+    String? requestMessage,
+  ) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/v1/Friend/sendFriendRequest'),
+      headers: createHeaders(token),
+      body: jsonEncode({
+        'requestMessage': requestMessage,
+        'friendId': profileId,
+      }),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception("Erro ao enviar solicitação de amizade");
+    }
+  }
+
+  static Future<List<FriendDto>> getFriendsAsync(
+    String profileId,
+    int page,
+    int rows,
+  ) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/v1/Friend/listFriends/$profileId?page=$page&rows=$rows'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> jsonList = jsonDecode(response.body);
+      return FriendDto.fromJsonList(jsonList);
+    } else {
+      throw Exception("Erro ao carregar amigos");
+    }
+  }
+
+  static Future<List<FriendRequestDto>> getFriendRequestsAsync() async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/v1/Friend/checkRequestStatus'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> jsonList = jsonDecode(response.body);
+      return FriendRequestDto.fromJsonList(jsonList);
+    } else {
+      throw Exception("Erro ao carregar solicitações de amizade");
+    }
+  }
+
+  static Future<void> manageFriendRequestAsync(
+    String profileId,
+    bool accept,
+  ) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/v1/Friend/manageFriendRequests'),
+      headers: createHeaders(token),
+      body: jsonEncode({'profileId': profileId, 'accept': accept}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Erro ao gerenciar solicitação de amizade");
+    }
+  }
+
+  static Future<void> deleteFriendAsync(String profileId) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/v1/Friend/removeFriend/$profileId'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode != 204) {
+      throw Exception("Erro ao deletar amigo");
+    }
+  }
+
+  static Future<void> removeFriendRequestAsync(String profileId) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/v1/Friend/removeFriendRequest/$profileId'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode != 204) {
+      throw Exception("Erro ao remover solicitação de amizade");
+    }
+  }
+
+  //TODO implementar rota de UploadProfilePicture
+
+  static Future<List<ProfileSearchResultDto>> searchProfileByNameAsync(
+    String name,
+  ) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/v1/Profile/searchProfileByName?Name=$name'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> jsonList = jsonDecode(response.body);
+      return ProfileSearchResultDto.fromJsonList(jsonList);
+    } else {
+      throw Exception("Erro ao pesquisar perfil");
     }
   }
 }
