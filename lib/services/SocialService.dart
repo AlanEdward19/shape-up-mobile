@@ -186,18 +186,33 @@ class SocialService {
   }
 
   static Future<void> reactToPostAsync(
-    String postId,
-    ReactionType reactionType,
-  ) async {
+      String postId,
+      ReactionType reactionType,
+      ) async {
     var token = await AuthenticationService.getToken();
 
+    final url = '$baseUrl/v1/Post/$postId/react';
+    final headers = createHeaders(token);
+    final body = jsonEncode({
+      'command': {
+        'reactionType': reactionType.name, // Ensure this matches the server's enum
+      }
+    });
+
+    print('Request URL: $url');
+    print('Request Headers: $headers');
+    print('Request Body: $body');
+
     final response = await http.put(
-      Uri.parse('$baseUrl/v1/Post/$postId/react'),
-      headers: createHeaders(token),
-      body: jsonEncode({'reactionType': reactionType}),
+      Uri.parse(url),
+      headers: headers,
+      body: body,
     );
 
-    if (response.statusCode != 200) {
+    print('Response Status Code: ${response.statusCode}');
+    print('Response Body: ${response.body}');
+
+    if (response.statusCode != 204) {
       throw Exception("Erro ao reagir ao post");
     }
   }
