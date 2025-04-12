@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:shape_up_app/components/bottomNavBar.dart';
-import 'package:shape_up_app/components/imageCarouselWithIndicators.dart';
+import 'package:flutter/foundation.dart'; // Para kDebugMode (já estava no seu DTO)
+import 'package:shape_up_app/components/imageCarouselWithIndicators.dart'; // Assumindo que você tem este componente
 import 'package:shape_up_app/models/socialServiceReponses.dart';
+import 'package:shape_up_app/services/SocialService.dart';
+// Removido: import 'package:shape_up_app/components/bottomNavBar.dart'; // Não usado neste arquivo
 
-import '../services/SocialService.dart';
-
+// --- Constantes ---
 const Color kBackgroundColor = Color(0xFF191F2B);
 const Color kPlaceholderColor = Colors.white24;
 const EdgeInsets kDefaultPadding = EdgeInsets.symmetric(
@@ -17,27 +18,13 @@ const EdgeInsets kCardMargin = EdgeInsets.symmetric(
 );
 const double kStoryAvatarSize = 66.0;
 const double kStoryAvatarRadius = 30.0;
-const double kPostImageHeight = 250.0;
+const double kPostImageHeight = 330.0; // Ajustado para o valor usado no PostCard
+const ReactionType kDefaultReactionType = ReactionType.like; // Reação padrão
+const String kDefaultReactionEmoji = '👍'; // Emoji padrão (like cinza por ex, mas usamos o mapeado)
 
-class PostModel {
-  final int id;
-  final String title;
-  final String? imageUrl;
-  int likes;
-  int comments;
-  int shares;
-  String selectedReaction;
-
-  PostModel({
-    required this.id,
-    required this.title,
-    this.imageUrl,
-    required this.likes,
-    required this.comments,
-    required this.shares,
-    required this.selectedReaction,
-  });
-}
+// --- Modelo de Estado do Post (para UI) ---
+// Não usaremos mais o PostModel antigo, vamos gerenciar com Maps no State
+// class PostModel { ... } // Removido
 
 class Feed extends StatefulWidget {
   const Feed({super.key});
@@ -47,42 +34,202 @@ class Feed extends StatefulWidget {
 }
 
 class _FeedState extends State<Feed> {
-  // Story status - kept simple as boolean list for this example
-  final List<bool> _storyStatus = [
-    false, // Seu Story (visto)
-    true, // Perfil 1 (não visto)
-    true, // Perfil 2 (não visto)
-    false, // Perfil 3 (visto)
-    false, // Perfil 4 (visto)
-  ];
+  // --- Estados ---
+  bool _isLoading = true;
+  String? _error;
+  List<PostDto> _posts = [];
+  // Mapa para guardar a reação ATUAL do usuário logado para cada post ID
+  Map<String, ReactionType?> _currentUserReactions = {};
+  // Mapa para guardar a lista COMPLETA de reações de cada post ID (para contagem)
+  Map<String, List<PostReactionDto>> _allPostReactions = {};
 
-  Future<List<PostDto>>? _postsFuture;
+  // Story status (mantido como exemplo simples)
+  final List<bool> _storyStatus = [
+    false, true, true, false, false,
+  ];
 
   @override
   void initState() {
     super.initState();
-
-    _postsFuture = _loadPosts();
+    _loadFeedData();
   }
 
-  Future<List<PostDto>> _loadPosts() async {
-    var posts = await SocialService.getActivityFeedAsync();
+  // --- Carregamento de Dados ---
+  Future<void> _loadFeedData() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final posts = await SocialService.getActivityFeedAsync();
+      _posts = posts;
 
-    return posts;
+      // Após carregar os posts, buscar as reações para cada um
+      // NOTA: Isso faz N chamadas adicionais (N = nº de posts).
+      // O ideal seria a API de feed já retornar a contagem e a reação do usuário.
+      Map<String, ReactionType?> userReactions = {};
+      Map<String, List<PostReactionDto>> allReactions = {};
+
+      // TODO: Precisamos saber o ID do usuário logado para filtrar a reação dele.
+      // Supondo que AuthenticationService possa fornecer isso:
+      // final String currentUserId = await AuthenticationService.getCurrentUserId(); // Método hipotético
+
+      for (var post in posts) {
+        try {
+          final reactions = await SocialService.getPostReactionsAsync(post.id);
+          allReactions[post.id] = reactions;
+          // Encontra a reação do usuário atual (se existir)
+          // Substitua 'CURRENT_USER_ID_PLACEHOLDER' pelo ID real do usuário logado
+          // userReactions[post.id] = reactions
+          //     .firstWhere(
+          //         (reaction) => reaction.profileId == currentUserId,
+          //         orElse: () => null) // Precisa ajustar o tipo de retorno do orElse se PostReactionDto não for nullable
+          //     ?.reactionType;
+
+          // --- Simulação SEM ID do usuário ---
+          // Apenas para demonstração, vamos pegar a primeira reação como se fosse a do usuário
+          if (reactions.isNotEmpty) {
+            // Tenta encontrar 'like' como exemplo, ou pega a primeira
+            final userReaction = reactions.firstWhere(
+                    (r) => r.reactionType == ReactionType.like, // Exemplo: prioriza 'like'
+                orElse: () => reactions.first
+            );
+            // Assumimos que esta é a do usuário logado para fins de UI AQUI
+            userReactions[post.id] = userReaction.reactionType;
+          } else {
+            userReactions[post.id] = null;
+          }
+          // --- Fim Simulação ---
+
+
+        } catch (e) {
+          // Erro ao carregar reações para UM post específico, não impede o resto
+          if (kDebugMode) {
+            print("Erro ao carregar reações para post ${post.id}: $e");
+          }
+          allReactions[post.id] = []; // Assume lista vazia em caso de erro
+          userReactions[post.id] = null;
+        }
+      }
+
+      setState(() {
+        _currentUserReactions = userReactions;
+        _allPostReactions = allReactions;
+        _isLoading = false;
+      });
+
+    } catch (e) {
+      setState(() {
+        _error = "Erro ao carregar feed: $e";
+        _isLoading = false;
+      });
+    }
   }
 
-  void _showReactionPopup(BuildContext context, int postIndex) {
+  // --- Lógica de Reação ---
+
+  // Função chamada quando um emoji é selecionado no popup
+  Future<void> _handleReactionSelected(String postId, ReactionType selectedReaction) async {
+    final currentReaction = _currentUserReactions[postId];
+    final originalReactions = List<PostReactionDto>.from(_allPostReactions[postId] ?? []);
+
+    // 1. Atualização Otimista da UI
+    setState(() {
+      if (currentReaction == selectedReaction) {
+        // Clicou na mesma reação -> Remover
+        _currentUserReactions[postId] = null;
+        _allPostReactions[postId]?.removeWhere((r) => /*r.profileId == currentUserId &&*/ r.reactionType == selectedReaction); // Precisa do ID do usuário real
+      } else {
+        // Nova reação ou mudou de reação
+        _currentUserReactions[postId] = selectedReaction;
+        // Remove a antiga se existia (simulação sem ID)
+        if(currentReaction != null) {
+          _allPostReactions[postId]?.removeWhere((r) => /*r.profileId == currentUserId &&*/ r.reactionType == currentReaction);
+        }
+        // Adiciona a nova (simulação sem ID - adiciona um DTO fake)
+        // O ideal é ter o ID do usuário e criar um DTO real
+        _allPostReactions[postId]?.add(PostReactionDto(
+            "CURRENT_USER_ID_PLACEHOLDER",
+            DateTime.now().toIso8601String(),
+            selectedReaction,
+            postId,
+            "temp_id_${DateTime.now().millisecondsSinceEpoch}" // ID temporário
+        ));
+      }
+    });
+
+    // 2. Chamada à API
+    try {
+      if (currentReaction == selectedReaction) {
+        // Remover reação
+        await SocialService.deleteReactionAsync(postId);
+      } else if (currentReaction != null) {
+        // Mudar reação (delete + add)
+        await SocialService.deleteReactionAsync(postId);
+        await SocialService.reactToPostAsync(postId, selectedReaction);
+      } else {
+        // Adicionar nova reação
+        await SocialService.reactToPostAsync(postId, selectedReaction);
+      }
+
+      // 3. (Opcional mas recomendado) Rebuscar reações para garantir consistência total
+      // Isso atualiza a contagem corretamente e pega o estado real do servidor.
+      final updatedReactions = await SocialService.getPostReactionsAsync(postId);
+      setState(() {
+        _allPostReactions[postId] = updatedReactions;
+        // Atualiza a reação do usuário novamente com base nos dados reais
+        // _currentUserReactions[postId] = updatedReactions.firstWhere((r) => r.profileId == currentUserId, orElse: () => null)?.reactionType; // Precisa do ID real
+        // --- Simulação SEM ID do usuário ---
+        if (updatedReactions.isNotEmpty) {
+          final userReaction = updatedReactions.firstWhere(
+                  (r) => r.reactionType == selectedReaction, // Prioriza a que acabou de ser selecionada
+              orElse: () => updatedReactions.first
+          );
+          // Assumimos que esta é a do usuário logado
+          _currentUserReactions[postId] = userReaction.reactionType;
+        } else {
+          _currentUserReactions[postId] = null;
+        }
+        // --- Fim Simulação ---
+      });
+
+    } catch (e) {
+      // 4. Reverter em caso de erro e mostrar mensagem
+      setState(() {
+        _currentUserReactions[postId] = currentReaction; // Reverte a reação do usuário
+        _allPostReactions[postId] = originalReactions; // Reverte a lista/contagem
+      });
+      if (mounted) { // Verifica se o widget ainda está na árvore
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao reagir: ${e.toString().replaceFirst("Exception: ", "")}')),
+        );
+      }
+      if (kDebugMode) {
+        print("Erro ao atualizar reação para post $postId: $e");
+      }
+    }
+  }
+
+
+  // Mostra o popup de seleção de reações
+  void _showReactionPopup(BuildContext context, String postId) {
+    // Obtém a posição do botão para posicionar o popup (opcional, mas melhora a UX)
+    // RenderBox renderBox = context.findRenderObject() as RenderBox;
+    // var offset = renderBox.localToGlobal(Offset.zero);
+
     showDialog(
       context: context,
+      barrierColor: Colors.black.withOpacity(0.3), // Fundo semi-transparente
       builder: (dialogContext) {
         return Dialog(
           backgroundColor: Colors.transparent,
+          elevation: 0,
+          // Posicionamento (opcional - requer mais lógica com GlobalKey no botão)
+          // insetPadding: EdgeInsets.only(left: offset.dx, top: offset.dy - 100), // Exemplo
           child: ReactionPopup(
-            onEmojiSelected: (String emoji) {
-              setState(() {
-                //_posts![postIndex]. = emoji;
-              });
-              Navigator.of(dialogContext).pop(); // Use the dialog's context
+            onEmojiSelected: (ReactionType selectedReaction) {
+              Navigator.of(dialogContext).pop(); // Fecha o popup primeiro
+              _handleReactionSelected(postId, selectedReaction); // Chama a lógica de reação
             },
           ),
         );
@@ -108,86 +255,84 @@ class _FeedState extends State<Feed> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications, color: Colors.white),
-            onPressed: () {
-              /* TODO: Implement notifications logic */
-            },
+            onPressed: () { /* TODO: Implement notifications logic */ },
           ),
           IconButton(
             icon: const Icon(Icons.message, color: Colors.white),
-            onPressed: () {
-              /* TODO: Implement messages logic */
-            },
+            onPressed: () { /* TODO: Implement messages logic */ },
           ),
         ],
       ),
-      body: FutureBuilder<List<PostDto>>(
-        future: _postsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Erro: ${snapshot.error}'));
-          } else if (snapshot.hasData) {
-            final posts = snapshot.data!;
-            return ListView.builder(
-              itemCount: posts.length + 1, // +1 para a seção de stories
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return StorySection(storyStatus: _storyStatus);
-                } else {
-                  final postIndex = index - 1;
-                  final post =
-                      posts[postIndex]; // Acessa os posts da lista recebida
-                  return PostCard(
-                    post: post,
-                    onReactionPressed:
-                        () => _showReactionPopup(context, postIndex),
-                    onOptionsPressed: () {
-                      // ...
-                    },
-                  );
-                }
-              },
-            );
-          } else {
-            return const Center(child: Text('Nenhum post encontrado'));
-          }
-        },
-      ),
+      body: _buildBody(),
+      // bottomNavigationBar: BottomNavBar(), // Se você tiver uma barra de navegação
     );
+  }
+
+  // --- Construção da UI ---
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator(color: Colors.white));
+    } else if (_error != null) {
+      return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text('Erro: $_error', style: const TextStyle(color: Colors.redAccent)),
+          ));
+    } else if (_posts.isEmpty) {
+      return const Center(child: Text('Nenhum post encontrado.', style: TextStyle(color: Colors.white)));
+    } else {
+      return RefreshIndicator( // Adiciona Pull-to-Refresh
+        onRefresh: _loadFeedData,
+        color: Colors.white,
+        backgroundColor: kBackgroundColor,
+        child: ListView.builder(
+          itemCount: _posts.length + 1, // +1 para a seção de stories
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              // --- Seção de Stories ---
+              return StorySection(storyStatus: _storyStatus);
+            } else {
+              // --- Card do Post ---
+              final postIndex = index - 1;
+              final post = _posts[postIndex];
+              final currentUserReaction = _currentUserReactions[post.id];
+              final reactionsList = _allPostReactions[post.id] ?? [];
+              final reactionCount = reactionsList.length;
+
+              return PostCard(
+                post: post,
+                currentUserReaction: currentUserReaction,
+                reactionCount: reactionCount,
+                // Passa o CONTEXTO do item para o popup saber onde foi clicado (para posicionamento futuro)
+                onReactionButtonPressed: (buttonContext) => _showReactionPopup(buttonContext, post.id),
+                onOptionsPressed: () { /* TODO: Implement options logic */ },
+              );
+            }
+          },
+        ),
+      );
+    }
   }
 }
 
-// --- Story Section Widget --- (Best Practice: Extract complex UI parts)
+// --- Story Section Widget --- (Sem alterações significativas)
 class StorySection extends StatelessWidget {
   final List<bool> storyStatus;
-
   const StorySection({required this.storyStatus, super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Example labels - in a real app, these would come from user data
-    final storyLabels = [
-      'Seu Story',
-      'Perfil 1',
-      'Perfil 2',
-      'Perfil 3',
-      'Perfil 4',
-    ];
-
+    final storyLabels = ['Seu Story', 'Perfil 1', 'Perfil 2', 'Perfil 3', 'Perfil 4'];
     return Container(
-      height: 120, // Height adjusted previously
-      color: kBackgroundColor, // Use constant
+      height: 120,
+      color: kBackgroundColor,
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(
-          vertical: 8.0,
-          horizontal: 4.0,
-        ), // Add horizontal padding
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
         scrollDirection: Axis.horizontal,
         itemCount: storyStatus.length,
         itemBuilder: (context, index) {
           return StoryAvatar(
-            label: storyLabels[index], // Use dynamic label
+            label: storyLabels[index],
             isNotSeen: storyStatus[index],
           );
         },
@@ -196,32 +341,24 @@ class StorySection extends StatelessWidget {
   }
 }
 
-// --- Story Avatar Widget ---
+// --- Story Avatar Widget --- (Sem alterações significativas)
 class StoryAvatar extends StatelessWidget {
   final String label;
   final bool isNotSeen;
-
   const StoryAvatar({required this.label, required this.isNotSeen, super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Define gradients as constants within the build or class scope if complex
     final Gradient seenGradient = LinearGradient(
       colors: [Colors.grey.shade600, Colors.grey.shade800],
-      begin: Alignment.topRight,
-      end: Alignment.bottomLeft,
+      begin: Alignment.topRight, end: Alignment.bottomLeft,
     );
     final Gradient notSeenGradient = const LinearGradient(
       colors: [Colors.pinkAccent, Colors.blueAccent],
-      begin: Alignment.topRight,
-      end: Alignment.bottomLeft,
+      begin: Alignment.topRight, end: Alignment.bottomLeft,
     );
-
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 6.0,
-        vertical: 4.0,
-      ), // Slight adjustment
+      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -229,18 +366,16 @@ class StoryAvatar extends StatelessWidget {
             alignment: Alignment.center,
             children: [
               Container(
-                width: kStoryAvatarSize,
-                height: kStoryAvatarSize,
+                width: kStoryAvatarSize, height: kStoryAvatarSize,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: isNotSeen ? notSeenGradient : seenGradient,
                 ),
               ),
-              // Consider adding placeholder/actual image logic here
               const CircleAvatar(
                 radius: kStoryAvatarRadius,
                 backgroundColor: Colors.grey,
-                // backgroundImage: NetworkImage('URL_DA_IMAGEM_AQUI'),
+                // backgroundImage: NetworkImage('URL_DA_IMAGEM_AQUI'), // Adicione a imagem real aqui
               ),
             ],
           ),
@@ -248,8 +383,7 @@ class StoryAvatar extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(fontSize: 12, color: Colors.white),
-            overflow: TextOverflow.ellipsis, // Good for potentially long names
-            maxLines: 1,
+            overflow: TextOverflow.ellipsis, maxLines: 1,
           ),
         ],
       ),
@@ -257,108 +391,133 @@ class StoryAvatar extends StatelessWidget {
   }
 }
 
-// --- Post Card Widget ---
+// --- Post Card Widget --- (Modificado para aceitar e exibir estado da reação)
 class PostCard extends StatelessWidget {
   final PostDto post;
-  final VoidCallback onReactionPressed;
+  final ReactionType? currentUserReaction; // Reação atual do usuário
+  final int reactionCount; // Contagem total
+  final Function(BuildContext) onReactionButtonPressed; // Callback com contexto do botão
   final VoidCallback onOptionsPressed;
 
   const PostCard({
     required this.post,
-    required this.onReactionPressed,
+    required this.currentUserReaction,
+    required this.reactionCount,
+    required this.onReactionButtonPressed,
     required this.onOptionsPressed,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Determina o emoji e a cor a serem exibidos com base na reação atual
+    final String displayEmoji;
+    final Color displayColor;
+
+    if (currentUserReaction != null) {
+      displayEmoji = reactionEmojiMap[currentUserReaction] ?? kDefaultReactionEmoji; // Usa o emoji mapeado ou padrão
+      displayColor = Colors.blue; // Ou outra cor para indicar que *há* uma reação
+    } else {
+      displayEmoji = kDefaultReactionEmoji; // Emoji de 'like' padrão
+      displayColor = Colors.grey; // Cor cinza para indicar ausência de reação do usuário
+    }
+
+
     return Card(
-      margin: kCardMargin, // Use constant margin
+      margin: kCardMargin,
       color: kBackgroundColor,
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
+          // --- Cabeçalho do Post ---
           ListTile(
             leading: CircleAvatar(
-              backgroundImage: Image.network(post.publisherImageUrl).image,
-              foregroundImage: Image.network(post.publisherImageUrl).image,
+              backgroundColor: kPlaceholderColor, // Cor de fundo enquanto carrega
+              backgroundImage: NetworkImage(post.publisherImageUrl),
+              onBackgroundImageError: (exception, stackTrace) {
+                // Opcional: Logar erro ou mostrar inicial
+                if (kDebugMode) print("Erro ao carregar imagem do perfil: $exception");
+              },
             ),
             title: Text(
-              '${post.publisherFirstName} ${post.publisherLastName}', // Access model property
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+              '${post.publisherFirstName} ${post.publisherLastName}',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             trailing: IconButton(
               icon: const Icon(Icons.more_horiz, color: Colors.white),
-              onPressed: onOptionsPressed, // Use callback
+              onPressed: onOptionsPressed,
             ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12.0,
-            ), // Adjust padding if needed
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
           ),
 
-          // Image Section
-          SizedBox(
-            height: 330, // Use constant
-            child: post.images != null && post.images.isNotEmpty
-                 ? ImageCarouselWithIndicator(imageUrls: post.images,)
-                 : const Center(child: Text("No Image", style: TextStyle(color: Colors.grey))),
-          ),
+          // --- Imagem/Carrossel do Post ---
+          if (post.images.isNotEmpty) // Só mostra o container se houver imagens
+            SizedBox(
+              height: kPostImageHeight, // Use constant
+              child: ImageCarouselWithIndicator(imageUrls: post.images),
+            )
+          else
+            const SizedBox(height: 10), // Espaço se não houver imagem
 
-          SizedBox(height: 15),
-
-          // Action Bar Section (Reactions, Comments, Shares)
+          // --- Barra de Ações (Reações, Comentários, Shares) ---
           Padding(
-            padding: kDefaultPadding, // Use constant padding
+            padding: kDefaultPadding,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Left side actions (Reaction, Likes, Comments)
+                // Ações da Esquerda (Reação, Contagem, Comentários)
                 Row(
                   children: [
-                    GestureDetector(
-                      onTap: onReactionPressed, // Use callback
-                      child: Text(
-                        '', // Access model property
-                        style: const TextStyle(fontSize: 24),
-                      ),
+                    // Botão de Reação (Usa um Builder para obter o contexto específico do botão)
+                    Builder(
+                        builder: (buttonContext) {
+                          return InkWell( // Adiciona feedback visual ao toque
+                            onTap: () => onReactionButtonPressed(buttonContext), // Chama o callback com o contexto
+                            borderRadius: BorderRadius.circular(4),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                              child: Text(
+                                displayEmoji,
+                                style: const TextStyle(fontSize: 24),
+                              ),
+                            ),
+                          );
+                        }
                     ),
                     const SizedBox(width: 6),
-                    // Combine icon/text for semantic grouping if needed
+                    // Contagem de Reações
                     Text(
-                      '${20}', // Access model property
-                      style: const TextStyle(color: Colors.white),
+                      '$reactionCount', // Mostra a contagem total
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
                     ),
                     const SizedBox(width: 16),
+                    // Ícone e Contagem de Comentários (TODO: Adicionar contagem real)
                     const Icon(
                       Icons.chat_bubble_outline,
                       color: Colors.white,
                       size: 20,
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      '${2}', // Access model property
-                      style: const TextStyle(color: Colors.white),
+                    const Text(
+                      '0', // Placeholder - TODO: Obter contagem de comentários
+                      style: TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ],
                 ),
-                // Right side actions (Shares)
+                // Ações da Direita (Compartilhar - TODO: Adicionar contagem real)
                 Row(
                   children: [
                     const Icon(
-                      Icons.send_outlined,
+                      Icons.send_outlined, // Ou Icons.share
                       color: Colors.white,
                       size: 20,
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      '${2}', // Access model property
-                      style: const TextStyle(color: Colors.white),
+                    const Text(
+                      '0', // Placeholder - TODO: Obter contagem de compartilhamentos
+                      style: TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ],
                 ),
@@ -366,19 +525,12 @@ class PostCard extends StatelessWidget {
             ),
           ),
 
-          // Description Section
+          // --- Descrição/Conteúdo do Post ---
           Padding(
-            padding: const EdgeInsets.fromLTRB(
-              12.0,
-              12.0,
-              12.0,
-              12.0,
-            ), // Adjusted padding
+            padding: const EdgeInsets.fromLTRB(12.0, 0, 12.0, 12.0), // Ajustado padding top
             child: Text(
-              post.content, // Placeholder description
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
-              ), // Use opacity for subtlety
+              post.content,
+              style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
             ),
           ),
         ],
@@ -387,57 +539,60 @@ class PostCard extends StatelessWidget {
   }
 }
 
-// --- Reaction Popup Widget --- (Largely unchanged, already well-structured)
-class ReactionPopup extends StatefulWidget {
-  final Function(String) onEmojiSelected;
+
+// --- Reaction Popup Widget --- (Modificado para retornar ReactionType)
+class ReactionPopup extends StatelessWidget {
+  final Function(ReactionType) onEmojiSelected; // Retorna o Enum
 
   const ReactionPopup({required this.onEmojiSelected, super.key});
 
-  @override
-  _ReactionPopupState createState() => _ReactionPopupState();
-}
-
-class _ReactionPopupState extends State<ReactionPopup> {
-  // Could be made a constant if never changed
-  final List<String> _reactionEmojis = const [
-    '👍',
-    '❤️',
-    '😂',
-    '😮',
-    '😢',
-    '😡',
-  ];
+  // Mapeamento inverso de Emoji para ReactionType
+  static final Map<String, ReactionType> _emojiToReactionType = {
+    for (var entry in reactionEmojiMap.entries) entry.value : entry.key
+  };
 
   @override
   Widget build(BuildContext context) {
+    // Pega apenas os emojis que temos no mapeamento (garante consistência)
+    final List<String> reactionEmojis = reactionEmojiMap.values.toList();
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10), // Ajuste no padding
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95), // Slightly less transparent
+        color: Colors.white.withOpacity(0.98), // Quase opaco
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15), // Softer shadow
-            blurRadius: 15,
-            spreadRadius: 1,
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+            spreadRadius: 0,
           ),
         ],
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min, // Important for Dialog sizing
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children:
-            _reactionEmojis.map((emoji) {
-              return GestureDetector(
-                onTap:
-                    () => widget.onEmojiSelected(emoji), // Use arrow function
-                // Add InkWell or similar for visual feedback on tap if desired
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(emoji, style: const TextStyle(fontSize: 28)),
-                ),
-              );
-            }).toList(),
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center, // Centraliza os emojis
+        children: reactionEmojis.map((emoji) {
+          // Adiciona espaçamento entre os emojis
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6.0), // Espaçamento
+            child: InkWell( // Usar InkWell para feedback visual
+              onTap: () {
+                final reactionType = _emojiToReactionType[emoji];
+                if (reactionType != null) {
+                  onEmojiSelected(reactionType); // Chama o callback com o Enum
+                } else {
+                  if (kDebugMode) print("Erro: Emoji '$emoji' não mapeado para ReactionType.");
+                }
+              },
+              borderRadius: BorderRadius.circular(20), // Raio para o InkWell
+              child: Text(
+                emoji,
+                style: const TextStyle(fontSize: 28),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
