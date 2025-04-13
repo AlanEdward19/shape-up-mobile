@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'; // Para kDebugMode (já estava no seu DTO)
-import 'package:shape_up_app/components/imageCarouselWithIndicators.dart'; // Assumindo que você tem este componente
-import 'package:shape_up_app/models/socialServiceReponses.dart';
-import 'package:shape_up_app/services/AuthenticationService.dart';
-import 'package:shape_up_app/services/SocialService.dart';
-// Removido: import 'package:shape_up_app/components/bottomNavBar.dart'; // Não usado neste arquivo
+import 'package:shape_up_app/components/image_carousel_with_indicators.dart'; // Assumindo que você tem este componente
+import 'package:shape_up_app/dtos/socialService/post_comment_dto.dart';
+import 'package:shape_up_app/dtos/socialService/post_dto.dart';
+import 'package:shape_up_app/dtos/socialService/post_reaction_dto.dart';
+import 'package:shape_up_app/enums/socialService/reaction_type.dart';
+import 'package:shape_up_app/services/authentication_service.dart';
+import 'package:shape_up_app/services/social_service.dart';
+import 'package:shape_up_app/widgets/socialService/comments/comments_modal.dart';
 
 // --- Constantes ---
 const Color kBackgroundColor = Color(0xFF191F2B);
@@ -91,7 +94,7 @@ class _FeedState extends State<Feed> {
 
           if(comments.isNotEmpty){
             PostCommentDto? userComment = comments.firstWhere(
-                  (c) => c.profileId == currentUserId);
+                  (c) => c!.profileId == currentUserId);
 
             if(userComment != null) {
               userComments[post.id] = userComment.content;
@@ -343,6 +346,7 @@ class _FeedState extends State<Feed> {
                 currentUserReaction: currentUserReaction,
                 reactionCount: reactionCount,
                 commentCount: commentCount,
+                comments: commentsList,
                 onReactionButtonPressed: (buttonContext) => _showReactionPopup(buttonContext, post.id),
                 onReactionSelected: (postId, reactionType) {
                   _handleReactionSelected(postId, reactionType);
@@ -481,6 +485,7 @@ class PostCard extends StatelessWidget {
   final ReactionType? currentUserReaction;
   final int reactionCount;
   final int commentCount;
+  final List<PostCommentDto> comments;
   final Function(BuildContext) onReactionButtonPressed;
   final Function(String, ReactionType) onReactionSelected;
   final VoidCallback onOptionsPressed;
@@ -491,6 +496,7 @@ class PostCard extends StatelessWidget {
     required this.currentUserReaction,
     required this.reactionCount,
     required this.commentCount,
+    required this.comments,
     required this.onReactionButtonPressed,
     required this.onOptionsPressed,
     required this.onReactionSelected,
@@ -592,12 +598,15 @@ class PostCard extends StatelessWidget {
                     const SizedBox(width: 16),
 
                     // Ícone e Contagem de Comentários (TODO: Adicionar contagem real)
-                    const Icon(
-                      Icons.chat_bubble_outline,
-                      color: Colors.white,
-                      size: 20,
+                    IconButton(
+                      icon : const Icon(Icons.chat_bubble_outline, color: Colors.white, size: 20),
+                      onPressed: (){
+                        showCommentsModal(context, post.id, comments);
+                      },
                     ),
                     const SizedBox(width: 6),
+
+                    // Quantidade de Comentários
                     Text(
                       '$commentCount',
                       style: TextStyle(color: Colors.white, fontSize: 14),

@@ -2,8 +2,18 @@ import 'dart:convert';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:shape_up_app/models/socialServiceReponses.dart';
-import 'package:shape_up_app/services/AuthenticationService.dart';
+import 'package:shape_up_app/dtos/socialService/follow_user_dto.dart';
+import 'package:shape_up_app/dtos/socialService/friend_dto.dart';
+import 'package:shape_up_app/dtos/socialService/friend_request_dto.dart';
+import 'package:shape_up_app/dtos/socialService/post_comment_dto.dart';
+import 'package:shape_up_app/dtos/socialService/post_dto.dart';
+import 'package:shape_up_app/dtos/socialService/post_reaction_dto.dart';
+import 'package:shape_up_app/dtos/socialService/profile_dto.dart';
+import 'package:shape_up_app/dtos/socialService/profile_search_result_dto.dart';
+import 'package:shape_up_app/enums/socialService/gender.dart';
+import 'package:shape_up_app/enums/socialService/reaction_type.dart';
+import 'package:shape_up_app/enums/socialService/visibility.dart';
+import 'package:shape_up_app/services/authentication_service.dart';
 
 class SocialService {
   static final String baseUrl = dotenv.env['SOCIAL_SERVICE_BASE_URL']!;
@@ -276,13 +286,13 @@ class SocialService {
   static Future<void> editPostAsync(String commentId, String content) async {
     var token = await AuthenticationService.getToken();
 
-    final response = await http.patch(
+    final response = await http.put(
       Uri.parse('$baseUrl/v1/Post/$commentId/editComment'),
       headers: createHeaders(token),
       body: jsonEncode({'content': content}),
     );
 
-    if (response.statusCode != 201) {
+    if (response.statusCode != 204) {
       throw Exception("Erro ao editar post");
     }
   }

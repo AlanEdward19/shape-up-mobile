@@ -1,11 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shape_up_app/pages/feed.dart';
-import 'package:shape_up_app/services/AuthenticationService.dart';
+import 'package:shape_up_app/services/authentication_service.dart';
 
-import '../components/backButton.dart';
-import '../components/shapeUpLogo.dart';
-import '../functions/changePage.dart';
+import '../components/back_button.dart';
+import '../components/shape_up_logo.dart';
+import '../functions/change_page.dart';
 
 class Login extends StatefulWidget {
   Login({super.key});

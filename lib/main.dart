@@ -1,11 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:shape_up_app/components/bottomNavBar.dart';
+import 'package:shape_up_app/components/bottom_nav_bar.dart';
 import 'package:shape_up_app/pages/feed.dart';
 import 'package:shape_up_app/pages/main.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:shape_up_app/services/AuthenticationService.dart';
+import 'package:shape_up_app/services/authentication_service.dart';
 
 import 'firebase_options.dart';
 

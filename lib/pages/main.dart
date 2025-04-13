@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:shape_up_app/functions/changePage.dart';
+import 'package:shape_up_app/functions/change_page.dart';
 import 'package:shape_up_app/pages/login.dart';
 
-import '../components/shapeUpLogo.dart';
-import '../models/carouselItem.dart';
+import '../components/shape_up_logo.dart';
+import '../models/carousel_item.dart';
 
 class Main extends StatelessWidget {
   Main({super.key});
