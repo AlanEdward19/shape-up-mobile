@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shape_up_app/enums/socialService/gender.dart';
 
 class ProfileDto {
@@ -34,6 +35,14 @@ class ProfileDto {
       );
 
   factory ProfileDto.fromJson(Map<String, dynamic> json) {
+    String birthDate = json.containsKey("birthDate") ? json['birthDate'] : "";
+    Gender gender = json.containsKey("gender") ? (genderMap[json["gender"]] ?? Gender.male) : Gender.male;
+    String imageUrl = json["imageUrl"];
+
+    if (kDebugMode) {
+      imageUrl = imageUrl.replaceFirst("127.0.0.1", "10.0.2.2");
+    }
+
     return ProfileDto(
       json['id'],
       json['firstName'],
@@ -41,11 +50,11 @@ class ProfileDto {
       json['city'],
       json['state'],
       json['country'],
-      json['birthDate'],
+      birthDate,
       json['bio'],
-      Gender.values.firstWhere((v) => v.name == json['gender']),
+      gender,
       json['email'],
-      json['imageUrl'],
+      imageUrl,
       json['followers'],
       json['following'],
       json['posts'],

@@ -648,7 +648,6 @@ class PostCard extends StatelessWidget {
   }
 }
 
-
 // --- Reaction Popup Widget --- (Modificado para retornar ReactionType)
 class ReactionPopup extends StatelessWidget {
   final Function(ReactionType) onEmojiSelected; // Retorna o Enum

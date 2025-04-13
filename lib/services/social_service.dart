@@ -140,6 +140,22 @@ class SocialService {
     }
   }
 
+  static Future<List<PostDto>> getPostsByProfileIdAsync(String profileId) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/v1/Profile/$profileId/getPosts'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> jsonList = jsonDecode(response.body);
+      return PostDto.fromJsonList(jsonList);
+    } else {
+      throw Exception("Erro ao carregar post");
+    }
+  }
+
   static Future<List<PostDto>> getActivityFeedAsync() async {
     var token = await AuthenticationService.getToken();
 
