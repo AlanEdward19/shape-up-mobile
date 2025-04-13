@@ -32,7 +32,9 @@ class MyApp extends StatelessWidget {
           if (snapshot.hasData && snapshot.data != null) {
             Future.microtask(() async {
               String token = (await snapshot.data!.getIdToken())!;
+              String profileId = snapshot.data!.uid;
               AuthenticationService.saveToken(token);
+              AuthenticationService.saveProfileId(profileId);
             });
 
             return BottomNavBar();

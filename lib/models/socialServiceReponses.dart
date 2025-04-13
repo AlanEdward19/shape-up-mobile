@@ -31,18 +31,19 @@ const Map<int, Visibility> visibilityMap = {
   2: Visibility.private,
 };
 
-const Map<int, ReactionType> reactionTypeMap = {
-  0: ReactionType.like,
-  1: ReactionType.dislike,
-  2: ReactionType.love,
-  3: ReactionType.haha,
-  4: ReactionType.wow,
-  5: ReactionType.sad,
-  6: ReactionType.angry,
-  7: ReactionType.care,
-  8: ReactionType.support,
-  9: ReactionType.celebrate,
+const Map<ReactionType, int> reactionTypeMap = {
+  ReactionType.like : 0,
+  ReactionType.dislike : 1,
+  ReactionType.love : 2,
+  ReactionType.haha : 3,
+  ReactionType.wow : 4,
+  ReactionType.sad : 5,
+  ReactionType.angry : 6,
+  ReactionType.care : 7,
+  ReactionType.support : 8,
+  ReactionType.celebrate : 9,
 };
+
 
 const Map<ReactionType, String> reactionEmojiMap = {
   ReactionType.like: "👍",
@@ -54,7 +55,7 @@ const Map<ReactionType, String> reactionEmojiMap = {
   ReactionType.angry: "😠",
   ReactionType.care: "🤗",
   ReactionType.support: "💪",
-  ReactionType.celebrate: "🎉",
+  ReactionType.celebrate: "🎉"
 };
 
 class PostReactionDto {
@@ -76,7 +77,7 @@ class PostReactionDto {
     return PostReactionDto(
       json['profileId'],
       json['createdAt'],
-      reactionTypeMap.values.firstWhere((v) => v.name == json['reactionType']),
+      ReactionType.values.firstWhere((e) => e.name == json['reactionType'].toString().toLowerCase()),
       json['postId'],
       json['id'],
     );

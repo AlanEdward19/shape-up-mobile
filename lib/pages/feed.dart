@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'; // Para kDebugMode (já estava no seu DTO)
 import 'package:shape_up_app/components/imageCarouselWithIndicators.dart'; // Assumindo que você tem este componente
 import 'package:shape_up_app/models/socialServiceReponses.dart';
+import 'package:shape_up_app/services/AuthenticationService.dart';
 import 'package:shape_up_app/services/SocialService.dart';
 // Removido: import 'package:shape_up_app/components/bottomNavBar.dart'; // Não usado neste arquivo
 
@@ -18,13 +19,10 @@ const EdgeInsets kCardMargin = EdgeInsets.symmetric(
 );
 const double kStoryAvatarSize = 66.0;
 const double kStoryAvatarRadius = 30.0;
-const double kPostImageHeight = 330.0; // Ajustado para o valor usado no PostCard
-const ReactionType kDefaultReactionType = ReactionType.like; // Reação padrão
-const String kDefaultReactionEmoji = '👍'; // Emoji padrão (like cinza por ex, mas usamos o mapeado)
+const double kPostImageHeight = 330.0;
+const ReactionType kDefaultReactionType = ReactionType.like;
+String kDefaultReactionEmoji = reactionEmojiMap[kDefaultReactionType] ?? "👍";
 
-// --- Modelo de Estado do Post (para UI) ---
-// Não usaremos mais o PostModel antigo, vamos gerenciar com Maps no State
-// class PostModel { ... } // Removido
 
 class Feed extends StatefulWidget {
   const Feed({super.key});
@@ -34,13 +32,12 @@ class Feed extends StatefulWidget {
 }
 
 class _FeedState extends State<Feed> {
-  // --- Estados ---
   bool _isLoading = true;
   String? _error;
   List<PostDto> _posts = [];
-  // Mapa para guardar a reação ATUAL do usuário logado para cada post ID
+
   Map<String, ReactionType?> _currentUserReactions = {};
-  // Mapa para guardar a lista COMPLETA de reações de cada post ID (para contagem)
+
   Map<String, List<PostReactionDto>> _allPostReactions = {};
 
   // Story status (mantido como exemplo simples)
@@ -54,7 +51,7 @@ class _FeedState extends State<Feed> {
     _loadFeedData();
   }
 
-  // --- Carregamento de Dados ---
+
   Future<void> _loadFeedData() async {
     setState(() {
       _isLoading = true;
@@ -64,38 +61,26 @@ class _FeedState extends State<Feed> {
       final posts = await SocialService.getActivityFeedAsync();
       _posts = posts;
 
-      // Após carregar os posts, buscar as reações para cada um
-      // NOTA: Isso faz N chamadas adicionais (N = nº de posts).
-      // O ideal seria a API de feed já retornar a contagem e a reação do usuário.
       Map<String, ReactionType?> userReactions = {};
       Map<String, List<PostReactionDto>> allReactions = {};
 
-      // TODO: Precisamos saber o ID do usuário logado para filtrar a reação dele.
-      // Supondo que AuthenticationService possa fornecer isso:
-      // final String currentUserId = await AuthenticationService.getCurrentUserId(); // Método hipotético
+      final String currentUserId = await AuthenticationService.getProfileId();
 
       for (var post in posts) {
         try {
           final reactions = await SocialService.getPostReactionsAsync(post.id);
           allReactions[post.id] = reactions;
-          // Encontra a reação do usuário atual (se existir)
-          // Substitua 'CURRENT_USER_ID_PLACEHOLDER' pelo ID real do usuário logado
-          // userReactions[post.id] = reactions
-          //     .firstWhere(
-          //         (reaction) => reaction.profileId == currentUserId,
-          //         orElse: () => null) // Precisa ajustar o tipo de retorno do orElse se PostReactionDto não for nullable
-          //     ?.reactionType;
 
-          // --- Simulação SEM ID do usuário ---
-          // Apenas para demonstração, vamos pegar a primeira reação como se fosse a do usuário
           if (reactions.isNotEmpty) {
-            // Tenta encontrar 'like' como exemplo, ou pega a primeira
-            final userReaction = reactions.firstWhere(
-                    (r) => r.reactionType == ReactionType.like, // Exemplo: prioriza 'like'
-                orElse: () => reactions.first
-            );
-            // Assumimos que esta é a do usuário logado para fins de UI AQUI
-            userReactions[post.id] = userReaction.reactionType;
+
+            PostReactionDto? userReaction = reactions.firstWhere(
+                  (r) => r.profileId == currentUserId);
+
+            if(userReaction != null) {
+              userReactions[post.id] = userReaction.reactionType;
+            } else {
+              userReactions[post.id] = null;
+            }
           } else {
             userReactions[post.id] = null;
           }
@@ -132,13 +117,14 @@ class _FeedState extends State<Feed> {
   Future<void> _handleReactionSelected(String postId, ReactionType selectedReaction) async {
     final currentReaction = _currentUserReactions[postId];
     final originalReactions = List<PostReactionDto>.from(_allPostReactions[postId] ?? []);
+    final String currentUserId = await AuthenticationService.getProfileId();
 
     // 1. Atualização Otimista da UI
     setState(() {
       if (currentReaction == selectedReaction) {
         // Clicou na mesma reação -> Remover
         _currentUserReactions[postId] = null;
-        _allPostReactions[postId]?.removeWhere((r) => /*r.profileId == currentUserId &&*/ r.reactionType == selectedReaction); // Precisa do ID do usuário real
+        _allPostReactions[postId]?.removeWhere((r) => r.profileId == currentUserId);
       } else {
         // Nova reação ou mudou de reação
         _currentUserReactions[postId] = selectedReaction;
@@ -172,8 +158,6 @@ class _FeedState extends State<Feed> {
         await SocialService.reactToPostAsync(postId, selectedReaction);
       }
 
-      // 3. (Opcional mas recomendado) Rebuscar reações para garantir consistência total
-      // Isso atualiza a contagem corretamente e pega o estado real do servidor.
       final updatedReactions = await SocialService.getPostReactionsAsync(postId);
       setState(() {
         _allPostReactions[postId] = updatedReactions;
@@ -213,25 +197,62 @@ class _FeedState extends State<Feed> {
 
   // Mostra o popup de seleção de reações
   void _showReactionPopup(BuildContext context, String postId) {
-    // Obtém a posição do botão para posicionar o popup (opcional, mas melhora a UX)
-    // RenderBox renderBox = context.findRenderObject() as RenderBox;
-    // var offset = renderBox.localToGlobal(Offset.zero);
+    final RenderBox buttonBox = context.findRenderObject() as RenderBox;
+    final Offset buttonPosition = buttonBox.localToGlobal(Offset.zero);
+    final Size buttonSize = buttonBox.size;
 
     showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.3), // Fundo semi-transparente
+      barrierColor: Colors.transparent,
       builder: (dialogContext) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          // Posicionamento (opcional - requer mais lógica com GlobalKey no botão)
-          // insetPadding: EdgeInsets.only(left: offset.dx, top: offset.dy - 100), // Exemplo
-          child: ReactionPopup(
-            onEmojiSelected: (ReactionType selectedReaction) {
-              Navigator.of(dialogContext).pop(); // Fecha o popup primeiro
-              _handleReactionSelected(postId, selectedReaction); // Chama a lógica de reação
-            },
-          ),
+        return Stack(
+          children: [
+            Positioned(
+              left: buttonPosition.dx + buttonSize.width / 2 - 30,
+              top: buttonPosition.dy + buttonSize.height - 100,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 6,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: reactionEmojiMap.values.map((emoji) {
+                        return GestureDetector(
+                          onTap: () {
+                            final reactionType = ReactionPopup._emojiToReactionType[emoji];
+                            if (reactionType != null) {
+                              Navigator.of(dialogContext).pop();
+                              _handleReactionSelected(postId, reactionType);
+                            }
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                            child: Text(
+                              emoji,
+                              style: const TextStyle(fontSize: 22),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -303,8 +324,10 @@ class _FeedState extends State<Feed> {
                 post: post,
                 currentUserReaction: currentUserReaction,
                 reactionCount: reactionCount,
-                // Passa o CONTEXTO do item para o popup saber onde foi clicado (para posicionamento futuro)
                 onReactionButtonPressed: (buttonContext) => _showReactionPopup(buttonContext, post.id),
+                onReactionSelected: (postId, reactionType) {
+                  _handleReactionSelected(postId, reactionType);
+                },
                 onOptionsPressed: () { /* TODO: Implement options logic */ },
               );
             }
@@ -397,6 +420,7 @@ class PostCard extends StatelessWidget {
   final ReactionType? currentUserReaction; // Reação atual do usuário
   final int reactionCount; // Contagem total
   final Function(BuildContext) onReactionButtonPressed; // Callback com contexto do botão
+  final Function(String, ReactionType) onReactionSelected;
   final VoidCallback onOptionsPressed;
 
   const PostCard({
@@ -405,6 +429,7 @@ class PostCard extends StatelessWidget {
     required this.reactionCount,
     required this.onReactionButtonPressed,
     required this.onOptionsPressed,
+    required this.onReactionSelected,
     super.key,
   });
 
@@ -474,7 +499,16 @@ class PostCard extends StatelessWidget {
                     Builder(
                         builder: (buttonContext) {
                           return InkWell( // Adiciona feedback visual ao toque
-                            onTap: () => onReactionButtonPressed(buttonContext), // Chama o callback com o contexto
+                            onTap: () {
+                              if (currentUserReaction != null) {
+                                onReactionSelected(post.id, currentUserReaction!); // Chama o callback
+                              } else {
+                                onReactionSelected(post.id, ReactionType.like); // Chama o callback
+                              }
+                            },
+                            onLongPress: () {
+                              onReactionButtonPressed(buttonContext);
+                            },
                             borderRadius: BorderRadius.circular(4),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),

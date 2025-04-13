@@ -194,9 +194,7 @@ class SocialService {
     final url = '$baseUrl/v1/Post/$postId/react';
     final headers = createHeaders(token);
     final body = jsonEncode({
-      'command': {
-        'reactionType': reactionType.name, // Ensure this matches the server's enum
-      }
+      'reactionType': reactionTypeMap[reactionType]
     });
 
     print('Request URL: $url');
