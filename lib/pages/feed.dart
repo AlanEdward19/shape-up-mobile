@@ -39,6 +39,7 @@ class _FeedState extends State<Feed> {
   Map<String, ReactionType?> _currentUserReactions = {};
 
   Map<String, List<PostReactionDto>> _allPostReactions = {};
+  Map<String, List<PostCommentDto>> _allPostComments = {};
 
   // Story status (mantido como exemplo simples)
   final List<bool> _storyStatus = [
@@ -62,6 +63,7 @@ class _FeedState extends State<Feed> {
       _posts = posts;
 
       Map<String, ReactionType?> userReactions = {};
+      Map<String, String?> userComments = {};
       Map<String, List<PostReactionDto>> allReactions = {};
 
       final String currentUserId = await AuthenticationService.getProfileId();
@@ -72,7 +74,6 @@ class _FeedState extends State<Feed> {
           allReactions[post.id] = reactions;
 
           if (reactions.isNotEmpty) {
-
             PostReactionDto? userReaction = reactions.firstWhere(
                   (r) => r.profileId == currentUserId);
 
@@ -84,8 +85,23 @@ class _FeedState extends State<Feed> {
           } else {
             userReactions[post.id] = null;
           }
-          // --- Fim Simulação ---
 
+          final comments = await SocialService.getPostCommentsAsync(post.id);
+          _allPostComments[post.id] = comments;
+
+          if(comments.isNotEmpty){
+            PostCommentDto? userComment = comments.firstWhere(
+                  (c) => c.profileId == currentUserId);
+
+            if(userComment != null) {
+              userComments[post.id] = userComment.content;
+            } else {
+              userComments[post.id] = null;
+            }
+          }
+          else {
+            userComments[post.id] = null;
+          }
 
         } catch (e) {
           // Erro ao carregar reações para UM post específico, não impede o resto
@@ -318,12 +334,15 @@ class _FeedState extends State<Feed> {
               final post = _posts[postIndex];
               final currentUserReaction = _currentUserReactions[post.id];
               final reactionsList = _allPostReactions[post.id] ?? [];
+              final commentsList = _allPostComments[post.id] ?? [];
               final reactionCount = reactionsList.length;
+              final commentCount = commentsList.length;
 
               return PostCard(
                 post: post,
                 currentUserReaction: currentUserReaction,
                 reactionCount: reactionCount,
+                commentCount: commentCount,
                 onReactionButtonPressed: (buttonContext) => _showReactionPopup(buttonContext, post.id),
                 onReactionSelected: (postId, reactionType) {
                   _handleReactionSelected(postId, reactionType);
@@ -459,9 +478,10 @@ class StoryAvatar extends StatelessWidget {
 // --- Post Card Widget --- (Modificado para aceitar e exibir estado da reação)
 class PostCard extends StatelessWidget {
   final PostDto post;
-  final ReactionType? currentUserReaction; // Reação atual do usuário
-  final int reactionCount; // Contagem total
-  final Function(BuildContext) onReactionButtonPressed; // Callback com contexto do botão
+  final ReactionType? currentUserReaction;
+  final int reactionCount;
+  final int commentCount;
+  final Function(BuildContext) onReactionButtonPressed;
   final Function(String, ReactionType) onReactionSelected;
   final VoidCallback onOptionsPressed;
   final Widget Function(String) buildReactionIcons;
@@ -470,6 +490,7 @@ class PostCard extends StatelessWidget {
     required this.post,
     required this.currentUserReaction,
     required this.reactionCount,
+    required this.commentCount,
     required this.onReactionButtonPressed,
     required this.onOptionsPressed,
     required this.onReactionSelected,
@@ -542,12 +563,12 @@ class PostCard extends StatelessWidget {
                     // Botão de Reação (Usa um Builder para obter o contexto específico do botão)
                     Builder(
                         builder: (buttonContext) {
-                          return InkWell( // Adiciona feedback visual ao toque
+                          return InkWell(
                             onTap: () {
                               if (currentUserReaction != null) {
-                                onReactionSelected(post.id, currentUserReaction!); // Chama o callback
+                                onReactionSelected(post.id, currentUserReaction!);
                               } else {
-                                onReactionSelected(post.id, ReactionType.like); // Chama o callback
+                                onReactionSelected(post.id, ReactionType.like);
                               }
                             },
                             onLongPress: () {
@@ -562,12 +583,14 @@ class PostCard extends StatelessWidget {
                         }
                     ),
                     const SizedBox(width: 6),
-                    // Contagem de Reações
+
+                    // Quantidade de Reações
                     Text(
                       '$reactionCount', // Mostra a contagem total
                       style: const TextStyle(color: Colors.white, fontSize: 14),
                     ),
                     const SizedBox(width: 16),
+
                     // Ícone e Contagem de Comentários (TODO: Adicionar contagem real)
                     const Icon(
                       Icons.chat_bubble_outline,
@@ -575,12 +598,13 @@ class PostCard extends StatelessWidget {
                       size: 20,
                     ),
                     const SizedBox(width: 6),
-                    const Text(
-                      '0', // Placeholder - TODO: Obter contagem de comentários
+                    Text(
+                      '$commentCount',
                       style: TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ],
                 ),
+
                 // Ações da Direita (Compartilhar - TODO: Adicionar contagem real)
                 Row(
                   children: [
@@ -596,6 +620,7 @@ class PostCard extends StatelessWidget {
                     ),
                   ],
                 ),
+
               ],
             ),
           ),
