@@ -328,6 +328,7 @@ class _FeedState extends State<Feed> {
                 onReactionSelected: (postId, reactionType) {
                   _handleReactionSelected(postId, reactionType);
                 },
+                buildReactionIcons: (postId) => _buildReactionIcons(postId),
                 onOptionsPressed: () { /* TODO: Implement options logic */ },
               );
             }
@@ -335,6 +336,47 @@ class _FeedState extends State<Feed> {
         ),
       );
     }
+  }
+
+  Widget _buildReactionIcons(String postId) {
+    final reactions = _allPostReactions[postId] ?? [];
+    if (reactions.isEmpty) {
+      // Caso não haja reações, exibe o ícone padrão de "like"
+      return Text(
+        kDefaultReactionEmoji,
+        style: const TextStyle(fontSize: 22),
+      );
+    }
+
+    // Conta as reações por tipo
+    final reactionCounts = <ReactionType, int>{};
+    for (var reaction in reactions) {
+      reactionCounts[reaction.reactionType] =
+          (reactionCounts[reaction.reactionType] ?? 0) + 1;
+    }
+
+    // Ordena as reações pela quantidade (decrescente)
+    final sortedReactions = reactionCounts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final topReactions = sortedReactions.take(3);
+
+    // Gera os emojis ordenados
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: topReactions.map((entry) {
+          final emoji = reactionEmojiMap[entry.key] ?? kDefaultReactionEmoji;
+          return Padding(
+            padding: const EdgeInsets.only(right: 4.0), // Ajuste no espaçamento
+            child: Text(
+              emoji,
+              style: const TextStyle(fontSize: 24),
+            ),
+          );
+        }).toList(),
+      ),
+    );
   }
 }
 
@@ -422,6 +464,7 @@ class PostCard extends StatelessWidget {
   final Function(BuildContext) onReactionButtonPressed; // Callback com contexto do botão
   final Function(String, ReactionType) onReactionSelected;
   final VoidCallback onOptionsPressed;
+  final Widget Function(String) buildReactionIcons;
 
   const PostCard({
     required this.post,
@@ -430,6 +473,7 @@ class PostCard extends StatelessWidget {
     required this.onReactionButtonPressed,
     required this.onOptionsPressed,
     required this.onReactionSelected,
+    required this.buildReactionIcons,
     super.key,
   });
 
@@ -512,10 +556,7 @@ class PostCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                              child: Text(
-                                displayEmoji,
-                                style: const TextStyle(fontSize: 24),
-                              ),
+                              child: buildReactionIcons(post.id),
                             ),
                           );
                         }
