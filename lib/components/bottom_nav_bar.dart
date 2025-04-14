@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shape_up_app/pages/feed.dart';
+import 'package:shape_up_app/pages/friends.dart';
 import 'package:shape_up_app/pages/nutrition.dart';
 import 'package:shape_up_app/pages/profile.dart';
 import 'package:shape_up_app/pages/training.dart';
@@ -16,8 +17,8 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   @override
   void initState() {
-    super.initState();
     _loadProfileId();
+    super.initState();
   }
 
   Future<void> _loadProfileId() async {
@@ -37,6 +38,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
   Widget build(BuildContext context) {
     final List<Widget> _pages = [
       Feed(),
+      Friends(),
       Training(),
       Nutrition(),
       _profileId != null ? Profile(profileId: _profileId!) : const Center(child: CircularProgressIndicator()),
@@ -56,6 +58,11 @@ class _BottomNavBarState extends State<BottomNavBar> {
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home),
             label: 'Feed',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.group_outlined),
+            activeIcon: Icon(Icons.group),
+            label: 'Amigos',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.fitness_center_outlined),
