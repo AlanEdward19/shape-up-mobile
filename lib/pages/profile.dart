@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shape_up_app/dtos/socialService/profile_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_dto.dart';
+import 'package:shape_up_app/pages/settings.dart';
 import 'package:shape_up_app/services/social_service.dart';
 
 class Profile extends StatefulWidget {
@@ -33,7 +34,24 @@ class _ProfilePageState extends State<Profile> {
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () {
-              // Navegar para a página de configurações
+              Navigator.of(context).push(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => const Settings(),
+                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                    const begin = Offset(1.0, 0.0); // Começa fora da tela (direita)
+                    const end = Offset.zero; // Termina na posição original
+                    const curve = Curves.easeInOut;
+
+                    var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                    var offsetAnimation = animation.drive(tween);
+
+                    return SlideTransition(
+                      position: offsetAnimation,
+                      child: child,
+                    );
+                  },
+                ),
+              );
             },
           ),
         ],
@@ -51,18 +69,21 @@ class _ProfilePageState extends State<Profile> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+
                   // Cabeçalho do Perfil
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+
                         // Foto do perfil
                         CircleAvatar(
                           radius: 40,
                           backgroundImage: NetworkImage(profile.imageUrl),
                         ),
                         const SizedBox(width: 16),
+
                         // Informações do perfil
                         Expanded(
                           child: Column(

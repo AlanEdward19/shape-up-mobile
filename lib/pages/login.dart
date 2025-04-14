@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shape_up_app/components/bottom_nav_bar.dart';
 import 'package:shape_up_app/pages/feed.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 
@@ -289,7 +290,7 @@ class _LoginState extends State<Login> {
           if(_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
             await AuthenticationService.loginWithEmailAndPassword(_emailController.text, _passwordController.text);
 
-            changePageStateful(context, Feed());
+            changePageStateful(context, BottomNavBar());
           }
         },
         child: Row(
