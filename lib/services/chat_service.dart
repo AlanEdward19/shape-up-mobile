@@ -18,11 +18,11 @@ class ChatService {
     return headers;
   }
 
-  static Future<void> initializeConnection() async {
+  static Future<void> initializeConnection(String profileId) async {
     _hubConnection =
         HubConnectionBuilder()
             .withUrl(
-              '$baseUrl/chat',
+              '$baseUrl/chat?ProfileId=$profileId',
               HttpConnectionOptions(
                 accessTokenFactory: () async {
                   return await AuthenticationService.getToken();

@@ -1,0 +1,218 @@
+import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
+import 'package:shape_up_app/dtos/chatService/message_dto.dart';
+import 'package:shape_up_app/services/authentication_service.dart';
+import 'package:shape_up_app/services/chat_service.dart';
+
+class ChatConversation extends StatefulWidget {
+  final String profileId;
+  final String profileName;
+  final String profileImageUrl;
+
+  const ChatConversation({
+    Key? key,
+    required this.profileId,
+    required this.profileName,
+    required this.profileImageUrl,
+  }) : super(key: key);
+
+  @override
+  _ChatConversationState createState() => _ChatConversationState();
+}
+
+class _ChatConversationState extends State<ChatConversation> {
+  List<MessageDto> _messages = [];
+  bool _isLoading = true;
+  String? _userId;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeUserId();
+    _loadMessages();
+    _initializeWebSocket();
+  }
+
+  Future<void> _initializeUserId() async {
+    try {
+      final userId = await AuthenticationService.getProfileId();
+      setState(() {
+        _userId = userId;
+      });
+    } catch (e) {
+      print('Erro ao obter o ID do usuário: $e');
+    }
+  }
+
+  Future<void> _loadMessages() async {
+    try {
+      List<MessageDto> messages = await ChatService.getMessagesAsync(widget.profileId);
+      setState(() {
+        _messages = messages;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      print('Erro ao carregar mensagens: $e');
+    }
+  }
+
+  Future<void> _initializeWebSocket() async {
+    try {
+      await ChatService.initializeConnection(widget.profileId);
+    } catch (e) {
+      print('Erro ao inicializar conexão WebSocket: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    ChatService.stopConnection();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            CircleAvatar(
+              backgroundImage: NetworkImage(widget.profileImageUrl),
+            ),
+            const SizedBox(width: 8),
+            Text(widget.profileName, style: const TextStyle(color: Colors.white)),
+          ],
+        ),
+        backgroundColor: const Color(0xFF191F2B),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+
+                // Ordenar mensagens por data
+                _messages.sort((a, b) => a.timestamp!.compareTo(b.timestamp!));
+
+                final message = _messages[index];
+                final isCurrentUser = _userId != null && message.senderId == _userId;
+
+                // Verificar se é o primeiro item ou se o dia mudou
+                final bool showDateDivider = index == 0 ||
+                    DateFormat('yyyy-MM-dd').format(message.timestamp!) !=
+                        DateFormat('yyyy-MM-dd').format(_messages[index - 1].timestamp!);
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (showDateDivider)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Row(
+                          children: [
+                            const Expanded(
+                              child: Divider(
+                                color: Colors.grey,
+                                thickness: 1,
+                                endIndent: 8,
+                              ),
+                            ),
+                            Text(
+                              DateFormat("dd 'de' MMMM 'de' yyyy").format(message.timestamp!),
+                              style: const TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                            const Expanded(
+                              child: Divider(
+                                color: Colors.grey,
+                                thickness: 1,
+                                indent: 8,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    Align(
+                      alignment: isCurrentUser
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 4.0, horizontal: 8.0),
+                        padding: const EdgeInsets.all(10.0),
+                        decoration: BoxDecoration(
+                          color: isCurrentUser
+                              ? const Color(0xFF0fa0ce)
+                              : const Color(0xFF2a2f3c),
+                          borderRadius: BorderRadius.only(
+                            topLeft: const Radius.circular(12),
+                            topRight: const Radius.circular(12),
+                            bottomLeft: isCurrentUser
+                                ? const Radius.circular(12)
+                                : const Radius.circular(0),
+                            bottomRight: isCurrentUser
+                                ? const Radius.circular(0)
+                                : const Radius.circular(12),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              message.content ?? '',
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 14),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              DateFormat('HH:mm').format(message.timestamp!),
+                              style: const TextStyle(
+                                  color: Colors.grey, fontSize: 10),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          Divider(),
+          Container(
+            padding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 16.0),
+            color: const Color(0xFF191F2B),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: TextEditingController(),
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      hintText: 'Digite sua mensagem...',
+                      hintStyle: TextStyle(color: Colors.grey),
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.send, color: Color(0xFF0fa0ce)),
+                  onPressed: () {
+                    print('Mensagem enviada'); //TODO enviar mensagem
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: const Color(0xFF191F2B),
+    );
+  }
+}

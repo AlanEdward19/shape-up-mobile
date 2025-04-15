@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shape_up_app/dtos/socialService/simplified_profile_dto.dart';
+import 'package:shape_up_app/pages/chat_conversation.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/chat_service.dart';
 import 'package:shape_up_app/dtos/chatService/message_dto.dart';
@@ -55,6 +56,7 @@ class _ChatState extends State<Chat> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: Text('Conversas', style: TextStyle(color: Colors.white),),
         backgroundColor: const Color(0xFF191F2B),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -96,6 +98,18 @@ class _ChatState extends State<Chat> {
               message.content ?? '',
               style: const TextStyle(color: Colors.grey),
             ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChatConversation(
+                    profileId: profile.id,
+                    profileName: '${profile.firstName} ${profile.lastName}',
+                    profileImageUrl: profile.imageUrl,
+                  ),
+                ),
+              );
+            },
           );
         },
       ),
