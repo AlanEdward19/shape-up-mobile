@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shape_up_app/dtos/socialService/simplified_profile_dto.dart';
+import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/chat_service.dart';
 import 'package:shape_up_app/dtos/chatService/message_dto.dart';
+import 'package:shape_up_app/services/social_service.dart';
 
 class Chat extends StatefulWidget {
   const Chat({Key? key}) : super(key: key);
@@ -10,7 +13,7 @@ class Chat extends StatefulWidget {
 }
 
 class _ChatState extends State<Chat> {
-  List<MessageDto> _messages = [];
+  List<Map<String, dynamic>> _messagesWithProfiles = [];
   bool _isLoading = true;
 
   @override
@@ -21,9 +24,23 @@ class _ChatState extends State<Chat> {
 
   Future<void> _loadRecentMessages() async {
     try {
+      final userId = await AuthenticationService.getProfileId();
       List<MessageDto> messages = await ChatService.getRecentMessagesAsync();
+
+      List<Map<String, dynamic>> messagesWithProfiles = [];
+      for (var message in messages) {
+        final otherUserId = message.senderId == userId ? message.receiverId : message.senderId;
+        if (otherUserId != null) {
+          final profile = await SocialService.viewProfileSimplifiedAsync(otherUserId);
+          messagesWithProfiles.add({
+            'message': message,
+            'profile': profile,
+          });
+        }
+      }
+
       setState(() {
-        _messages = messages;
+        _messagesWithProfiles = messagesWithProfiles;
         _isLoading = false;
       });
     } catch (e) {
@@ -45,7 +62,7 @@ class _ChatState extends State<Chat> {
           ? const Center(
         child: CircularProgressIndicator(),
       )
-          : _messages.isEmpty
+          : _messagesWithProfiles.isEmpty
           ? const Center(
         child: Text(
           "Nenhuma mensagem recente.",
@@ -53,16 +70,30 @@ class _ChatState extends State<Chat> {
         ),
       )
           : ListView.builder(
-        itemCount: _messages.length,
+        itemCount: _messagesWithProfiles.length,
         itemBuilder: (context, index) {
-          final message = _messages[index];
+          final message = _messagesWithProfiles[index]['message'] as MessageDto;
+          final profile = _messagesWithProfiles[index]['profile'] as SimplifiedProfileDto;
+
           return ListTile(
-            title: Text(
-              message.content ?? '',
-              style: const TextStyle(color: Colors.white),
+            leading: CircleAvatar(
+              backgroundImage: NetworkImage(profile.imageUrl),
+            ),
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${profile.firstName} ${profile.lastName}',
+                  style: const TextStyle(color: Colors.white),
+                ),
+                Text(
+                  '${message.timestamp?.hour.toString().padLeft(2, '0')}:${message.timestamp?.minute.toString().padLeft(2, '0')} - ${message.timestamp?.day.toString().padLeft(2, '0')}/${message.timestamp?.month.toString().padLeft(2, '0')}/${message.timestamp?.year}',
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+              ],
             ),
             subtitle: Text(
-              'Enviado por: ${message.senderId}',
+              message.content ?? '',
               style: const TextStyle(color: Colors.grey),
             ),
           );

@@ -44,6 +44,8 @@ dependencies:
   flutter_dotenv: ^5.1.0
   http: ^0.13.6
   signalr_core: any
+  encrypt: ^5.0.0
+  crypto: ^3.0.0
 
 dev_dependencies:
   flutter_test:

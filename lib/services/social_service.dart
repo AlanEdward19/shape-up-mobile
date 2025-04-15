@@ -9,7 +9,7 @@ import 'package:shape_up_app/dtos/socialService/post_comment_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_reaction_dto.dart';
 import 'package:shape_up_app/dtos/socialService/profile_dto.dart';
-import 'package:shape_up_app/dtos/socialService/profile_search_result_dto.dart';
+import 'package:shape_up_app/dtos/socialService/simplified_profile_dto.dart';
 import 'package:shape_up_app/enums/socialService/gender.dart';
 import 'package:shape_up_app/enums/socialService/reaction_type.dart';
 import 'package:shape_up_app/enums/socialService/visibility.dart';
@@ -36,6 +36,21 @@ class SocialService {
 
     if (response.statusCode == 200) {
       return ProfileDto.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception("Erro ao carregar perfil");
+    }
+  }
+
+  static Future<SimplifiedProfileDto> viewProfileSimplifiedAsync(String id) async{
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/v1/Profile/ViewProfile/$id/simplified'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode == 200) {
+      return SimplifiedProfileDto.fromJson(jsonDecode(response.body));
     } else {
       throw Exception("Erro ao carregar perfil");
     }
@@ -416,7 +431,7 @@ class SocialService {
 
   //TODO implementar rota de UploadProfilePicture
 
-  static Future<List<ProfileSearchResultDto>> searchProfileByNameAsync(
+  static Future<List<SimplifiedProfileDto>> searchProfileByNameAsync(
     String name,
   ) async {
     var token = await AuthenticationService.getToken();
@@ -428,7 +443,7 @@ class SocialService {
 
     if (response.statusCode == 200) {
       List<dynamic> jsonList = jsonDecode(response.body);
-      return ProfileSearchResultDto.fromJsonList(jsonList);
+      return SimplifiedProfileDto.fromJsonList(jsonList);
     } else {
       throw Exception("Erro ao pesquisar perfil");
     }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shape_up_app/pages/main.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 
 class Settings extends StatelessWidget {
@@ -19,7 +20,11 @@ class Settings extends StatelessWidget {
         child: ElevatedButton(
           onPressed: () async {
             await AuthenticationService.signOut();
-            Navigator.of(context).pop();
+            Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => Main()),
+                    (Route<dynamic> route) => false
+            );
           },
           style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
           child: const Text("Logout", style: TextStyle(color: Colors.white)),
