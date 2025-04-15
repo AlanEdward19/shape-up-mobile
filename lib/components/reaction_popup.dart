@@ -46,7 +46,7 @@ class ReactionPopup extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               child: Text(
                 emoji,
-                style: const TextStyle(fontSize: 28),
+                style: const TextStyle(fontSize: 20),
               ),
             ),
           );

@@ -1,0 +1,86 @@
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+import 'package:shape_up_app/dtos/chatService/message_dto.dart';
+import 'package:shape_up_app/services/authentication_service.dart';
+import 'package:signalr_core/signalr_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+class ChatService {
+  static final String baseUrl = dotenv.env['CHAT_SERVICE_BASE_URL']!;
+  static late HubConnection _hubConnection;
+
+  static Map<String, String> createHeaders(String token) {
+    Map<String, String> headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+    return headers;
+  }
+
+  static Future<void> initializeConnection() async {
+    _hubConnection =
+        HubConnectionBuilder()
+            .withUrl(
+              '$baseUrl/chat',
+              HttpConnectionOptions(
+                accessTokenFactory: () async {
+                  return await AuthenticationService.getToken();
+                },
+              ),
+            )
+            .build();
+
+    _hubConnection.onclose((error) {
+      print('Conexão encerrada: $error');
+    });
+
+    _hubConnection.on('ReceiveMessage', (arguments) {
+      print('Mensagem recebida: $arguments');
+    });
+
+    await _hubConnection.start();
+    print('Conexão com o SignalR estabelecida.');
+  }
+
+  static Future<void> stopConnection() async {
+    await _hubConnection.stop();
+    print('Conexão com o SignalR encerrada.');
+  }
+
+  static Future<List<MessageDto>> getRecentMessagesAsync() async {
+    var token = await AuthenticationService.getToken();
+    var headers = createHeaders(token);
+
+    var response = await http.get(
+      Uri.parse('$baseUrl/v1/Chat/messages/getRecentMessages'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> jsonResponse = jsonDecode(response.body);
+      List<MessageDto> messages = MessageDto.fromJsonList(jsonResponse);
+      return messages;
+    } else {
+      throw Exception('Falha ao carregar mensagens recentes');
+    }
+  }
+
+  static Future<List<MessageDto>> getMessagesAsync(String profileId) async{
+    var token = await AuthenticationService.getToken();
+    var headers = createHeaders(token);
+
+    var response = await http.get(
+      Uri.parse('$baseUrl/v1/Chat/messages/getMessages/$profileId'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> jsonResponse = jsonDecode(response.body);
+      List<MessageDto> messages = MessageDto.fromJsonList(jsonResponse);
+      return messages;
+    } else {
+      throw Exception('Falha ao carregar mensagens');
+    }
+  }
+}

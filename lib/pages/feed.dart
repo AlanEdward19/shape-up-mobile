@@ -4,6 +4,7 @@ import 'package:shape_up_app/dtos/socialService/post_comment_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_reaction_dto.dart';
 import 'package:shape_up_app/enums/socialService/reaction_type.dart';
+import 'package:shape_up_app/pages/chat.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/social_service.dart';
 import '../components/post_card.dart';
@@ -207,7 +208,7 @@ class _FeedState extends State<Feed> {
     final Size buttonSize = buttonBox.size;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    const double popupHeight = 50.0;
+    const double popupHeight = 70.0;
     const double popupWidth = 280.0;
 
     double top = buttonPosition.dy - popupHeight - 8;
@@ -215,7 +216,7 @@ class _FeedState extends State<Feed> {
 
     // Ajustar para não sair da tela
     if (top < kToolbarHeight) {
-      top = buttonPosition.dy + buttonSize.height + 8;
+      top = buttonPosition.dy + buttonSize.height - 100;
     }
     if (left < 8) left = 8;
     if (left + popupWidth > screenWidth - 8) left = screenWidth - popupWidth - 8;
@@ -254,7 +255,19 @@ class _FeedState extends State<Feed> {
         backgroundColor: kBackgroundColor,
         elevation: 0,
         title: const Text('ShapeUp', style: TextStyle(color: Colors.white)),
-        actions: [],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications, color: Colors.white),
+            onPressed: () { /* TODO: Implement notifications logic */ },
+          ),
+          IconButton(
+            icon: const Icon(Icons.message, color: Colors.white),
+            onPressed: () {
+              Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const Chat()),
+            );},
+          ),
+        ],
       ),
       body: _buildBody(),
     );
