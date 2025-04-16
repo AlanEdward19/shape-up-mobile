@@ -1,3 +1,5 @@
+import 'package:shape_up_app/utils/message_decryptor.dart';
+
 class MessageDto {
   String? id;
   String? senderId;
@@ -17,8 +19,8 @@ class MessageDto {
     id = json['id'];
     senderId = json['senderId'];
     receiverId = json['receiverId'];
-    content = json['encryptedMessage'];
-    timestamp = DateTime.parse(json['timestamp']);
+    content = MessageDecryptor.decryptMessage(json['encryptedMessage']);
+    timestamp = DateTime.parse(json['timestamp']).toLocal();
   }
 
   static List<MessageDto> fromJsonList(List<dynamic> jsonList) {

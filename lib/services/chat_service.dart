@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -18,11 +19,14 @@ class ChatService {
     return headers;
   }
 
-  static Future<void> initializeConnection() async {
+  static final StreamController<MessageDto> _messageStreamController = StreamController<MessageDto>.broadcast();
+  static Stream<MessageDto> get messageStream => _messageStreamController.stream;
+
+  static Future<void> initializeConnection(String profileId) async {
     _hubConnection =
         HubConnectionBuilder()
             .withUrl(
-              '$baseUrl/chat',
+              '$baseUrl/chat?ProfileId=$profileId',
               HttpConnectionOptions(
                 accessTokenFactory: () async {
                   return await AuthenticationService.getToken();
@@ -36,7 +40,18 @@ class ChatService {
     });
 
     _hubConnection.on('ReceiveMessage', (arguments) {
-      print('Mensagem recebida: $arguments');
+      if (arguments != null && arguments.isNotEmpty) {
+        try {
+
+          final message = MessageDto.fromJson(arguments[0] as Map<String, dynamic>);
+
+          _messageStreamController.add(message);
+        } catch (e) {
+          print('Erro ao converter mensagem: $e');
+        }
+      } else {
+        print('Nenhuma mensagem recebida.');
+      }
     });
 
     await _hubConnection.start();
@@ -66,12 +81,12 @@ class ChatService {
     }
   }
 
-  static Future<List<MessageDto>> getMessagesAsync(String profileId) async{
+  static Future<List<MessageDto>> getMessagesAsync(String profileId, int page) async{
     var token = await AuthenticationService.getToken();
     var headers = createHeaders(token);
 
     var response = await http.get(
-      Uri.parse('$baseUrl/v1/Chat/messages/getMessages/$profileId'),
+      Uri.parse('$baseUrl/v1/Chat/messages/getMessages/$profileId?page=$page'),
       headers: headers,
     );
 
@@ -81,6 +96,26 @@ class ChatService {
       return messages;
     } else {
       throw Exception('Falha ao carregar mensagens');
+    }
+  }
+
+  static Future<void> sendMessageAsync(String profileId, String message) async {
+    var token = await AuthenticationService.getToken();
+    var headers = createHeaders(token);
+
+    var body = jsonEncode({
+      'receiverId': profileId,
+      'message': message,
+    });
+
+    var response = await http.post(
+      Uri.parse('$baseUrl/v1/Chat/messages/send'),
+      headers: headers,
+      body: body,
+    );
+
+    if (response.statusCode != 202) {
+      throw Exception('Falha ao enviar mensagem');
     }
   }
 }

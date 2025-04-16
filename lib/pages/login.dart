@@ -289,8 +289,16 @@ class _LoginState extends State<Login> {
         onPressed: () async {
           if(_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
             await AuthenticationService.loginWithEmailAndPassword(_emailController.text, _passwordController.text);
-
-            changePageStateful(context, BottomNavBar());
+            if (FirebaseAuth.instance.currentUser != null) {
+              print("Login realizado com sucesso!");
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => BottomNavBar()),
+                    (Route<dynamic> route) => false
+              );
+            } else {
+              print("Erro ao realizar login.");
+            }
           }
         },
         child: Row(
