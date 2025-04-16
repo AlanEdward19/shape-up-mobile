@@ -83,4 +83,24 @@ class ChatService {
       throw Exception('Falha ao carregar mensagens');
     }
   }
+
+  static Future<void> sendMessageAsync(String profileId, String message) async {
+    var token = await AuthenticationService.getToken();
+    var headers = createHeaders(token);
+
+    var body = jsonEncode({
+      'receiverId': profileId,
+      'message': message,
+    });
+
+    var response = await http.post(
+      Uri.parse('$baseUrl/v1/Chat/messages/send'),
+      headers: headers,
+      body: body,
+    );
+
+    if (response.statusCode != 202) {
+      throw Exception('Falha ao enviar mensagem');
+    }
+  }
 }

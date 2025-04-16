@@ -79,6 +79,7 @@ class _ChatState extends State<Chat> {
 
           return ListTile(
             leading: CircleAvatar(
+              radius: 25,
               backgroundImage: NetworkImage(profile.imageUrl),
             ),
             title: Row(
@@ -86,20 +87,20 @@ class _ChatState extends State<Chat> {
               children: [
                 Text(
                   '${profile.firstName} ${profile.lastName}',
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white, fontSize: 18),
                 ),
                 Text(
                   '${message.timestamp?.hour.toString().padLeft(2, '0')}:${message.timestamp?.minute.toString().padLeft(2, '0')} - ${message.timestamp?.day.toString().padLeft(2, '0')}/${message.timestamp?.month.toString().padLeft(2, '0')}/${message.timestamp?.year}',
-                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
                 ),
               ],
             ),
             subtitle: Text(
               message.content ?? '',
-              style: const TextStyle(color: Colors.grey),
+              style: const TextStyle(color: Colors.grey, fontSize: 16),
             ),
-            onTap: () {
-              Navigator.push(
+            onTap: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => ChatConversation(
@@ -109,6 +110,8 @@ class _ChatState extends State<Chat> {
                   ),
                 ),
               );
+
+              _loadRecentMessages();
             },
           );
         },

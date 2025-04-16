@@ -24,6 +24,8 @@ class _ChatConversationState extends State<ChatConversation> {
   List<MessageDto> _messages = [];
   bool _isLoading = true;
   String? _userId;
+  final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -51,6 +53,13 @@ class _ChatConversationState extends State<ChatConversation> {
         _messages = messages;
         _isLoading = false;
       });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        }
+      });
+
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -69,6 +78,8 @@ class _ChatConversationState extends State<ChatConversation> {
 
   @override
   void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
     ChatService.stopConnection();
     super.dispose();
   }
@@ -95,16 +106,12 @@ class _ChatConversationState extends State<ChatConversation> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : ListView.builder(
+              controller: _scrollController,
               itemCount: _messages.length,
               itemBuilder: (context, index) {
-
-                // Ordenar mensagens por data
                 _messages.sort((a, b) => a.timestamp!.compareTo(b.timestamp!));
-
                 final message = _messages[index];
                 final isCurrentUser = _userId != null && message.senderId == _userId;
-
-                // Verificar se é o primeiro item ou se o dia mudou
                 final bool showDateDivider = index == 0 ||
                     DateFormat('yyyy-MM-dd').format(message.timestamp!) !=
                         DateFormat('yyyy-MM-dd').format(_messages[index - 1].timestamp!);
@@ -192,7 +199,7 @@ class _ChatConversationState extends State<ChatConversation> {
               children: [
                 Expanded(
                   child: TextField(
-                    controller: TextEditingController(),
+                    controller: _messageController,
                     style: const TextStyle(color: Colors.white),
                     decoration: const InputDecoration(
                       hintText: 'Digite sua mensagem...',
@@ -203,8 +210,29 @@ class _ChatConversationState extends State<ChatConversation> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.send, color: Color(0xFF0fa0ce)),
-                  onPressed: () {
-                    print('Mensagem enviada'); //TODO enviar mensagem
+                  onPressed: () async {
+                    final messageText = _messageController.text;
+                    await ChatService.sendMessageAsync(widget.profileId, messageText);
+
+                    MessageDto message = MessageDto(
+                      content: messageText,
+                      senderId: _userId,
+                      receiverId: widget.profileId,
+                      timestamp: DateTime.now(),
+                    );
+
+                    setState(() {
+                      _messages.add(message);
+                    });
+
+                    // Rola para o final após enviar uma mensagem
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (_scrollController.hasClients) {
+                        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+                      }
+                    });
+
+                    _messageController.clear();
                   },
                 ),
               ],
