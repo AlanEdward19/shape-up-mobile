@@ -25,6 +25,7 @@ class _ChatConversationState extends State<ChatConversation> {
   bool _isLoading = true;
   bool _isLoadingMore = false;
   bool _canLoadMore = true;
+  bool _isAtBottom = true;
   String? _userId;
   int _currentPage = 1;
   final TextEditingController _messageController = TextEditingController();
@@ -37,8 +38,30 @@ class _ChatConversationState extends State<ChatConversation> {
     _loadMessages();
     _initializeWebSocket();
 
+    ChatService.messageStream.listen((newMessage) {
+      setState(() {
+        _messages.add(newMessage);
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_isAtBottom && _scrollController.hasClients) {
+          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        }
+      });
+    });
+
     _scrollController.addListener(() {
-      if (_scrollController.position.pixels <= _scrollController.position.minScrollExtent + 50 && _canLoadMore) {
+
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 50) {
+        _isAtBottom = true;
+      } else {
+        _isAtBottom = false;
+      }
+
+      if (_scrollController.position.pixels <=
+          _scrollController.position.minScrollExtent + 50 &&
+          _canLoadMore) {
         _loadMoreMessages();
       }
     });
@@ -250,17 +273,6 @@ class _ChatConversationState extends State<ChatConversation> {
                   onPressed: () async {
                     final messageText = _messageController.text;
                     await ChatService.sendMessageAsync(widget.profileId, messageText);
-
-                    MessageDto message = MessageDto(
-                      content: messageText,
-                      senderId: _userId,
-                      receiverId: widget.profileId,
-                      timestamp: DateTime.now(),
-                    );
-
-                    setState(() {
-                      _messages.add(message);
-                    });
 
                     // Rola para o final após enviar uma mensagem
                     WidgetsBinding.instance.addPostFrameCallback((_) {

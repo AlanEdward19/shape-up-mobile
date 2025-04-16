@@ -59,7 +59,9 @@ class _FeedState extends State<Feed> {
   Future<void> _initializeAndLoadFeed() async {
     try {
       _currentUserId = await AuthenticationService.getProfileId();
-      await _loadFeedData();
+      if (_currentUserId.isNotEmpty) {
+        await _loadFeedData();
+      }
     } catch (e) {
       setState(() {
         _error = "Erro ao inicializar: $e";

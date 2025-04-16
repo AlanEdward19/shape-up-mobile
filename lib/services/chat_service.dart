@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -18,6 +19,9 @@ class ChatService {
     return headers;
   }
 
+  static final StreamController<MessageDto> _messageStreamController = StreamController<MessageDto>.broadcast();
+  static Stream<MessageDto> get messageStream => _messageStreamController.stream;
+
   static Future<void> initializeConnection(String profileId) async {
     _hubConnection =
         HubConnectionBuilder()
@@ -36,7 +40,18 @@ class ChatService {
     });
 
     _hubConnection.on('ReceiveMessage', (arguments) {
-      print('Mensagem recebida: $arguments');
+      if (arguments != null && arguments.isNotEmpty) {
+        try {
+
+          final message = MessageDto.fromJson(arguments[0] as Map<String, dynamic>);
+
+          _messageStreamController.add(message);
+        } catch (e) {
+          print('Erro ao converter mensagem: $e');
+        }
+      } else {
+        print('Nenhuma mensagem recebida.');
+      }
     });
 
     await _hubConnection.start();
