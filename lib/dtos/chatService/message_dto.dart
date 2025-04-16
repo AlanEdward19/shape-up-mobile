@@ -20,7 +20,7 @@ class MessageDto {
     senderId = json['senderId'];
     receiverId = json['receiverId'];
     content = MessageDecryptor.decryptMessage(json['encryptedMessage']);
-    timestamp = DateTime.parse(json['timestamp']);
+    timestamp = DateTime.parse(json['timestamp']).toLocal();
   }
 
   static List<MessageDto> fromJsonList(List<dynamic> jsonList) {
