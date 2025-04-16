@@ -23,7 +23,10 @@ class ChatConversation extends StatefulWidget {
 class _ChatConversationState extends State<ChatConversation> {
   List<MessageDto> _messages = [];
   bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _canLoadMore = true;
   String? _userId;
+  int _currentPage = 1;
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
@@ -33,6 +36,12 @@ class _ChatConversationState extends State<ChatConversation> {
     _initializeUserId();
     _loadMessages();
     _initializeWebSocket();
+
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels <= _scrollController.position.minScrollExtent + 50 && _canLoadMore) {
+        _loadMoreMessages();
+      }
+    });
   }
 
   Future<void> _initializeUserId() async {
@@ -48,7 +57,7 @@ class _ChatConversationState extends State<ChatConversation> {
 
   Future<void> _loadMessages() async {
     try {
-      List<MessageDto> messages = await ChatService.getMessagesAsync(widget.profileId);
+      List<MessageDto> messages = await ChatService.getMessagesAsync(widget.profileId, 1);
       setState(() {
         _messages = messages;
         _isLoading = false;
@@ -65,6 +74,34 @@ class _ChatConversationState extends State<ChatConversation> {
         _isLoading = false;
       });
       print('Erro ao carregar mensagens: $e');
+    }
+  }
+
+  Future<void> _loadMoreMessages() async {
+    if (_isLoadingMore) return;
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    try {
+      List<MessageDto> newMessages = await ChatService.getMessagesAsync(widget.profileId, _currentPage + 1);
+
+      if (newMessages.isNotEmpty) {
+        setState(() {
+          _currentPage++;
+          _messages.insertAll(0, newMessages);
+        });
+      }
+      else{
+        setState(() {
+          _canLoadMore = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingMore = false;
+      });
+      print('Erro ao carregar mais mensagens: $e');
     }
   }
 

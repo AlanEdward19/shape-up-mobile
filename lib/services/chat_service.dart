@@ -66,12 +66,12 @@ class ChatService {
     }
   }
 
-  static Future<List<MessageDto>> getMessagesAsync(String profileId) async{
+  static Future<List<MessageDto>> getMessagesAsync(String profileId, int page) async{
     var token = await AuthenticationService.getToken();
     var headers = createHeaders(token);
 
     var response = await http.get(
-      Uri.parse('$baseUrl/v1/Chat/messages/getMessages/$profileId'),
+      Uri.parse('$baseUrl/v1/Chat/messages/getMessages/$profileId?page=$page'),
       headers: headers,
     );
 
