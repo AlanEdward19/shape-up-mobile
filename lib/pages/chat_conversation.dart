@@ -10,11 +10,11 @@ class ChatConversation extends StatefulWidget {
   final String profileImageUrl;
 
   const ChatConversation({
-    Key? key,
+    super.key,
     required this.profileId,
     required this.profileName,
     required this.profileImageUrl,
-  }) : super(key: key);
+  });
 
   @override
   _ChatConversationState createState() => _ChatConversationState();

@@ -3,7 +3,7 @@ import 'package:shape_up_app/pages/main.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 
 class Settings extends StatelessWidget {
-  const Settings({Key? key}) : super(key: key);
+  const Settings({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -1,15 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shape_up_app/components/bottom_nav_bar.dart';
-import 'package:shape_up_app/pages/feed.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 
 import '../components/back_button.dart';
 import '../components/shape_up_logo.dart';
-import '../functions/change_page.dart';
 
 class Login extends StatefulWidget {
-  Login({super.key});
+  const Login({super.key});
 
   @override
   State<Login> createState() => _LoginState();
