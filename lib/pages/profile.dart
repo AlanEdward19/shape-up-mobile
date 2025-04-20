@@ -7,7 +7,7 @@ import 'package:shape_up_app/services/social_service.dart';
 class Profile extends StatefulWidget {
   final String profileId;
 
-  const Profile({required this.profileId, Key? key}) : super(key: key);
+  const Profile({required this.profileId, super.key});
 
   @override
   _ProfilePageState createState() => _ProfilePageState();

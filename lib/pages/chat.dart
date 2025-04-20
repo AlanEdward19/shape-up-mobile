@@ -8,7 +8,7 @@ import 'package:shape_up_app/services/social_service.dart';
 import 'package:string_similarity/string_similarity.dart';
 
 class Chat extends StatefulWidget {
-  const Chat({Key? key}) : super(key: key);
+  const Chat({super.key});
 
   @override
   _ChatState createState() => _ChatState();
@@ -18,7 +18,7 @@ class _ChatState extends State<Chat> {
   List<Map<String, dynamic>> _messagesWithProfiles = [];
   List<Map<String, dynamic>> _filteredMessagesWithProfiles = [];
   bool _isLoading = true;
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {

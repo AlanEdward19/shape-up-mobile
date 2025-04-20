@@ -7,6 +7,8 @@ import 'package:shape_up_app/pages/training.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 
 class BottomNavBar extends StatefulWidget {
+  const BottomNavBar({super.key});
+
   @override
   _BottomNavBarState createState() => _BottomNavBarState();
 }
@@ -36,7 +38,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> _pages = [
+    final List<Widget> pages = [
       Feed(),
       Friends(),
       Training(),
@@ -45,7 +47,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
     ];
 
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Color(0xFF191F2B),
         currentIndex: _selectedIndex,

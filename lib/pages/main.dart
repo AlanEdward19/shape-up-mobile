@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:shape_up_app/functions/change_page.dart';
 import 'package:shape_up_app/pages/login.dart';
 
@@ -61,7 +60,7 @@ class Main extends StatelessWidget {
                 child: TextButton(
                   onPressed: null,
                   child: Text('Criar conta',
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 16,
                     color: Colors.white,
                     fontWeight: FontWeight.bold
@@ -97,7 +96,7 @@ class Main extends StatelessWidget {
 
 class _Carousel extends StatefulWidget {
   final List<CarouselItem> carouselItems;
-  const _Carousel({Key? key, required this.carouselItems}) : super(key: key);
+  const _Carousel({required this.carouselItems});
 
   @override
   State<_Carousel> createState() => _CarouselState();
