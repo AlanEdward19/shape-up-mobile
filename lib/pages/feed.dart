@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shape_up_app/dtos/notificationService/notification_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_comment_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_reaction_dto.dart';
+import 'package:shape_up_app/enums/notificationService/notification_topic.dart';
 import 'package:shape_up_app/enums/socialService/reaction_type.dart';
 import 'package:shape_up_app/pages/chat.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
+import 'package:shape_up_app/services/notification_service.dart';
 import 'package:shape_up_app/services/social_service.dart';
 import '../components/post_card.dart';
 import '../components/reaction_popup.dart';
@@ -39,6 +42,9 @@ class _FeedState extends State<Feed> {
   bool _isLoading = true;
   String? _error;
   List<PostDto> _posts = [];
+  int _unreadNotifications = 0;
+  int _unreadMessages = 0;
+
 
   Map<String, ReactionType?> _currentUserReactions = {};
   Map<String, List<PostReactionDto>> _allPostReactions = {};
@@ -54,6 +60,18 @@ class _FeedState extends State<Feed> {
   void initState() {
     super.initState();
     _initializeAndLoadFeed();
+    _listenToNotifications();
+  }
+
+  void _listenToNotifications() {
+    NotificationService.notificationStream.listen((notification) {
+      setState(() {
+        _unreadNotifications++;
+        if (notification.topic == NotificationTopic.Message) {
+          _unreadMessages++;
+        }
+      });
+    });
   }
 
   Future<void> _initializeAndLoadFeed() async {
@@ -69,7 +87,6 @@ class _FeedState extends State<Feed> {
       });
     }
   }
-
 
   Future<void> _loadFeedData() async {
     if (_currentUserId.isEmpty) {
@@ -259,15 +276,55 @@ class _FeedState extends State<Feed> {
         title: const Text('ShapeUp', style: TextStyle(color: Colors.white)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications, color: Colors.white),
-            onPressed: () { /* TODO: Implement notifications logic */ },
+            icon: Stack(
+              children: [
+                const Icon(Icons.notifications, color: Colors.white),
+                if (_unreadNotifications > 0)
+                  Positioned(
+                    right: 0,
+                    child: CircleAvatar(
+                      radius: 8,
+                      backgroundColor: Colors.red,
+                      child: Text(
+                        '$_unreadNotifications',
+                        style: const TextStyle(fontSize: 10, color: Colors.white),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            onPressed: () {
+              // Lógica para abrir a página de notificações
+
+              Map<String, String> metadata = {
+
+              };
+              NotificationService.showNotification(new NotificationDto(topic: NotificationTopic.Comment, title: 'title', body: 'ttt', metadata: metadata));
+            },
           ),
           IconButton(
-            icon: const Icon(Icons.message, color: Colors.white),
+            icon: Stack(
+              children: [
+                const Icon(Icons.message, color: Colors.white),
+                if (_unreadMessages > 0)
+                  Positioned(
+                    right: 0,
+                    child: CircleAvatar(
+                      radius: 8,
+                      backgroundColor: Colors.red,
+                      child: Text(
+                        '$_unreadMessages',
+                        style: const TextStyle(fontSize: 10, color: Colors.white),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
             onPressed: () {
               Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const Chat()),
-            );},
+                MaterialPageRoute(builder: (context) => const Chat()),
+              );
+            },
           ),
         ],
       ),

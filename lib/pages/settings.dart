@@ -1,6 +1,8 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:shape_up_app/pages/main.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
+import 'package:shape_up_app/services/notification_service.dart';
 
 class Settings extends StatelessWidget {
   const Settings({super.key});
