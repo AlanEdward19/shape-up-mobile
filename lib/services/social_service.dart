@@ -12,7 +12,7 @@ import 'package:shape_up_app/dtos/socialService/profile_dto.dart';
 import 'package:shape_up_app/dtos/socialService/simplified_profile_dto.dart';
 import 'package:shape_up_app/enums/socialService/gender.dart';
 import 'package:shape_up_app/enums/socialService/reaction_type.dart';
-import 'package:shape_up_app/enums/socialService/visibility.dart';
+import 'package:shape_up_app/enums/socialService/post_visibility.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 
 class SocialService {
@@ -189,7 +189,7 @@ class SocialService {
 
   static Future<PostDto> createPostAsync(
     String content,
-    Visibility visibility,
+      PostVisibility visibility,
   ) async {
     var token = await AuthenticationService.getToken();
 
@@ -206,7 +206,31 @@ class SocialService {
     }
   }
 
-  //TODO Subir função de chamar endpoint de upload de imagens
+  static Future<void> uploadFilesAsync(String id, List<String> filePaths) async {
+    var token = await AuthenticationService.getToken();
+
+    var uri = Uri.parse('$baseUrl/v1/Post/$id/uploadPostImages');
+    var request = http.MultipartRequest('PUT', uri);
+
+    for (String filePath in filePaths) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'files',
+        filePath
+      ));
+    }
+
+    request.headers.addAll({
+      'Authorization': 'Bearer $token',
+    });
+
+    var response = await request.send();
+
+    if (response.statusCode == 204) {
+      print("Arquivos enviados com sucesso!");
+    } else {
+      throw Exception("Erro ao enviar arquivos: ${response.statusCode}");
+    }
+  }
 
   static Future<List<PostReactionDto>> getPostReactionsAsync(
     String postId,

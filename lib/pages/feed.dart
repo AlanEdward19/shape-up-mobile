@@ -4,8 +4,10 @@ import 'package:shape_up_app/dtos/notificationService/notification_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_comment_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_reaction_dto.dart';
+import 'package:shape_up_app/dtos/socialService/simplified_profile_dto.dart';
 import 'package:shape_up_app/enums/notificationService/notification_topic.dart';
 import 'package:shape_up_app/enums/socialService/reaction_type.dart';
+import 'package:shape_up_app/enums/socialService/post_visibility.dart';
 import 'package:shape_up_app/pages/chat.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/notification_service.dart';
@@ -40,6 +42,7 @@ class Feed extends StatefulWidget {
 
 class _FeedState extends State<Feed> {
   bool _isLoading = true;
+  SimplifiedProfileDto? _currentUser;
   String? _error;
   List<PostDto> _posts = [];
   int _unreadNotifications = 0;
@@ -63,6 +66,10 @@ class _FeedState extends State<Feed> {
     _listenToNotifications();
   }
 
+  Future<void> _getUserInfo() async{
+    _currentUser = await SocialService.viewProfileSimplifiedAsync(_currentUserId);
+  }
+
   void _listenToNotifications() {
     NotificationService.notificationStream.listen((notification) {
       setState(() {
@@ -79,6 +86,7 @@ class _FeedState extends State<Feed> {
       _currentUserId = await AuthenticationService.getProfileId();
       if (_currentUserId.isNotEmpty) {
         await _loadFeedData();
+        await _getUserInfo();
       }
     } catch (e) {
       setState(() {
@@ -160,7 +168,6 @@ class _FeedState extends State<Feed> {
       });
     }
   }
-
 
   Future<void> _handleReactionSelected(String postId, ReactionType selectedReaction) async {
     final currentReaction = _currentUserReactions[postId];
@@ -337,8 +344,6 @@ class _FeedState extends State<Feed> {
       return const Center(child: CircularProgressIndicator(color: Colors.white));
     } else if (_error != null) {
       return Center();
-    } else if (_posts.isEmpty) {
-      return Center();
     } else {
       return RefreshIndicator(
         onRefresh: _loadFeedData,
@@ -349,7 +354,13 @@ class _FeedState extends State<Feed> {
           itemCount: _posts.length + 1,
           itemBuilder: (context, index) {
             if (index == 0) {
-              return StorySection(storyStatus: _storyStatus);
+              return Column(
+                children: [
+                  StorySection(storyStatus: _storyStatus),
+                  const SizedBox(height: 16),
+                  _buildPostCreationSection()
+                ],
+              );
             } else {
               final postIndex = index - 1;
               if (postIndex >= _posts.length) return const SizedBox.shrink();
@@ -416,6 +427,165 @@ class _FeedState extends State<Feed> {
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildPostCreationSection() {
+    final TextEditingController descriptionController = TextEditingController();
+    PostVisibility? selectedVisibility = PostVisibility.public;
+    List<String> selectedImages = [];
+
+    Future<void> selectImages() async {
+      // Lógica para selecionar imagens (exemplo usando o pacote image_picker)
+      // final pickedFiles = await ImagePicker().pickMultiImage();
+      // if (pickedFiles != null) {
+      //   setState(() {
+      //     _selectedImages = pickedFiles.map((file) => file.path).toList();
+      //   });
+      // }
+    }
+
+    Future<void> createPost() async {
+      if (descriptionController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Por favor, insira uma descrição.')),
+        );
+        return;
+      }
+
+      try {
+        final post = await SocialService.createPostAsync(
+          descriptionController.text,
+          selectedVisibility!,
+        );
+
+        if (selectedImages.isNotEmpty) {
+          await SocialService.uploadFilesAsync(post.id, selectedImages);
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Post criado com sucesso!')),
+        );
+
+        descriptionController.clear();
+        setState(() {
+          selectedImages = [];
+          selectedVisibility = PostVisibility.public;
+        });
+
+        await _loadFeedData();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao criar post: $e')),
+        );
+      }
+    }
+
+    return Card(
+      margin: const EdgeInsets.all(16.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+      color: kBackgroundColor,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundImage: NetworkImage(_currentUser?.imageUrl ?? ''),
+                  radius: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: descriptionController,
+                    maxLines: 2,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      hintText: 'No que você está pensando?',
+                      hintStyle: TextStyle(color: Colors.grey),
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const Divider(color: Colors.white24),
+            Row(
+              children: [
+                ElevatedButton.icon(
+                  onPressed: selectImages,
+                  icon: const Icon(Icons.image, color: Colors.white, size: 18),
+                  label: const Text('Imagem', style: TextStyle(fontSize: 14)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kPlaceholderColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    elevation: 0,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                DropdownButton<PostVisibility?>(
+                  value: selectedVisibility,
+                  dropdownColor: kBackgroundColor,
+                  items: [
+                    DropdownMenuItem(
+                      value: PostVisibility.public,
+                      child: Row(
+                        children: const [
+                          Icon(Icons.public, color: Colors.white, size: 18),
+                          SizedBox(width: 8),
+                          Text('Público', style: TextStyle(color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: PostVisibility.friendsOnly,
+                      child: Row(
+                        children: const [
+                          Icon(Icons.group, color: Colors.white, size: 18),
+                          SizedBox(width: 8),
+                          Text('Somente Amigos', style: TextStyle(color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: PostVisibility.private,
+                      child: Row(
+                        children: const [
+                          Icon(Icons.lock, color: Colors.white, size: 18),
+                          SizedBox(width: 8),
+                          Text('Privado', style: TextStyle(color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      selectedVisibility = value;
+                    });
+                  },
+                  underline: const SizedBox(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                onPressed: createPost,
+                child: const Text('Publicar', style: TextStyle(fontSize: 14)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
