@@ -1,6 +1,8 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shape_up_app/services/notification_service.dart';
 
 class AuthenticationService
 {
@@ -15,6 +17,13 @@ class AuthenticationService
 
     await saveToken(token!);
     await saveProfileId(userId);
+
+    String? deviceToken = await FirebaseMessaging.instance.getToken();
+    if (deviceToken != null) {
+      await NotificationService.logIn(deviceToken);
+    }
+
+    NotificationService.initializeConnection(userId);
   }
 
   static Future<void> signOut() async {
@@ -23,6 +32,13 @@ class AuthenticationService
     await removeToken();
     await removeProfileId();
     await auth.signOut();
+
+    String? deviceToken = await FirebaseMessaging.instance.getToken();
+    if (deviceToken != null) {
+      await NotificationService.signOut(deviceToken);
+    }
+
+    NotificationService.stopConnection();
   }
 
   static Future<void> loginWithGoogle() async {
