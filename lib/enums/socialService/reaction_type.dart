@@ -24,6 +24,19 @@ const Map<ReactionType, int> reactionTypeMap = {
   ReactionType.celebrate : 9,
 };
 
+const Map<int, ReactionType> intReactionTypeMap = {
+  0: ReactionType.like,
+  1: ReactionType.dislike,
+  2: ReactionType.love,
+  3: ReactionType.haha,
+  4: ReactionType.wow,
+  5: ReactionType.sad,
+  6: ReactionType.angry,
+  7: ReactionType.care,
+  8: ReactionType.support,
+  9: ReactionType.celebrate,
+};
+
 const Map<ReactionType, String> reactionEmojiMap = {
   ReactionType.like: "👍",
   ReactionType.dislike: "👎",

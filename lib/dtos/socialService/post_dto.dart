@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:shape_up_app/enums/socialService/post_visibility.dart';
+import 'package:shape_up_app/enums/socialService/reaction_type.dart';
 
 class PostDto {
   final String id;
@@ -10,6 +11,9 @@ class PostDto {
   final PostVisibility visibility;
   final List<String> images;
   final String content;
+  final int reactionsCount;
+  final int commentsCount;
+  final List<ReactionType> topReactions;
 
   PostDto(
       this.id,
@@ -20,6 +24,9 @@ class PostDto {
       this.visibility,
       this.images,
       this.content,
+      this.reactionsCount,
+      this.commentsCount,
+      this.topReactions,
       );
 
   factory PostDto.fromJson(Map<String, dynamic> json) {
@@ -45,6 +52,11 @@ class PostDto {
       visibilityMap[json['visibility']]!,
       postImages,
       json['content'],
+      json['reactionsCount'],
+      json['commentsCount'],
+      (json['topReactions'] as List<dynamic>)
+          .map((reaction) => intReactionTypeMap[reaction]!)
+          .toList()
     );
   }
 
