@@ -5,3 +5,9 @@ const Map<int, PostVisibility> visibilityMap = {
   1: PostVisibility.friendsOnly,
   2: PostVisibility.private,
 };
+
+const Map<PostVisibility, int> visibilityToIntMap = {
+  PostVisibility.public : 0,
+  PostVisibility.friendsOnly : 1,
+  PostVisibility.private : 2,
+};

@@ -194,9 +194,9 @@ class SocialService {
     var token = await AuthenticationService.getToken();
 
     final response = await http.post(
-      Uri.parse('$baseUrl/v1/Post/CreatePost'),
+      Uri.parse('$baseUrl/v1/Post/createPost'),
       headers: createHeaders(token),
-      body: jsonEncode({'Content': content, 'Visibility': visibility}),
+      body: jsonEncode({'content': content, 'visibility': visibilityToIntMap[visibility]}),
     );
 
     if (response.statusCode == 201) {
