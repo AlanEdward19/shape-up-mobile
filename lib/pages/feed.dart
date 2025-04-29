@@ -17,6 +17,8 @@ import '../components/reaction_popup.dart';
 import '../components/story_section.dart';
 import 'dart:collection';
 
+import '../widgets/socialService/comments/comments_modal.dart';
+
 const Color kBackgroundColor = Color(0xFF191F2B);
 const Color kPlaceholderColor = Colors.white24;
 const EdgeInsets kDefaultPadding = EdgeInsets.symmetric(
@@ -97,70 +99,18 @@ class _FeedState extends State<Feed> {
   }
 
   Future<void> _loadFeedData() async {
-    if (_currentUserId.isEmpty) {
-      try {
-        _currentUserId = await AuthenticationService.getProfileId();
-      } catch (e) {
-        setState(() {
-          _error = "Erro ao obter ID do usuário: $e";
-          _isLoading = false;
-        });
-        return;
-      }
-    }
-
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
     try {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+
       final posts = await SocialService.getActivityFeedAsync();
-
-
-      Map<String, ReactionType?> userReactions = {};
-      Map<String, List<PostReactionDto>> allReactions = {};
-      Map<String, List<PostCommentDto>> allComments = {};
-
-      for (var post in posts) {
-        try {
-          final results = await Future.wait([
-            SocialService.getPostReactionsAsync(post.id),
-            SocialService.getPostCommentsAsync(post.id),
-          ]);
-
-          final postReactions = results[0] as List<PostReactionDto>;
-          final postComments = results[1] as List<PostCommentDto>;
-
-          allReactions[post.id] = postReactions;
-          allComments[post.id] = postComments;
-
-          try {
-            userReactions[post.id] = postReactions
-                .firstWhere((r) => r.profileId == _currentUserId)
-                .reactionType;
-          } catch (e) {
-            userReactions[post.id] = null;
-          }
-
-        } catch (e) {
-          if (kDebugMode) {
-            print("Erro ao carregar dados para post ${post.id}: $e");
-          }
-          allReactions[post.id] = [];
-          allComments[post.id] = [];
-          userReactions[post.id] = null;
-        }
-      }
-
 
       setState(() {
         _posts = posts;
-        _currentUserReactions = userReactions;
-        _allPostReactions = allReactions;
-        _allPostComments = allComments;
         _isLoading = false;
       });
-
     } catch (e) {
       setState(() {
         _error = "Erro ao carregar feed: $e";
@@ -272,6 +222,24 @@ class _FeedState extends State<Feed> {
     );
   }
 
+  Future<void> _loadCommentsForPost(String postId) async {
+    try {
+      final comments = await SocialService.getPostCommentsAsync(postId);
+      setState(() {
+        _allPostComments[postId] = comments;
+      });
+
+      // Exibir o modal de comentários
+      showCommentsModal(context, postId, comments);
+    } catch (e) {
+      if (kDebugMode) {
+        print("Erro ao carregar comentários para o post $postId: $e");
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao carregar comentários: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -343,7 +311,7 @@ class _FeedState extends State<Feed> {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator(color: Colors.white));
     } else if (_error != null) {
-      return Center();
+      return Center(child: Text(_error!, style: const TextStyle(color: Colors.white)));
     } else {
       return RefreshIndicator(
         onRefresh: _loadFeedData,
@@ -358,7 +326,7 @@ class _FeedState extends State<Feed> {
                 children: [
                   StorySection(storyStatus: _storyStatus),
                   const SizedBox(height: 16),
-                  _buildPostCreationSection()
+                  _buildPostCreationSection(),
                 ],
               );
             } else {
@@ -367,21 +335,18 @@ class _FeedState extends State<Feed> {
 
               final post = _posts[postIndex];
               final currentUserReaction = _currentUserReactions[post.id];
-              final reactionsList = _allPostReactions[post.id] ?? [];
-              final commentsList = _allPostComments[post.id] ?? [];
-              final reactionCount = reactionsList.length;
-              final commentCount = commentsList.length;
 
               return PostCard(
                 post: post,
                 currentUserReaction: currentUserReaction,
-                reactionCount: reactionCount,
-                commentCount: commentCount,
-                comments: commentsList,
+                reactionCount: post.reactionsCount,
+                commentCount: post.commentsCount,
+                comments: [], // Comentários não carregados aqui
                 onReactionButtonPressed: (buttonContext) => _showReactionPopup(buttonContext, post.id),
                 onReactionSelected: _handleReactionSelected,
-                buildReactionIcons: _buildReactionIcons,
+                buildReactionIcons: (postId) => _buildReactionIconsFromPost(post),
                 onOptionsPressed: () { /* TODO: Implement options logic */ },
+                onCommentButtonPressed: () => _loadCommentsForPost(post.id),
               );
             }
           },
@@ -390,34 +355,16 @@ class _FeedState extends State<Feed> {
     }
   }
 
-  Widget _buildReactionIcons(String postId) {
-    final reactions = _allPostReactions[postId] ?? [];
+  Widget _buildReactionIconsFromPost(PostDto post) {
+    final topReactions = post.topReactions;
 
-    if (reactions.isEmpty) {
+    if (topReactions.isEmpty) {
       return const Icon(Icons.thumb_up_alt_outlined, color: Colors.grey, size: 22);
     }
 
-    reactions.sort((a, b) {
-      try {
-        return DateTime.parse(b.createdAt).compareTo(DateTime.parse(a.createdAt));
-      } catch (_) {
-        return 0;
-      }
-    });
-
-    final uniqueRecentTypes = LinkedHashSet<ReactionType>(
-      equals: (a, b) => a == b,
-      hashCode: (a) => a.hashCode,
-    );
-    for (var reaction in reactions) {
-      uniqueRecentTypes.add(reaction.reactionType);
-    }
-
-    final topRecentTypes = uniqueRecentTypes.take(3).toList();
-
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: topRecentTypes.map((reactionType) {
+      children: topReactions.take(3).map((reactionType) {
         final emoji = reactionEmojiMap[reactionType] ?? kDefaultReactionEmoji;
         return Padding(
           padding: const EdgeInsets.only(right: 2.0),

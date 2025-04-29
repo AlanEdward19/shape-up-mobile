@@ -31,6 +31,7 @@ class PostCard extends StatelessWidget {
   final Function(String, ReactionType) onReactionSelected;
   final VoidCallback onOptionsPressed;
   final Widget Function(String) buildReactionIcons;
+  final VoidCallback onCommentButtonPressed;
 
   const PostCard({
     required this.post,
@@ -42,6 +43,7 @@ class PostCard extends StatelessWidget {
     required this.onOptionsPressed,
     required this.onReactionSelected,
     required this.buildReactionIcons,
+    required this.onCommentButtonPressed,
     super.key,
   });
 
@@ -133,9 +135,7 @@ class PostCard extends StatelessWidget {
                     // Ícone e Contagem de Comentários (TODO: Adicionar contagem real)
                     IconButton(
                       icon : const Icon(Icons.chat_bubble_outline, color: Colors.white, size: 20),
-                      onPressed: (){
-                        showCommentsModal(context, post.id, comments);
-                      },
+                      onPressed: onCommentButtonPressed,
                     ),
                     const SizedBox(width: 6),
 
