@@ -9,14 +9,13 @@ import 'package:shape_up_app/enums/notificationService/notification_topic.dart';
 import 'package:shape_up_app/enums/socialService/reaction_type.dart';
 import 'package:shape_up_app/enums/socialService/post_visibility.dart';
 import 'package:shape_up_app/pages/chat.dart';
+import 'package:shape_up_app/pages/notifications.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/notification_service.dart';
 import 'package:shape_up_app/services/social_service.dart';
 import '../components/post_card.dart';
 import '../components/reaction_popup.dart';
 import '../components/story_section.dart';
-import 'dart:collection';
-
 import '../widgets/socialService/comments/comments_modal.dart';
 
 const Color kBackgroundColor = Color(0xFF191F2B);
@@ -34,7 +33,6 @@ const double kPostImageHeight = 330.0;
 const ReactionType kDefaultReactionType = ReactionType.like;
 String kDefaultReactionEmoji = reactionEmojiMap[kDefaultReactionType] ?? "👍";
 
-
 class Feed extends StatefulWidget {
   const Feed({super.key});
 
@@ -50,7 +48,6 @@ class _FeedState extends State<Feed> {
   int _unreadNotifications = 0;
   int _unreadMessages = 0;
 
-
   Map<String, ReactionType?> _currentUserReactions = {};
   Map<String, List<PostReactionDto>> _allPostReactions = {};
   Map<String, List<PostCommentDto>> _allPostComments = {};
@@ -60,6 +57,7 @@ class _FeedState extends State<Feed> {
   ];
 
   String _currentUserId = '';
+  PostVisibility? selectedVisibility = PostVisibility.public; // Variável de instância
 
   @override
   void initState() {
@@ -68,17 +66,29 @@ class _FeedState extends State<Feed> {
     _listenToNotifications();
   }
 
-  Future<void> _getUserInfo() async{
+  Future<void> _getUserInfo() async {
     _currentUser = await SocialService.viewProfileSimplifiedAsync(_currentUserId);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _reloadUnreadNotifications();
+  }
+
+  void _reloadUnreadNotifications() {
+    setState(() {
+      var notifications = NotificationService.getNotifications();
+
+      _unreadMessages = notifications.where((notification) => notification.topic == NotificationTopic.Comment).length;
+      _unreadNotifications = notifications.where((notification) => notification.topic != NotificationTopic.Comment).length;
+    });
   }
 
   void _listenToNotifications() {
     NotificationService.notificationStream.listen((notification) {
       setState(() {
-        _unreadNotifications++;
-        if (notification.topic == NotificationTopic.Message) {
-          _unreadMessages++;
-        }
+        _reloadUnreadNotifications();
       });
     });
   }
@@ -133,10 +143,10 @@ class _FeedState extends State<Feed> {
         _allPostReactions[postId]?.removeWhere((r) => r.profileId == _currentUserId);
         _allPostReactions[postId]?.add(PostReactionDto(
             _currentUserId,
-            DateTime.now().toIso8601String(), // Data/hora temporária
+            DateTime.now().toIso8601String(),
             selectedReaction,
             postId,
-            "temp_id_${DateTime.now().millisecondsSinceEpoch}" // ID temporário
+            "temp_id_${DateTime.now().millisecondsSinceEpoch}"
         ));
       }
       _allPostReactions[postId]?.sort((a, b) => DateTime.parse(b.createdAt).compareTo(DateTime.parse(a.createdAt)));
@@ -190,7 +200,6 @@ class _FeedState extends State<Feed> {
     double top = buttonPosition.dy - popupHeight - 8;
     double left = buttonPosition.dx + buttonSize.width / 2 - popupWidth / 2;
 
-    // Ajustar para não sair da tela
     if (top < kToolbarHeight) {
       top = buttonPosition.dy + buttonSize.height - 100;
     }
@@ -229,7 +238,6 @@ class _FeedState extends State<Feed> {
         _allPostComments[postId] = comments;
       });
 
-      // Exibir o modal de comentários
       showCommentsModal(context, postId, comments);
     } catch (e) {
       if (kDebugMode) {
@@ -269,12 +277,9 @@ class _FeedState extends State<Feed> {
               ],
             ),
             onPressed: () {
-              // Lógica para abrir a página de notificações
-
-              Map<String, String> metadata = {
-
-              };
-              NotificationService.showNotification(new NotificationDto(topic: NotificationTopic.Comment, title: 'title', body: 'ttt', metadata: metadata));
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const Notifications()),
+              );
             },
           ),
           IconButton(
@@ -341,7 +346,7 @@ class _FeedState extends State<Feed> {
                 currentUserReaction: currentUserReaction,
                 reactionCount: post.reactionsCount,
                 commentCount: post.commentsCount,
-                comments: [], // Comentários não carregados aqui
+                comments: [],
                 onReactionButtonPressed: (buttonContext) => _showReactionPopup(buttonContext, post.id),
                 onReactionSelected: _handleReactionSelected,
                 buildReactionIcons: (postId) => _buildReactionIconsFromPost(post),
@@ -379,17 +384,10 @@ class _FeedState extends State<Feed> {
 
   Widget _buildPostCreationSection() {
     final TextEditingController descriptionController = TextEditingController();
-    PostVisibility? selectedVisibility = PostVisibility.public;
     List<String> selectedImages = [];
 
     Future<void> selectImages() async {
-      // Lógica para selecionar imagens (exemplo usando o pacote image_picker)
-      // final pickedFiles = await ImagePicker().pickMultiImage();
-      // if (pickedFiles != null) {
-      //   setState(() {
-      //     _selectedImages = pickedFiles.map((file) => file.path).toList();
-      //   });
-      // }
+      // Lógica para selecionar imagens
     }
 
     Future<void> createPost() async {

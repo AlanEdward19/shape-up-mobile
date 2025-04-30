@@ -16,21 +16,26 @@ class NotificationService {
   static final String baseUrl = dotenv.env['NOTIFICATION_SERVICE_BASE_URL']!;
 
   static Map<String, String> createHeaders(String token) {
-    Map<String, String> headers = {
+    return {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
     };
-    return headers;
   }
 
   static late HubConnection _hubConnection;
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin();
 
   static final StreamController<NotificationDto> _notificationStreamController =
-      StreamController<NotificationDto>.broadcast();
+  StreamController<NotificationDto>.broadcast();
   static Stream<NotificationDto> get notificationStream =>
       _notificationStreamController.stream;
+
+  static final List<NotificationDto> _notifications = [];
+
+  static List<NotificationDto> getNotifications() {
+    return List.unmodifiable(_notifications);
+  }
 
   static Future initializeLocalNotifications() async {
     final android = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -40,17 +45,16 @@ class NotificationService {
   }
 
   static Future<void> initializeConnection(String profileId) async {
-    _hubConnection =
-        HubConnectionBuilder()
-            .withUrl(
-              '$baseUrl/notifications?userId=$profileId',
-              HttpConnectionOptions(
-                accessTokenFactory: () async {
-                  return await AuthenticationService.getToken();
-                },
-              ),
-            )
-            .build();
+    _hubConnection = HubConnectionBuilder()
+        .withUrl(
+      '$baseUrl/notifications?userId=$profileId',
+      HttpConnectionOptions(
+        accessTokenFactory: () async {
+          return await AuthenticationService.getToken();
+        },
+      ),
+    )
+        .build();
 
     _hubConnection.onclose((error) {
       print('Conexão encerrada: $error');
@@ -62,7 +66,8 @@ class NotificationService {
           final notification = NotificationDto.fromJson(
             jsonDecode(arguments[0]),
           );
-          _notificationStreamController.add(notification);
+          _notifications.insert(0, notification); // Armazena a notificação
+          _notificationStreamController.add(notification); // Emite no stream
           showNotification(notification);
         } catch (e) {
           print('Erro ao converter notificação: $e');
@@ -85,7 +90,7 @@ class NotificationService {
         icon: 'logo',
         enableVibration: true,
         playSound: true,
-        color: Color(0xFF159CD5)
+        color: Color(0xFF159CD5),
       ),
     );
 
@@ -96,6 +101,10 @@ class NotificationService {
       payload: 'asdsada',
       platformDetails,
     );
+  }
+
+  static void removeNotification(NotificationDto notification) {
+    _notifications.remove(notification);
   }
 
   static Future<void> stopConnection() async {
@@ -110,11 +119,13 @@ class NotificationService {
   }
 
   static Future<void> updateDeviceToken(String token) async {
-    String oldToken = (await storage.read(key: 'device_token'))!;
+    String? oldToken = await storage.read(key: 'device_token');
 
     if (oldToken == token) return;
 
-    await signOut(oldToken);
+    if (oldToken != null) {
+      await signOut(oldToken);
+    }
     await saveDeviceToken(token);
     await logIn(token);
   }
@@ -139,7 +150,7 @@ class NotificationService {
     final response = await http.put(
       Uri.parse('$baseUrl/v1/User/SignOut'),
       headers: createHeaders(token),
-      body: {'deviceToken': deviceToken},
+      body: jsonEncode({'deviceToken': deviceToken}),
     );
 
     if (response.statusCode != 200) {
