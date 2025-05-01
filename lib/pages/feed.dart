@@ -97,8 +97,8 @@ class _FeedState extends State<Feed> {
     try {
       _currentUserId = await AuthenticationService.getProfileId();
       if (_currentUserId.isNotEmpty) {
-        await _loadFeedData();
         await _getUserInfo();
+        await _loadFeedData();
       }
     } catch (e) {
       setState(() {
