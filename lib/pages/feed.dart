@@ -342,6 +342,7 @@ class _FeedState extends State<Feed> {
               final currentUserReaction = _currentUserReactions[post.id];
 
               return PostCard(
+                currentUserId: _currentUserId,
                 post: post,
                 currentUserReaction: currentUserReaction,
                 reactionCount: post.reactionsCount,
@@ -350,8 +351,8 @@ class _FeedState extends State<Feed> {
                 onReactionButtonPressed: (buttonContext) => _showReactionPopup(buttonContext, post.id),
                 onReactionSelected: _handleReactionSelected,
                 buildReactionIcons: (postId) => _buildReactionIconsFromPost(post),
-                onOptionsPressed: () { /* TODO: Implement options logic */ },
                 onCommentButtonPressed: () => _loadCommentsForPost(post.id),
+                onPostDeleted: _loadFeedData
               );
             }
           },

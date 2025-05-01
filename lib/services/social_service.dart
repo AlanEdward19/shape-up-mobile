@@ -352,6 +352,19 @@ class SocialService {
     }
   }
 
+  static Future<void> deletePostAsync(String postId) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/v1/Post/$postId/deletePost'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode != 204) {
+      throw Exception("Erro ao deletar post");
+    }
+  }
+
   //TODO implementar rota de getFriendRecommendation
 
   static Future<void> sendFriendRequestAsync(

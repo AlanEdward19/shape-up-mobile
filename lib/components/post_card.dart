@@ -5,6 +5,7 @@ import 'package:shape_up_app/components/personalized_circle_avatar.dart';
 import 'package:shape_up_app/dtos/socialService/post_comment_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_dto.dart';
 import 'package:shape_up_app/enums/socialService/reaction_type.dart';
+import 'package:shape_up_app/services/social_service.dart';
 import 'package:shape_up_app/widgets/socialService/comments/comments_modal.dart';
 
 const Color kBackgroundColor = Color(0xFF191F2B);
@@ -23,6 +24,7 @@ String kDefaultReactionEmoji = reactionEmojiMap[kDefaultReactionType] ?? "👍";
 
 
 class PostCard extends StatelessWidget {
+  final String? currentUserId;
   final PostDto post;
   final ReactionType? currentUserReaction;
   final int reactionCount;
@@ -30,21 +32,22 @@ class PostCard extends StatelessWidget {
   final List<PostCommentDto> comments;
   final Function(BuildContext) onReactionButtonPressed;
   final Function(String, ReactionType) onReactionSelected;
-  final VoidCallback onOptionsPressed;
   final Widget Function(String) buildReactionIcons;
   final VoidCallback onCommentButtonPressed;
+  final VoidCallback? onPostDeleted;
 
   const PostCard({
+    this.currentUserId,
     required this.post,
     required this.currentUserReaction,
     required this.reactionCount,
     required this.commentCount,
     required this.comments,
     required this.onReactionButtonPressed,
-    required this.onOptionsPressed,
     required this.onReactionSelected,
     required this.buildReactionIcons,
     required this.onCommentButtonPressed,
+    this.onPostDeleted,
     super.key,
   });
 
@@ -61,7 +64,6 @@ class PostCard extends StatelessWidget {
       displayColor = Colors.grey;
     }
 
-
     return Card(
       margin: kCardMargin,
       color: kBackgroundColor,
@@ -76,9 +78,41 @@ class PostCard extends StatelessWidget {
               '${post.publisherFirstName} ${post.publisherLastName}',
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
-            trailing: IconButton(
+            trailing: PopupMenuButton<String>(
               icon: const Icon(Icons.more_horiz, color: Colors.white),
-              onPressed: onOptionsPressed,
+              onSelected: (value) async {
+                if (value == 'edit') {
+                  // Ação de editar (apenas imprime no console por enquanto)
+                  print('Editar post: ${post.id}');
+                } else if (value == 'delete') {
+                  try {
+                    await SocialService.deletePostAsync(post.id);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Post excluído com sucesso!')),
+                    );
+
+                    onPostDeleted?.call();
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Erro ao excluir post: $e')),
+                    );
+                  }
+                }
+              },
+              itemBuilder: (context) {
+                return [
+                  if (post.publisherId == currentUserId) ...[
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Text('Editar'),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Text('Excluir'),
+                    ),
+                  ],
+                ];
+              },
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
           ),
