@@ -70,6 +70,7 @@ class _FriendsState extends State<Friends> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Amigos', style: TextStyle(color: Colors.white)),
+        iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: const Color(0xFF191F2B),
       ),
       body: _friends.isEmpty && !_isLoading

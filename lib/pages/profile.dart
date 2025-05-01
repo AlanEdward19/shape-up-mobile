@@ -95,6 +95,7 @@ class _ProfilePageState extends State<Profile> {
             },
           ),
         ],
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: FutureBuilder<ProfileDto>(
         future: _profileFuture,
