@@ -191,25 +191,39 @@ class _ProfilePageState extends State<Profile> {
                             children: [
                               Expanded(
                                 child: ElevatedButton(
-                                  onPressed:
-                                      profile.isFriend
-                                          ? () {
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (
-                                                      context,
-                                                    ) => ChatConversation(
-                                                      profileId: profile.id,
-                                                      profileName:
-                                                          "${profile.firstName} ${profile.lastName}",
-                                                      profileImageUrl:
-                                                          profile.imageUrl,
-                                                    ),
-                                              ),
-                                            );
-                                          }
-                                          : null,
+                                  onPressed: profile.isFriend
+                                      ? () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => ChatConversation(
+                                          profileId: profile.id,
+                                          profileName: "${profile.firstName} ${profile.lastName}",
+                                          profileImageUrl: profile.imageUrl,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                      : () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: const Text("Atenção"),
+                                          content: const Text(
+                                            "Para enviar mensagem a esse perfil é necessário enviar uma solicitação de amizade e ser aceita primeiro.",
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: const Text("OK"),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor:
                                         profile.isFriend
@@ -425,7 +439,7 @@ class _ProfilePageState extends State<Profile> {
                         );
                       } else {
                         return const Center(
-                          child: Text("Nenhum post disponível"),
+                          child: Text("Nenhum post disponível", style: TextStyle(color: Colors.white)),
                         );
                       }
                     },
