@@ -428,11 +428,15 @@ class _ProfilePageState extends State<Profile> {
                                 ),
                             itemCount: posts.length,
                             itemBuilder: (context, index) {
-                              return Image.network(
-                                posts[index].images.isNotEmpty
-                                    ? posts[index].images[0]
-                                    : "",
+                              return posts[index].images.isNotEmpty
+                                  ? Image.network(
+                                posts[index].images[0],
                                 fit: BoxFit.cover,
+                              )
+                                  : const Icon(
+                                Icons.image_not_supported,
+                                color: Colors.grey,
+                                size: 45,
                               );
                             },
                           ),
