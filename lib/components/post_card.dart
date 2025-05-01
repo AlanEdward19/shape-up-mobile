@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shape_up_app/components/image_carousel_with_indicators.dart';
+import 'package:shape_up_app/components/personalized_circle_avatar.dart';
 import 'package:shape_up_app/dtos/socialService/post_comment_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_dto.dart';
 import 'package:shape_up_app/enums/socialService/reaction_type.dart';
@@ -70,13 +71,7 @@ class PostCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ListTile(
-            leading: CircleAvatar(
-              backgroundColor: kPlaceholderColor,
-              backgroundImage: NetworkImage(post.publisherImageUrl),
-              onBackgroundImageError: (exception, stackTrace) {
-                if (kDebugMode) print("Erro ao carregar imagem do perfil: $exception");
-              },
-            ),
+            leading: personalizedCircleAvatar(post.publisherImageUrl, '${post.publisherFirstName} ${post.publisherLastName}', 20),
             title: Text(
               '${post.publisherFirstName} ${post.publisherLastName}',
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),

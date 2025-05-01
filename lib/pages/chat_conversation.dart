@@ -4,6 +4,8 @@ import 'package:shape_up_app/dtos/chatService/message_dto.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/chat_service.dart';
 
+import '../components/personalized_circle_avatar.dart';
+
 class ChatConversation extends StatefulWidget {
   final String profileId;
   final String profileName;
@@ -153,7 +155,7 @@ class _ChatConversationState extends State<ChatConversation> {
       appBar: AppBar(
         title: Row(
           children: [
-            CircleAvatar(backgroundImage: NetworkImage(widget.profileImageUrl)),
+            personalizedCircleAvatar(widget.profileImageUrl, widget.profileName, 20),
             const SizedBox(width: 8),
             Text(
               widget.profileName,
