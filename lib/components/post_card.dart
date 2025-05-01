@@ -5,6 +5,7 @@ import 'package:shape_up_app/components/personalized_circle_avatar.dart';
 import 'package:shape_up_app/dtos/socialService/post_comment_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_dto.dart';
 import 'package:shape_up_app/enums/socialService/reaction_type.dart';
+import 'package:shape_up_app/pages/profile.dart';
 import 'package:shape_up_app/services/social_service.dart';
 import 'package:shape_up_app/widgets/socialService/comments/comments_modal.dart';
 
@@ -73,10 +74,35 @@ class PostCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ListTile(
-            leading: personalizedCircleAvatar(post.publisherImageUrl, '${post.publisherFirstName} ${post.publisherLastName}', 20),
-            title: Text(
-              '${post.publisherFirstName} ${post.publisherLastName}',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            leading: GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => Profile(profileId: post.publisherId),
+                  ),
+                );
+              },
+              child: personalizedCircleAvatar(
+                post.publisherImageUrl,
+                '${post.publisherFirstName} ${post.publisherLastName}',
+                20,
+              ),
+            ),
+            title: GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => Profile(profileId: post.publisherId),
+                  ),
+                );
+              },
+              child: Text(
+                '${post.publisherFirstName} ${post.publisherLastName}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
             trailing: PopupMenuButton<String>(
               icon: const Icon(Icons.more_horiz, color: Colors.white),

@@ -333,19 +333,35 @@ class _ProfilePageState extends State<Profile> {
                                           ElevatedButton(
                                             onPressed: () async {
                                               await SocialService.manageFriendRequestAsync(profile.id, true);
-                                              _loadFriendRequests();
+
+                                              setState(() {
+                                                _profileFuture =
+                                                    SocialService.viewProfileAsync(
+                                                      widget.profileId,
+                                                    );
+
+                                                _loadFriendRequests();
+                                              });
                                             },
-                                            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                                            child: const Text("Aceitar"),
+                                            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                                            child: const Text("Aceitar", style: TextStyle(color: Colors.white)),
                                           ),
                                           const SizedBox(width: 8),
                                           ElevatedButton(
                                             onPressed: () async {
                                               await SocialService.manageFriendRequestAsync(profile.id, false);
-                                              _loadFriendRequests();
+
+                                              setState(() {
+                                                _profileFuture =
+                                                    SocialService.viewProfileAsync(
+                                                      widget.profileId,
+                                                    );
+
+                                                _loadFriendRequests();
+                                              });
                                             },
                                             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                                            child: const Text("Recusar"),
+                                            child: const Text("Recusar", style: TextStyle(color: Colors.white)),
                                           ),
                                         ],
                                       ),

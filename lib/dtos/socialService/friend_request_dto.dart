@@ -10,7 +10,7 @@ class FriendRequestDto {
   factory FriendRequestDto.fromJson(Map<String, dynamic> json) {
     return FriendRequestDto(
       json['profileId'],
-      friendRequestStatusMap.values.firstWhere((v) => v.name == json['status']),
+      friendRequestStatusMap[json['status']]!,
       json['message'],
     );
   }
