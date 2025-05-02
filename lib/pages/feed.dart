@@ -13,6 +13,7 @@ import 'package:shape_up_app/pages/notifications.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/notification_service.dart';
 import 'package:shape_up_app/services/social_service.dart';
+import 'package:shape_up_app/widgets/socialService/post/post_creation_section.dart';
 import '../components/post_card.dart';
 import '../components/reaction_popup.dart';
 import '../components/story_section.dart';
@@ -331,7 +332,7 @@ class _FeedState extends State<Feed> {
                 children: [
                   StorySection(storyStatus: _storyStatus),
                   const SizedBox(height: 16),
-                  _buildPostCreationSection(),
+                  const PostCreationSection(),
                 ],
               );
             } else {
@@ -380,158 +381,6 @@ class _FeedState extends State<Feed> {
           ),
         );
       }).toList(),
-    );
-  }
-
-  Widget _buildPostCreationSection() {
-    final TextEditingController descriptionController = TextEditingController();
-    List<String> selectedImages = [];
-
-    Future<void> selectImages() async {
-      // Lógica para selecionar imagens
-    }
-
-    Future<void> createPost() async {
-      if (descriptionController.text.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Por favor, insira uma descrição.')),
-        );
-        return;
-      }
-
-      try {
-        final post = await SocialService.createPostAsync(
-          descriptionController.text,
-          selectedVisibility!,
-        );
-
-        if (selectedImages.isNotEmpty) {
-          await SocialService.uploadFilesAsync(post.id, selectedImages);
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Post criado com sucesso!')),
-        );
-
-        descriptionController.clear();
-        setState(() {
-          selectedImages = [];
-          selectedVisibility = PostVisibility.public;
-        });
-
-        await _loadFeedData();
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao criar post: $e')),
-        );
-      }
-    }
-
-    return Card(
-      margin: const EdgeInsets.all(16.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-      color: kBackgroundColor,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundImage: NetworkImage(_currentUser?.imageUrl ?? ''),
-                  radius: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: descriptionController,
-                    maxLines: 2,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
-                      hintText: 'No que você está pensando?',
-                      hintStyle: TextStyle(color: Colors.grey),
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const Divider(color: Colors.white24),
-            Row(
-              children: [
-                ElevatedButton.icon(
-                  onPressed: selectImages,
-                  icon: const Icon(Icons.image, color: Colors.white, size: 18),
-                  label: const Text('Imagem', style: TextStyle(fontSize: 14)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kPlaceholderColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    elevation: 0,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                DropdownButton<PostVisibility?>(
-                  value: selectedVisibility,
-                  dropdownColor: kBackgroundColor,
-                  items: [
-                    DropdownMenuItem(
-                      value: PostVisibility.public,
-                      child: Row(
-                        children: const [
-                          Icon(Icons.public, color: Colors.white, size: 18),
-                          SizedBox(width: 8),
-                          Text('Público', style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: PostVisibility.friendsOnly,
-                      child: Row(
-                        children: const [
-                          Icon(Icons.group, color: Colors.white, size: 18),
-                          SizedBox(width: 8),
-                          Text('Somente Amigos', style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: PostVisibility.private,
-                      child: Row(
-                        children: const [
-                          Icon(Icons.lock, color: Colors.white, size: 18),
-                          SizedBox(width: 8),
-                          Text('Privado', style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      selectedVisibility = value;
-                    });
-                  },
-                  underline: const SizedBox(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton(
-                onPressed: createPost,
-                child: const Text('Publicar', style: TextStyle(fontSize: 14)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
