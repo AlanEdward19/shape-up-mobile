@@ -11,3 +11,15 @@ const Map<PostVisibility, int> visibilityToIntMap = {
   PostVisibility.friendsOnly : 1,
   PostVisibility.private : 2,
 };
+
+const Map<PostVisibility, String> visibilityToStringMap = {
+  PostVisibility.public : "Público",
+  PostVisibility.friendsOnly : "Apenas amigos",
+  PostVisibility.private : "Privado",
+};
+
+const Map<String, PostVisibility> stringToVisibilityMap = {
+  "Público" : PostVisibility.public,
+  "Apenas amigos" : PostVisibility.friendsOnly,
+  "Privado" : PostVisibility.private,
+};
