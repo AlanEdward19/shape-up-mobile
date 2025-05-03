@@ -11,9 +11,9 @@ class PostDto {
   final PostVisibility visibility;
   final List<String> images;
   final String content;
-  final int reactionsCount;
-  final int commentsCount;
-  final List<ReactionType> topReactions;
+  int reactionsCount;
+  int commentsCount;
+  List<ReactionType> topReactions;
 
   PostDto(
       this.id,

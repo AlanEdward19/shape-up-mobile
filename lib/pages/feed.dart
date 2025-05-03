@@ -151,6 +151,24 @@ class _FeedState extends State<Feed> {
         ));
       }
       _allPostReactions[postId]?.sort((a, b) => DateTime.parse(b.createdAt).compareTo(DateTime.parse(a.createdAt)));
+
+      var post = _posts.firstWhere((p) => p.id == postId);
+
+      if(post.reactionsCount != null) {
+        post.reactionsCount = currentReaction == selectedReaction ? post.reactionsCount! - 1 : post.reactionsCount! + 1;
+      }
+
+      if(post.topReactions == null || post.topReactions!.isEmpty) {
+        post.topReactions = [selectedReaction];
+      }
+      else if(post.reactionsCount != null && post.reactionsCount == 0){
+        post.topReactions = [];
+      }
+      else if(post.topReactions!.length < 3 && !post.topReactions!.contains(selectedReaction)) {
+        post.topReactions!.add(selectedReaction);
+      }
+
+      _buildReactionIconsFromPost(post);
     });
 
     try {
