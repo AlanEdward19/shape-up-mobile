@@ -1,3 +1,4 @@
+import 'package:shape_up_app/components/search_bar.dart' as SearchBar;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shape_up_app/dtos/notificationService/notification_dto.dart';
@@ -10,6 +11,7 @@ import 'package:shape_up_app/enums/socialService/reaction_type.dart';
 import 'package:shape_up_app/enums/socialService/post_visibility.dart';
 import 'package:shape_up_app/pages/chat.dart';
 import 'package:shape_up_app/pages/notifications.dart';
+import 'package:shape_up_app/pages/profile.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/notification_service.dart';
 import 'package:shape_up_app/services/social_service.dart';
@@ -43,6 +45,7 @@ class Feed extends StatefulWidget {
 
 class _FeedState extends State<Feed> {
   bool _isLoading = true;
+  List<SimplifiedProfileDto> _searchResults = [];
   SimplifiedProfileDto? _currentUser;
   String? _error;
   List<PostDto> _posts = [];
@@ -59,6 +62,28 @@ class _FeedState extends State<Feed> {
 
   String _currentUserId = '';
   PostVisibility? selectedVisibility = PostVisibility.public; // Variável de instância
+
+  Future<void> _searchProfiles(String query) async {
+    if (query.isNotEmpty) {
+      try {
+        final results = await SocialService.searchProfileByNameAsync(query);
+        setState(() {
+          _searchResults = results;
+        });
+      } catch (e) {
+        if (kDebugMode) {
+          print("Erro ao buscar perfis: $e");
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao buscar perfis: $e')),
+        );
+      }
+    } else {
+      setState(() {
+        _searchResults = [];
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -305,7 +330,37 @@ class _FeedState extends State<Feed> {
           ),
         ],
       ),
-      body: _buildBody(),
+      body: Column(
+        children: [
+          SearchBar.SearchBar(onSearch: _searchProfiles),
+          if (_searchResults.isNotEmpty)
+            Expanded(
+              child: ListView.builder(
+                itemCount: _searchResults.length,
+                itemBuilder: (context, index) {
+                  final profile = _searchResults[index];
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage: NetworkImage(profile.imageUrl),
+                    ),
+                    title: Text(
+                      '${profile.firstName} ${profile.lastName}',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => Profile(profileId: profile.id),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          if (_searchResults.isEmpty) Expanded(child: _buildBody()),
+        ],
+      ),
     );
   }
 
