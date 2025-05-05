@@ -62,7 +62,7 @@ class PostCard extends StatelessWidget {
       displayColor = Colors.blue;
     } else {
       displayEmoji = kDefaultReactionEmoji;
-      displayColor = Colors.grey;
+      displayColor = Colors.white;
     }
 
     return Card(
@@ -143,7 +143,7 @@ class PostCard extends StatelessWidget {
             contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
           ),
 
-          if (post.images.isNotEmpty)
+          if (post.images.isNotEmpty && post.images[0].isNotEmpty)
             SizedBox(
               height: kPostImageHeight,
               child: ImageCarouselWithIndicator(imageUrls: post.images),
@@ -182,19 +182,17 @@ class PostCard extends StatelessWidget {
                     const SizedBox(width: 6),
 
                     Text(
-                      '$reactionCount', // Mostra a contagem total
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      '$reactionCount',
+                      style: TextStyle(color: displayColor, fontSize: 14),
                     ),
                     const SizedBox(width: 16),
 
-                    // Ícone e Contagem de Comentários (TODO: Adicionar contagem real)
                     IconButton(
                       icon : const Icon(Icons.chat_bubble_outline, color: Colors.white, size: 20),
                       onPressed: onCommentButtonPressed,
                     ),
                     const SizedBox(width: 6),
 
-                    // Quantidade de Comentários
                     Text(
                       '$commentCount',
                       style: TextStyle(color: Colors.white, fontSize: 14),

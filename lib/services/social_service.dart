@@ -144,7 +144,7 @@ class SocialService {
     var token = await AuthenticationService.getToken();
 
     final response = await http.get(
-      Uri.parse('$baseUrl/v1/Post/$postId'),
+      Uri.parse('$baseUrl/v1/Post/$postId/getPost'),
       headers: createHeaders(token),
     );
 

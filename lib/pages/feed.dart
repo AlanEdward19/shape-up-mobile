@@ -135,41 +135,24 @@ class _FeedState extends State<Feed> {
     final originalReactions = List<PostReactionDto>.from(_allPostReactions[postId] ?? []);
     final originalUserReaction = _currentUserReactions[postId];
 
-    setState(() {
-      if (currentReaction == selectedReaction) {
+    if (currentReaction == selectedReaction) {
+      setState(() {
         _currentUserReactions[postId] = null;
         _allPostReactions[postId]?.removeWhere((r) => r.profileId == _currentUserId);
-      } else {
+      });
+    } else {
+      setState(() {
         _currentUserReactions[postId] = selectedReaction;
         _allPostReactions[postId]?.removeWhere((r) => r.profileId == _currentUserId);
         _allPostReactions[postId]?.add(PostReactionDto(
-            _currentUserId,
-            DateTime.now().toIso8601String(),
-            selectedReaction,
-            postId,
-            "temp_id_${DateTime.now().millisecondsSinceEpoch}"
+          _currentUserId,
+          DateTime.now().toIso8601String(),
+          selectedReaction,
+          postId,
+          "temp_id_${DateTime.now().millisecondsSinceEpoch}",
         ));
-      }
-      _allPostReactions[postId]?.sort((a, b) => DateTime.parse(b.createdAt).compareTo(DateTime.parse(a.createdAt)));
-
-      var post = _posts.firstWhere((p) => p.id == postId);
-
-      if(post.reactionsCount != null) {
-        post.reactionsCount = currentReaction == selectedReaction ? post.reactionsCount! - 1 : post.reactionsCount! + 1;
-      }
-
-      if(post.topReactions == null || post.topReactions!.isEmpty) {
-        post.topReactions = [selectedReaction];
-      }
-      else if(post.reactionsCount != null && post.reactionsCount == 0){
-        post.topReactions = [];
-      }
-      else if(post.topReactions!.length < 3 && !post.topReactions!.contains(selectedReaction)) {
-        post.topReactions!.add(selectedReaction);
-      }
-
-      _buildReactionIconsFromPost(post);
-    });
+      });
+    }
 
     try {
       if (currentReaction == selectedReaction) {
@@ -178,20 +161,18 @@ class _FeedState extends State<Feed> {
         await SocialService.reactToPostAsync(postId, selectedReaction);
       }
 
-      final updatedReactions = await SocialService.getPostReactionsAsync(postId);
-      setState(() {
-        _allPostReactions[postId] = updatedReactions;
-        try {
-          _currentUserReactions[postId] = updatedReactions
-              .firstWhere((r) => r.profileId == _currentUserId)
-              .reactionType;
-        } catch (e) {
-          _currentUserReactions[postId] = null;
-        }
-        _allPostReactions[postId]?.sort((a, b) => DateTime.parse(b.createdAt).compareTo(DateTime.parse(a.createdAt)));
-      });
+      // Buscar o post atualizado
+      final updatedPost = await SocialService.getPostAsync(postId);
 
+      // Atualizar o post na lista
+      setState(() {
+        final postIndex = _posts.indexWhere((post) => post.id == postId);
+        if (postIndex != -1) {
+          _posts[postIndex] = updatedPost;
+        }
+      });
     } catch (e) {
+      // Reverter alterações em caso de erro
       setState(() {
         _currentUserReactions[postId] = originalUserReaction;
         _allPostReactions[postId] = originalReactions;
@@ -200,9 +181,6 @@ class _FeedState extends State<Feed> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao ${currentReaction == selectedReaction ? "remover" : "salvar"} reação: ${e.toString().replaceFirst("Exception: ", "")}')),
         );
-      }
-      if (kDebugMode) {
-        print("Erro ao atualizar reação para post $postId: $e");
       }
     }
   }
