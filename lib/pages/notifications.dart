@@ -34,9 +34,9 @@ class _NotificationState extends State<Notifications> {
   }
 
   void _markAsRead(NotificationDto notification) {
+    NotificationService.removeNotification(notification);
     setState(() {
-      _notifications.remove(notification);
-      NotificationService.removeNotification(notification);
+      _notifications = NotificationService.getNotifications();
     });
   }
 
@@ -74,8 +74,10 @@ class _NotificationState extends State<Notifications> {
               child: const Icon(Icons.delete, color: Colors.white),
             ),
             onDismissed: (direction) {
+              final removedNotification = _notifications[index];
+
               if (direction == DismissDirection.startToEnd) {
-                _markAsRead(notification);
+                _markAsRead(removedNotification);
               }
             },
             child: ListTile(

@@ -43,7 +43,10 @@ class Feed extends StatefulWidget {
   State<Feed> createState() => _FeedState();
 }
 
-class _FeedState extends State<Feed> {
+class _FeedState extends State<Feed> with RouteAware {
+
+  final RouteObserver<PageRoute> _routeObserver = RouteObserver<PageRoute>();
+
   bool _isLoading = true;
   List<SimplifiedProfileDto> _searchResults = [];
   SimplifiedProfileDto? _currentUser;
@@ -99,6 +102,18 @@ class _FeedState extends State<Feed> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+    _reloadUnreadNotifications();
+  }
+
+  @override
+  void dispose() {
+    _routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
     _reloadUnreadNotifications();
   }
 
