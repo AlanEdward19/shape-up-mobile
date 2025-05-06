@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shape_up_app/components/personalized_circle_avatar.dart';
 import 'package:shape_up_app/dtos/socialService/post_comment_dto.dart';
 import 'package:shape_up_app/dtos/socialService/profile_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_dto.dart';
 import 'package:shape_up_app/dtos/socialService/friend_request_dto.dart';
 import 'package:shape_up_app/enums/socialService/friend_request_status.dart';
+import 'package:shape_up_app/enums/socialService/gender.dart';
 import 'package:shape_up_app/pages/chat_conversation.dart';
 import 'package:shape_up_app/pages/settings.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
@@ -162,9 +164,48 @@ class _ProfilePageState extends State<Profile> {
                   const SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      "${profile.country}, ${profile.city} - ${profile.state}",
-                      style: const TextStyle(fontSize: 16, color: Colors.white),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on, color: Colors.white),
+                            const SizedBox(width: 8),
+                            Text(
+                              "${profile.country}, ${profile.city} - ${profile.state}",
+                              style: const TextStyle(fontSize: 16, color: Colors.white),
+                            ),
+                          ],
+                        ),
+
+                        if (profile.gender != null) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              const Icon(Icons.person, color: Colors.white),
+                              const SizedBox(width: 8),
+                              Text(
+                                genderToString[profile.gender]!,
+                                style: const TextStyle(fontSize: 16, color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ],
+
+                        if (profile.birthDate.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              const Icon(Icons.cake, color: Colors.white),
+                              const SizedBox(width: 8),
+                              Text(
+                                DateFormat("dd/MM").format(DateTime.parse(profile.birthDate)),
+                                style: const TextStyle(fontSize: 16, color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ]
+                      ],
                     ),
                   ),
                   const SizedBox(height: 16),
