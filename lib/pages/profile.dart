@@ -186,233 +186,25 @@ class _ProfilePageState extends State<Profile> {
                         );
 
                         return Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 8,
-                          ),
-                          child: Row(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                          child: Column(
                             children: [
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: profile.isFriend
-                                      ? () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => ChatConversation(
-                                          profileId: profile.id,
-                                          profileName: "${profile.firstName} ${profile.lastName}",
-                                          profileImageUrl: profile.imageUrl,
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                      : () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return AlertDialog(
-                                          title: const Text("Atenção"),
-                                          content: const Text(
-                                            "Para enviar mensagem a esse perfil é necessário enviar uma solicitação de amizade e ser aceita primeiro.",
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                              },
-                                              child: const Text("OK"),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        profile.isFriend
-                                            ? Colors.blue
-                                            : Colors.grey,
-                                  ),
-                                  child: const Icon(
-                                    Icons.message,
-                                    color: Colors.white,
-                                  ),
-                                ),
+                              Row(
+                                children: [
+                                  _buildMessageButton(profile),
+                                  const SizedBox(width: 5),
+                                  _buildFollowButton(profile),
+                                  const SizedBox(width: 5),
+                                  if (profile.isFriend) _buildUnfriendButton(profile),
+                                  if (!profile.isFriend && friendRequest.profileId != '' && friendRequest.status == FriendRequestStatus.Pending)
+                                    _buildCancelRequestButton(friendRequest),
+                                  if (!profile.isFriend && friendRequest.profileId == '' && friendRequest.status != FriendRequestStatus.PendingResponse)
+                                    _buildSendRequestButton(friendRequest),
+                                ],
                               ),
-                              const SizedBox(width: 5),
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () async {
-                                    try {
-                                      if (profile.isFollowing) {
-                                        await SocialService.unfollowUser(
-                                          profile.id,
-                                        );
-                                      } else {
-                                        await SocialService.followUser(
-                                          profile.id,
-                                        );
-                                      }
-                                      setState(() {
-                                        _profileFuture =
-                                            SocialService.viewProfileAsync(
-                                              widget.profileId,
-                                            );
-                                      });
-                                    } catch (e) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(content: Text("Erro: $e")),
-                                      );
-                                    }
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        profile.isFollowing
-                                            ? Colors.red
-                                            : Colors.blue,
-                                  ),
-                                  child: Icon(
-                                    profile.isFollowing
-                                        ? Icons.person_remove
-                                        : Icons.person_add,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              if (profile.isFriend)
-                                Expanded(
-                                  child: ElevatedButton(
-                                    onPressed: () async {
-                                      try {
-                                        await SocialService.deleteFriendAsync(
-                                          profile.id,
-                                        );
-                                        setState(() {
-                                          _profileFuture =
-                                              SocialService.viewProfileAsync(
-                                                widget.profileId,
-                                              );
-                                        });
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              "Amizade desfeita com sucesso!",
-                                            ),
-                                          ),
-                                        );
-                                      } catch (e) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(content: Text("Erro: $e")),
-                                        );
-                                      }
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.red,
-                                    ),
-                                    child: const Icon(
-                                      Icons.group_remove,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                )
-                              else if (friendRequest.profileId != '' &&
-                                  friendRequest.status == FriendRequestStatus.PendingResponse)
-                                Expanded(
-                                  child: Column(
-                                    children: [
-                                      const Text(
-                                        "Você possui uma solicitação de amizade pendente desse perfil",
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                      Row(
-                                        children: [
-                                          ElevatedButton(
-                                            onPressed: () async {
-                                              await SocialService.manageFriendRequestAsync(profile.id, true);
-
-                                              setState(() {
-                                                _profileFuture =
-                                                    SocialService.viewProfileAsync(
-                                                      widget.profileId,
-                                                    );
-
-                                                _loadFriendRequests();
-                                              });
-                                            },
-                                            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                                            child: const Text("Aceitar", style: TextStyle(color: Colors.white)),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          ElevatedButton(
-                                            onPressed: () async {
-                                              await SocialService.manageFriendRequestAsync(profile.id, false);
-
-                                              setState(() {
-                                                _profileFuture =
-                                                    SocialService.viewProfileAsync(
-                                                      widget.profileId,
-                                                    );
-
-                                                _loadFriendRequests();
-                                              });
-                                            },
-                                            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                                            child: const Text("Recusar", style: TextStyle(color: Colors.white)),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              else if (friendRequest.profileId != '' &&
-                                  friendRequest.status == FriendRequestStatus.Pending)
-                                Expanded(
-                                  child: ElevatedButton(
-                                    onPressed: () async {
-                                      await SocialService.removeFriendRequestAsync(profile.id);
-                                      _loadFriendRequests();
-                                    },
-                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                                    child: const Icon(Icons.cancel, color: Colors.white),
-                                  ),
-                                )
-                              else
-                                Expanded(
-                                  child: ElevatedButton(
-                                    onPressed: () async {
-                                      try {
-                                        await SocialService.sendFriendRequestAsync(profile.id, null);
-
-                                        setState(() {
-                                          _friendRequests.add(
-                                            FriendRequestDto(
-                                              profile.id,
-                                              FriendRequestStatus.Pending,
-                                              null,
-                                            ),
-                                          );
-                                        });
-
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text("Solicitação de amizade enviada!")),
-                                        );
-                                      } catch (e) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text("Erro: $e")),
-                                        );
-                                      }
-                                    },
-                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                                    child: const Icon(Icons.group_add, color: Colors.white),
-                                  ),
-                                ),
+                              const SizedBox(height: 15),
+                              if (friendRequest.profileId != '' && friendRequest.status == FriendRequestStatus.PendingResponse)
+                                _buildPendingRequestActions(profile),
                             ],
                           ),
                         );
@@ -608,6 +400,188 @@ class _ProfilePageState extends State<Profile> {
           ),
         ),
         Text(label, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+      ],
+    );
+  }
+
+  Widget _buildMessageButton(ProfileDto profile) {
+    return Expanded(
+      child: ElevatedButton(
+        onPressed: profile.isFriend
+            ? () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => ChatConversation(
+                profileId: profile.id,
+                profileName: "${profile.firstName} ${profile.lastName}",
+                profileImageUrl: profile.imageUrl,
+              ),
+            ),
+          );
+        }
+            : () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text("Atenção"),
+                content: const Text(
+                  "Para enviar mensagem a esse perfil é necessário enviar uma solicitação de amizade e ser aceita primeiro.",
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("OK"),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: profile.isFriend ? Colors.blue : Colors.grey,
+        ),
+        child: const Icon(Icons.message, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildFollowButton(ProfileDto profile) {
+    return Expanded(
+      child: ElevatedButton(
+        onPressed: () async {
+          try {
+            if (profile.isFollowing) {
+              await SocialService.unfollowUser(profile.id);
+            } else {
+              await SocialService.followUser(profile.id);
+            }
+            setState(() {
+              _profileFuture = SocialService.viewProfileAsync(widget.profileId);
+            });
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Erro: $e")),
+            );
+          }
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: profile.isFollowing ? Colors.red : Colors.blue,
+        ),
+        child: Icon(
+          profile.isFollowing ? Icons.person_remove : Icons.person_add,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUnfriendButton(ProfileDto profile) {
+    return Expanded(
+      child: ElevatedButton(
+        onPressed: () async {
+          try {
+            await SocialService.deleteFriendAsync(profile.id);
+            setState(() {
+              _profileFuture = SocialService.viewProfileAsync(widget.profileId);
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Amizade desfeita com sucesso!")),
+            );
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Erro: $e")),
+            );
+          }
+        },
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+        child: const Icon(Icons.group_remove, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildCancelRequestButton(FriendRequestDto friendRequest) {
+    return Expanded(
+      child: ElevatedButton(
+        onPressed: () async {
+          await SocialService.removeFriendRequestAsync(friendRequest.profileId);
+          _loadFriendRequests();
+        },
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+        child: const Icon(Icons.cancel, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildSendRequestButton(FriendRequestDto friendRequest) {
+    return Expanded(
+      child: ElevatedButton(
+        onPressed: () async {
+          try {
+            await SocialService.sendFriendRequestAsync(friendRequest.profileId, null);
+            setState(() {
+              _friendRequests.add(
+                FriendRequestDto(
+                  friendRequest.profileId,
+                  FriendRequestStatus.Pending,
+                  null,
+                ),
+              );
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Solicitação de amizade enviada!")),
+            );
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Erro: $e")),
+            );
+          }
+        },
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+        child: const Icon(Icons.group_add, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildPendingRequestActions(ProfileDto profile) {
+    return Column(
+      children: [
+        const Text(
+          "Você possui uma solicitação de amizade pendente desse perfil",
+          style: TextStyle(color: Colors.white), textAlign: TextAlign.center,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () async {
+                await SocialService.manageFriendRequestAsync(profile.id, true);
+                setState(() {
+                  _profileFuture = SocialService.viewProfileAsync(widget.profileId);
+                  _loadFriendRequests();
+                });
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+              child: const Text("Aceitar", style: TextStyle(color: Colors.white)),
+            ),
+
+            const SizedBox(width: 8, height: 10),
+
+            ElevatedButton(
+              onPressed: () async {
+                await SocialService.manageFriendRequestAsync(profile.id, false);
+                setState(() {
+                  _profileFuture = SocialService.viewProfileAsync(widget.profileId);
+                  _loadFriendRequests();
+                });
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text("Recusar", style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
       ],
     );
   }
