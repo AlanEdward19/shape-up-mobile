@@ -383,7 +383,7 @@ class _FeedState extends State<Feed> {
                 children: [
                   StorySection(storyStatus: _storyStatus),
                   const SizedBox(height: 16),
-                  const PostCreationSection(),
+                  PostCreationSection(profileImage: _currentUser!.imageUrl,),
                 ],
               );
             } else {

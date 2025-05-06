@@ -4,7 +4,9 @@ import 'package:shape_up_app/enums/socialService/post_visibility.dart';
 import 'package:shape_up_app/services/social_service.dart';
 
 class PostCreationSection extends StatefulWidget {
-  const PostCreationSection({Key? key}) : super(key: key);
+  String profileImage;
+
+  PostCreationSection({required this.profileImage, super.key});
 
   @override
   _PostCreationSectionState createState() => _PostCreationSectionState();
@@ -146,7 +148,7 @@ class _PostCreationSectionState extends State<PostCreationSection> {
                         children: [
                           CircleAvatar(
                             backgroundImage: NetworkImage(
-                                "https://via.placeholder.com/150"),
+                                widget.profileImage),
                             radius: 20,
                           ),
                           const SizedBox(width: 12),

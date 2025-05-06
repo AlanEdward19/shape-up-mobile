@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shape_up_app/components/personalized_circle_avatar.dart';
 import 'package:shape_up_app/dtos/socialService/post_comment_dto.dart';
 import 'package:shape_up_app/dtos/socialService/profile_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_dto.dart';
@@ -116,9 +117,10 @@ class _ProfilePageState extends State<Profile> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CircleAvatar(
-                          radius: 40,
-                          backgroundImage: NetworkImage(profile.imageUrl),
+                        personalizedCircleAvatar(
+                          profile.imageUrl,
+                          "${profile.firstName} ${profile.lastName}",
+                          40,
                         ),
                         const SizedBox(width: 16),
                         Expanded(
