@@ -207,6 +207,25 @@ class SocialService {
     }
   }
 
+  static Future<PostDto> editPostAsync(String postId, String? content, PostVisibility? visibility) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.patch(
+      Uri.parse('$baseUrl/v1/Post/$postId/editPost'),
+      headers: createHeaders(token),
+      body: jsonEncode({
+        'content': content,
+        'visibility': visibility != null ? visibilityToIntMap[visibility] : null
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      return PostDto.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception("Erro ao editar post");
+    }
+  }
+
   static Future<void> uploadFilesAsync(String id, List<String> filePaths) async {
     var token = await AuthenticationService.getToken();
 
@@ -339,7 +358,7 @@ class SocialService {
     }
   }
 
-  static Future<void> editPostAsync(String commentId, String content) async {
+  static Future<void> editPostCommentAsync(String commentId, String content) async {
     var token = await AuthenticationService.getToken();
 
     final response = await http.put(

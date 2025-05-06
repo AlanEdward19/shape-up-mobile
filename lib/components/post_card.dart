@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shape_up_app/components/image_carousel_with_indicators.dart';
 import 'package:shape_up_app/components/personalized_circle_avatar.dart';
 import 'package:shape_up_app/dtos/socialService/post_comment_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_dto.dart';
+import 'package:shape_up_app/enums/socialService/post_visibility.dart';
 import 'package:shape_up_app/enums/socialService/reaction_type.dart';
 import 'package:shape_up_app/pages/profile.dart';
 import 'package:shape_up_app/services/social_service.dart';
@@ -36,6 +40,174 @@ class PostCard extends StatelessWidget {
   final Widget Function(String) buildReactionIcons;
   final VoidCallback onCommentButtonPressed;
   final VoidCallback? onPostDeleted;
+
+  void showEditPostModal(BuildContext context, PostDto post, VoidCallback onPostUpdated) {
+    final TextEditingController contentController = TextEditingController(text: post.content);
+    PostVisibility selectedVisibility = post.visibility;
+    List<String> currentImages = List.from(post.images);
+    List<String> newImages = [];
+    final ImagePicker imagePicker = ImagePicker();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: kBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Editar Postagem",
+                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: contentController,
+                    maxLines: 3,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: "Texto da postagem",
+                      labelStyle: TextStyle(color: Colors.white70),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white24),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<PostVisibility>(
+                    value: selectedVisibility,
+                    dropdownColor: kBackgroundColor,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: "Visibilidade",
+                      labelStyle: TextStyle(color: Colors.white70),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white24),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue),
+                      ),
+                    ),
+                    items: PostVisibility.values.map((visibility) {
+                      return DropdownMenuItem(
+                        value: visibility,
+                        child: Text(visibilityToStringMap[visibility] ?? ""),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          selectedVisibility = value;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Imagens",
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ...currentImages.map((image) {
+                        return Stack(
+                          children: [
+                            Image.network(image, width: 100, height: 100, fit: BoxFit.cover),
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: IconButton(
+                                icon: const Icon(Icons.close, color: Colors.red),
+                                onPressed: () {
+                                  setState(() {
+                                    currentImages.remove(image);
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        );
+                      }).toList(),
+                      ...newImages.map((image) {
+                        return Stack(
+                          children: [
+                            Image.file(File(image), width: 100, height: 100, fit: BoxFit.cover),
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: IconButton(
+                                icon: const Icon(Icons.close, color: Colors.red),
+                                onPressed: () {
+                                  setState(() {
+                                    newImages.remove(image);
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        );
+                      }).toList(),
+                      IconButton(
+                        icon: const Icon(Icons.add, color: Colors.white),
+                        onPressed: () async {
+                          final XFile? pickedFile = await imagePicker.pickImage(source: ImageSource.gallery);
+                          if (pickedFile != null) {
+                            setState(() {
+                              newImages.add(pickedFile.path);
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () async {
+                      try {
+                        await SocialService.editPostAsync(post.id, contentController.text.trim(), selectedVisibility);
+
+                        if (newImages.isNotEmpty) {
+                          final List<String> finalImages = [...currentImages, ...newImages];
+                          await SocialService.uploadFilesAsync(post.id, finalImages);
+                        }
+                        Navigator.of(context).pop();
+                        onPostUpdated();
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Erro ao editar postagem: $e")),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                    child: const Text("Salvar Alterações"),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   const PostCard({
     this.currentUserId,
@@ -108,8 +280,7 @@ class PostCard extends StatelessWidget {
               icon: const Icon(Icons.more_horiz, color: Colors.white),
               onSelected: (value) async {
                 if (value == 'edit') {
-                  // Ação de editar (apenas imprime no console por enquanto)
-                  print('Editar post: ${post.id}');
+                  showEditPostModal(context, post, onPostDeleted!);
                 } else if (value == 'delete') {
                   try {
                     await SocialService.deletePostAsync(post.id);
