@@ -73,6 +73,8 @@ class _SettingsState extends State<Settings> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Alterações salvas com sucesso!")),
     );
+
+    Navigator.pop(context);
   }
 
   @override

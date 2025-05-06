@@ -90,7 +90,13 @@ class _ProfilePageState extends State<Profile> {
                           );
                         },
                       ),
-                    );
+                    ).then((_) {
+                      setState(() {
+                        _profileFuture = SocialService.viewProfileAsync(widget.profileId);
+                        _postsFuture = SocialService.getPostsByProfileIdAsync(widget.profileId);
+                        _loadFriendRequests();
+                      });
+                    });
                   },
                 );
               } else {
