@@ -112,7 +112,7 @@ class _CommentsModalState extends State<CommentsModal> {
             TextButton(
               onPressed: () async {
                 try {
-                  await SocialService.editPostAsync(commentId, editController.text.trim());
+                  await SocialService.editPostCommentAsync(commentId, editController.text.trim());
                   Navigator.of(context).pop();
                   await _loadComments();
                 } catch (e) {

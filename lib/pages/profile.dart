@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:shape_up_app/components/personalized_circle_avatar.dart';
+import 'package:shape_up_app/dtos/socialService/post_comment_dto.dart';
 import 'package:shape_up_app/dtos/socialService/profile_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_dto.dart';
+import 'package:shape_up_app/dtos/socialService/friend_request_dto.dart';
+import 'package:shape_up_app/enums/socialService/friend_request_status.dart';
+import 'package:shape_up_app/enums/socialService/gender.dart';
+import 'package:shape_up_app/pages/chat_conversation.dart';
 import 'package:shape_up_app/pages/settings.dart';
+import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/social_service.dart';
 
 class Profile extends StatefulWidget {
@@ -16,45 +24,88 @@ class Profile extends StatefulWidget {
 class _ProfilePageState extends State<Profile> {
   late Future<ProfileDto> _profileFuture;
   late Future<List<PostDto>> _postsFuture;
+  late Future<String> _loggedInProfileId;
+  List<FriendRequestDto> _friendRequests = [];
 
   @override
   void initState() {
     super.initState();
     _profileFuture = SocialService.viewProfileAsync(widget.profileId);
     _postsFuture = SocialService.getPostsByProfileIdAsync(widget.profileId);
+    _loggedInProfileId = AuthenticationService.getProfileId();
+    _loadFriendRequests();
   }
 
-  @override
+  Future<void> _loadFriendRequests() async {
+    try {
+      final requests = await SocialService.getFriendRequestsAsync();
+      setState(() {
+        _friendRequests = requests;
+      });
+    } catch (e) {
+      print("Erro ao carregar solicitações de amizade: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF191F2B),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () {
-              Navigator.of(context).push(
-                PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) => const Settings(),
-                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                    const begin = Offset(1.0, 0.0); // Começa fora da tela (direita)
-                    const end = Offset.zero; // Termina na posição original
-                    const curve = Curves.easeInOut;
+          FutureBuilder<String>(
+            future: _loggedInProfileId,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SizedBox.shrink();
+              } else if (snapshot.hasData &&
+                  snapshot.data == widget.profileId) {
+                return IconButton(
+                  icon: const Icon(Icons.settings, color: Colors.white),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      PageRouteBuilder(
+                        pageBuilder:
+                            (context, animation, secondaryAnimation) =>
+                                const Settings(),
+                        transitionsBuilder: (
+                          context,
+                          animation,
+                          secondaryAnimation,
+                          child,
+                        ) {
+                          const begin = Offset(1.0, 0.0);
+                          const end = Offset.zero;
+                          const curve = Curves.easeInOut;
 
-                    var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                    var offsetAnimation = animation.drive(tween);
+                          var tween = Tween(
+                            begin: begin,
+                            end: end,
+                          ).chain(CurveTween(curve: curve));
+                          var offsetAnimation = animation.drive(tween);
 
-                    return SlideTransition(
-                      position: offsetAnimation,
-                      child: child,
-                    );
+                          return SlideTransition(
+                            position: offsetAnimation,
+                            child: child,
+                          );
+                        },
+                      ),
+                    ).then((_) {
+                      setState(() {
+                        _profileFuture = SocialService.viewProfileAsync(widget.profileId);
+                        _postsFuture = SocialService.getPostsByProfileIdAsync(widget.profileId);
+                        _loadFriendRequests();
+                      });
+                    });
                   },
-                ),
-              );
+                );
+              } else {
+                return const SizedBox.shrink();
+              }
             },
           ),
         ],
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: FutureBuilder<ProfileDto>(
         future: _profileFuture,
@@ -69,22 +120,17 @@ class _ProfilePageState extends State<Profile> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
-                  // Cabeçalho do Perfil
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-
-                        // Foto do perfil
-                        CircleAvatar(
-                          radius: 40,
-                          backgroundImage: NetworkImage(profile.imageUrl),
+                        personalizedCircleAvatar(
+                          profile.imageUrl,
+                          "${profile.firstName} ${profile.lastName}",
+                          40,
                         ),
                         const SizedBox(width: 16),
-
-                        // Informações do perfil
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,12 +140,13 @@ class _ProfilePageState extends State<Profile> {
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white
+                                  color: Colors.white,
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   _buildStat("Publicações", profile.posts),
                                   _buildStat("Seguidores", profile.followers),
@@ -113,8 +160,6 @@ class _ProfilePageState extends State<Profile> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Bio
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Text(
@@ -123,28 +168,109 @@ class _ProfilePageState extends State<Profile> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Localização
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      "${profile.country}, ${profile.city} - ${profile.state}",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on, color: Colors.white),
+                            const SizedBox(width: 8),
+                            Text(
+                              "${profile.country}, ${profile.city} - ${profile.state}",
+                              style: const TextStyle(fontSize: 16, color: Colors.white),
+                            ),
+                          ],
+                        ),
+
+                        if (profile.gender != null) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              const Icon(Icons.person, color: Colors.white),
+                              const SizedBox(width: 8),
+                              Text(
+                                genderToString[profile.gender]!,
+                                style: const TextStyle(fontSize: 16, color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ],
+
+                        if (profile.birthDate.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              const Icon(Icons.cake, color: Colors.white),
+                              const SizedBox(width: 8),
+                              Text(
+                                DateFormat("dd/MM").format(DateTime.parse(profile.birthDate)),
+                                style: const TextStyle(fontSize: 16, color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ]
+                      ],
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  FutureBuilder<String>(
+                    future: _loggedInProfileId,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const SizedBox.shrink();
+                      } else if (snapshot.hasData &&
+                          snapshot.data != profile.id) {
+                        final friendRequest = _friendRequests.firstWhere(
+                          (request) => request.profileId == profile.id,
+                          orElse:
+                              () => FriendRequestDto(
+                                '',
+                                FriendRequestStatus.Pending,
+                                null,
+                              ),
+                        );
 
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  _buildMessageButton(profile),
+                                  const SizedBox(width: 5),
+                                  _buildFollowButton(profile),
+                                  const SizedBox(width: 5),
+                                  if (profile.isFriend) _buildUnfriendButton(profile),
+                                  if (!profile.isFriend && friendRequest.profileId != '' && friendRequest.status == FriendRequestStatus.Pending)
+                                    _buildCancelRequestButton(friendRequest),
+                                  if (!profile.isFriend && friendRequest.profileId == '' && friendRequest.status != FriendRequestStatus.PendingResponse)
+                                    _buildSendRequestButton(friendRequest),
+                                ],
+                              ),
+                              const SizedBox(height: 15),
+                              if (friendRequest.profileId != '' && friendRequest.status == FriendRequestStatus.PendingResponse)
+                                _buildPendingRequestActions(profile),
+                            ],
+                          ),
+                        );
+                      } else {
+                        return const SizedBox.shrink();
+                      }
+                    },
+                  ),
                   const Divider(),
-                  // Lista de Posts
                   FutureBuilder<List<PostDto>>(
                     future: _postsFuture,
                     builder: (context, postsSnapshot) {
-                      if (postsSnapshot.connectionState == ConnectionState.waiting) {
+                      if (postsSnapshot.connectionState ==
+                          ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
                       } else if (postsSnapshot.hasError) {
-                        return Center(child: Text("Erro: ${postsSnapshot.error}"));
+                        return Center(
+                          child: Text("Erro: ${postsSnapshot.error}"),
+                        );
                       } else if (postsSnapshot.hasData) {
                         final posts = postsSnapshot.data!;
                         return Padding(
@@ -152,22 +278,149 @@ class _ProfilePageState extends State<Profile> {
                           child: GridView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 3,
-                              crossAxisSpacing: 4,
-                              mainAxisSpacing: 4,
-                            ),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 3,
+                                  crossAxisSpacing: 4,
+                                  mainAxisSpacing: 4,
+                                ),
                             itemCount: posts.length,
                             itemBuilder: (context, index) {
-                              return Image.network(
-                                posts[index].images.isNotEmpty ? posts[index].images[0] : "",
-                                fit: BoxFit.cover,
+                              return GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      final post = posts[index];
+                                      return Dialog(
+                                        backgroundColor: const Color(0xFF191F2B),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: SizedBox(
+                                          width: MediaQuery.of(context).size.width * 0.9,
+                                          height: MediaQuery.of(context).size.height * 0.8,
+                                          child: FutureBuilder<List<PostCommentDto>>(
+                                            future: SocialService.getPostCommentsAsync(post.id),
+                                            builder: (context, snapshot) {
+                                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                                return const Center(child: CircularProgressIndicator());
+                                              } else if (snapshot.hasError) {
+                                                return Padding(
+                                                  padding: const EdgeInsets.all(16.0),
+                                                  child: Text(
+                                                    "Erro ao carregar comentários: ${snapshot.error}",
+                                                    style: const TextStyle(color: Colors.white),
+                                                  ),
+                                                );
+                                              } else if (snapshot.hasData) {
+                                                final comments = snapshot.data!;
+                                                return SingleChildScrollView(
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(16.0),
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        if (post.images.isNotEmpty)
+                                                          ClipRRect(
+                                                            borderRadius: BorderRadius.circular(8),
+                                                            child: Image.network(
+                                                              post.images[0],
+                                                              fit: BoxFit.cover,
+                                                              width: double.infinity,
+                                                            ),
+                                                          ),
+                                                        const SizedBox(height: 16),
+                                                        Text(
+                                                          post.content,
+                                                          style: const TextStyle(color: Colors.white, fontSize: 16),
+                                                        ),
+                                                        const SizedBox(height: 16),
+                                                        Row(
+                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                          children: [
+                                                            Row(
+                                                              children: [
+                                                                const Icon(Icons.thumb_up, color: Colors.white),
+                                                                const SizedBox(width: 8),
+                                                                Text(
+                                                                  '${post.reactionsCount}',
+                                                                  style: const TextStyle(color: Colors.white),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            Row(
+                                                              children: [
+                                                                const Icon(Icons.chat_bubble_outline, color: Colors.white),
+                                                                const SizedBox(width: 8),
+                                                                Text(
+                                                                  '${post.commentsCount}',
+                                                                  style: const TextStyle(color: Colors.white),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        const Divider(color: Colors.white24),
+                                                        const Text(
+                                                          "Comentários",
+                                                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                                                        ),
+                                                        const SizedBox(height: 8),
+                                                        ...comments.map((comment) {
+                                                          return ListTile(
+                                                            leading: CircleAvatar(
+                                                              backgroundImage: NetworkImage(comment.profileImageUrl),
+                                                            ),
+                                                            title: Text(
+                                                              '${comment.profileFirstName} ${comment.profileLastName}',
+                                                              style: const TextStyle(color: Colors.white),
+                                                            ),
+                                                            subtitle: Text(
+                                                              comment.content,
+                                                              style: const TextStyle(color: Colors.white70),
+                                                            ),
+                                                          );
+                                                        }).toList(),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                );
+                                              } else {
+                                                return const Padding(
+                                                  padding: EdgeInsets.all(16.0),
+                                                  child: Text(
+                                                    "Nenhum comentário disponível",
+                                                    style: TextStyle(color: Colors.white),
+                                                  ),
+                                                );
+                                              }
+                                            },
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                                child: posts[index].images.isNotEmpty
+                                    ? Image.network(
+                                  posts[index].images[0],
+                                  fit: BoxFit.cover,
+                                )
+                                    : const Icon(
+                                  Icons.image_not_supported,
+                                  color: Colors.grey,
+                                  size: 45,
+                                ),
                               );
                             },
                           ),
                         );
                       } else {
-                        return const Center(child: Text("Nenhum post disponível"));
+                        return const Center(
+                          child: Text("Nenhum post disponível", style: TextStyle(color: Colors.white)),
+                        );
                       }
                     },
                   ),
@@ -193,12 +446,188 @@ class _ProfilePageState extends State<Profile> {
             color: Colors.white,
           ),
         ),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            color: Colors.grey,
-          ),
+        Text(label, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+      ],
+    );
+  }
+
+  Widget _buildMessageButton(ProfileDto profile) {
+    return Expanded(
+      child: ElevatedButton(
+        onPressed: profile.isFriend
+            ? () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => ChatConversation(
+                profileId: profile.id,
+                profileName: "${profile.firstName} ${profile.lastName}",
+                profileImageUrl: profile.imageUrl,
+              ),
+            ),
+          );
+        }
+            : () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text("Atenção"),
+                content: const Text(
+                  "Para enviar mensagem a esse perfil é necessário enviar uma solicitação de amizade e ser aceita primeiro.",
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("OK"),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: profile.isFriend ? Colors.blue : Colors.grey,
+        ),
+        child: const Icon(Icons.message, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildFollowButton(ProfileDto profile) {
+    return Expanded(
+      child: ElevatedButton(
+        onPressed: () async {
+          try {
+            if (profile.isFollowing) {
+              await SocialService.unfollowUser(profile.id);
+            } else {
+              await SocialService.followUser(profile.id);
+            }
+            setState(() {
+              _profileFuture = SocialService.viewProfileAsync(widget.profileId);
+            });
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Erro: $e")),
+            );
+          }
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: profile.isFollowing ? Colors.red : Colors.blue,
+        ),
+        child: Icon(
+          profile.isFollowing ? Icons.person_remove : Icons.person_add,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUnfriendButton(ProfileDto profile) {
+    return Expanded(
+      child: ElevatedButton(
+        onPressed: () async {
+          try {
+            await SocialService.deleteFriendAsync(profile.id);
+            setState(() {
+              _profileFuture = SocialService.viewProfileAsync(widget.profileId);
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Amizade desfeita com sucesso!")),
+            );
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Erro: $e")),
+            );
+          }
+        },
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+        child: const Icon(Icons.group_remove, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildCancelRequestButton(FriendRequestDto friendRequest) {
+    return Expanded(
+      child: ElevatedButton(
+        onPressed: () async {
+          await SocialService.removeFriendRequestAsync(friendRequest.profileId);
+          _loadFriendRequests();
+        },
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+        child: const Icon(Icons.cancel, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildSendRequestButton(FriendRequestDto friendRequest) {
+    return Expanded(
+      child: ElevatedButton(
+        onPressed: () async {
+          try {
+            await SocialService.sendFriendRequestAsync(friendRequest.profileId, null);
+            setState(() {
+              _friendRequests.add(
+                FriendRequestDto(
+                  friendRequest.profileId,
+                  FriendRequestStatus.Pending,
+                  null,
+                ),
+              );
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Solicitação de amizade enviada!")),
+            );
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Erro: $e")),
+            );
+          }
+        },
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+        child: const Icon(Icons.group_add, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildPendingRequestActions(ProfileDto profile) {
+    return Column(
+      children: [
+        const Text(
+          "Você possui uma solicitação de amizade pendente desse perfil",
+          style: TextStyle(color: Colors.white), textAlign: TextAlign.center,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () async {
+                await SocialService.manageFriendRequestAsync(profile.id, true);
+                setState(() {
+                  _profileFuture = SocialService.viewProfileAsync(widget.profileId);
+                  _loadFriendRequests();
+                });
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+              child: const Text("Aceitar", style: TextStyle(color: Colors.white)),
+            ),
+
+            const SizedBox(width: 8, height: 10),
+
+            ElevatedButton(
+              onPressed: () async {
+                await SocialService.manageFriendRequestAsync(profile.id, false);
+                setState(() {
+                  _profileFuture = SocialService.viewProfileAsync(widget.profileId);
+                  _loadFriendRequests();
+                });
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text("Recusar", style: TextStyle(color: Colors.white)),
+            ),
+          ],
         ),
       ],
     );

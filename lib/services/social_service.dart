@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shape_up_app/dtos/socialService/follow_user_dto.dart';
 import 'package:shape_up_app/dtos/socialService/friend_dto.dart';
+import 'package:shape_up_app/dtos/socialService/friend_recommendation_dto.dart';
 import 'package:shape_up_app/dtos/socialService/friend_request_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_comment_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_dto.dart';
@@ -12,7 +13,7 @@ import 'package:shape_up_app/dtos/socialService/profile_dto.dart';
 import 'package:shape_up_app/dtos/socialService/simplified_profile_dto.dart';
 import 'package:shape_up_app/enums/socialService/gender.dart';
 import 'package:shape_up_app/enums/socialService/reaction_type.dart';
-import 'package:shape_up_app/enums/socialService/visibility.dart';
+import 'package:shape_up_app/enums/socialService/post_visibility.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 
 class SocialService {
@@ -69,7 +70,7 @@ class SocialService {
       body: jsonEncode({'Gender': gender, 'BirthDate': birthDate, 'Bio': bio}),
     );
 
-    if (response.statusCode != 201) {
+    if (response.statusCode != 200) {
       throw Exception("Erro ao editar perfil");
     }
   }
@@ -144,7 +145,7 @@ class SocialService {
     var token = await AuthenticationService.getToken();
 
     final response = await http.get(
-      Uri.parse('$baseUrl/v1/Post/$postId'),
+      Uri.parse('$baseUrl/v1/Post/$postId/getPost'),
       headers: createHeaders(token),
     );
 
@@ -189,14 +190,14 @@ class SocialService {
 
   static Future<PostDto> createPostAsync(
     String content,
-    Visibility visibility,
+      PostVisibility visibility,
   ) async {
     var token = await AuthenticationService.getToken();
 
     final response = await http.post(
-      Uri.parse('$baseUrl/v1/Post/CreatePost'),
+      Uri.parse('$baseUrl/v1/Post/createPost'),
       headers: createHeaders(token),
-      body: jsonEncode({'Content': content, 'Visibility': visibility}),
+      body: jsonEncode({'content': content, 'visibility': visibilityToIntMap[visibility]}),
     );
 
     if (response.statusCode == 201) {
@@ -206,7 +207,50 @@ class SocialService {
     }
   }
 
-  //TODO Subir função de chamar endpoint de upload de imagens
+  static Future<PostDto> editPostAsync(String postId, String? content, PostVisibility? visibility) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.patch(
+      Uri.parse('$baseUrl/v1/Post/$postId/editPost'),
+      headers: createHeaders(token),
+      body: jsonEncode({
+        'content': content,
+        'visibility': visibility != null ? visibilityToIntMap[visibility] : null
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      return PostDto.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception("Erro ao editar post");
+    }
+  }
+
+  static Future<void> uploadFilesAsync(String id, List<String> filePaths) async {
+    var token = await AuthenticationService.getToken();
+
+    var uri = Uri.parse('$baseUrl/v1/Post/$id/uploadPostImages');
+    var request = http.MultipartRequest('PUT', uri);
+
+    for (String filePath in filePaths) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'files',
+        filePath
+      ));
+    }
+
+    request.headers.addAll({
+      'Authorization': 'Bearer $token',
+    });
+
+    var response = await request.send();
+
+    if (response.statusCode == 204) {
+      print("Arquivos enviados com sucesso!");
+    } else {
+      throw Exception("Erro ao enviar arquivos: ${response.statusCode}");
+    }
+  }
 
   static Future<List<PostReactionDto>> getPostReactionsAsync(
     String postId,
@@ -314,7 +358,7 @@ class SocialService {
     }
   }
 
-  static Future<void> editPostAsync(String commentId, String content) async {
+  static Future<void> editPostCommentAsync(String commentId, String content) async {
     var token = await AuthenticationService.getToken();
 
     final response = await http.put(
@@ -328,7 +372,34 @@ class SocialService {
     }
   }
 
-  //TODO implementar rota de getFriendRecommendation
+  static Future<void> deletePostAsync(String postId) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/v1/Post/$postId/deletePost'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode != 204) {
+      throw Exception("Erro ao deletar post");
+    }
+  }
+
+  static Future<List<FriendRecommendationDto>> getFriendRecommendationsAsync() async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/v1/Recommendation/friendRecommendations'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> jsonList = jsonDecode(response.body);
+      return FriendRecommendationDto.fromJsonList(jsonList);
+    } else {
+      throw Exception("Erro ao carregar recomendações de amizade");
+    }
+  }
 
   static Future<void> sendFriendRequestAsync(
     String profileId,
@@ -398,7 +469,7 @@ class SocialService {
       body: jsonEncode({'profileId': profileId, 'accept': accept}),
     );
 
-    if (response.statusCode != 200) {
+    if (response.statusCode != 204) {
       throw Exception("Erro ao gerenciar solicitação de amizade");
     }
   }
@@ -429,7 +500,29 @@ class SocialService {
     }
   }
 
-  //TODO implementar rota de UploadProfilePicture
+  static Future<void> uploadProfilePictureAsync(String filePath) async {
+    var token = await AuthenticationService.getToken();
+
+    var uri = Uri.parse('$baseUrl/v1/Profile/uploadProfilePicture');
+    var request = http.MultipartRequest('PUT', uri);
+
+    request.files.add(await http.MultipartFile.fromPath(
+      'image',
+      filePath,
+    ));
+
+    request.headers.addAll({
+      'Authorization': 'Bearer $token',
+    });
+
+    var response = await request.send();
+
+    if (response.statusCode == 204) {
+      print("Imagem de perfil enviada com sucesso!");
+    } else {
+      throw Exception("Erro ao enviar imagem de perfil: ${response.statusCode}");
+    }
+  }
 
   static Future<List<SimplifiedProfileDto>> searchProfileByNameAsync(
     String name,

@@ -1,19 +1,25 @@
+import 'package:shape_up_app/components/search_bar.dart' as SearchBar;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shape_up_app/dtos/notificationService/notification_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_comment_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_reaction_dto.dart';
+import 'package:shape_up_app/dtos/socialService/simplified_profile_dto.dart';
 import 'package:shape_up_app/enums/notificationService/notification_topic.dart';
 import 'package:shape_up_app/enums/socialService/reaction_type.dart';
+import 'package:shape_up_app/enums/socialService/post_visibility.dart';
 import 'package:shape_up_app/pages/chat.dart';
+import 'package:shape_up_app/pages/notifications.dart';
+import 'package:shape_up_app/pages/profile.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/notification_service.dart';
 import 'package:shape_up_app/services/social_service.dart';
+import 'package:shape_up_app/widgets/socialService/post/post_creation_section.dart';
 import '../components/post_card.dart';
 import '../components/reaction_popup.dart';
 import '../components/story_section.dart';
-import 'dart:collection';
+import '../widgets/socialService/comments/comments_modal.dart';
 
 const Color kBackgroundColor = Color(0xFF191F2B);
 const Color kPlaceholderColor = Colors.white24;
@@ -30,7 +36,6 @@ const double kPostImageHeight = 330.0;
 const ReactionType kDefaultReactionType = ReactionType.like;
 String kDefaultReactionEmoji = reactionEmojiMap[kDefaultReactionType] ?? "👍";
 
-
 class Feed extends StatefulWidget {
   const Feed({super.key});
 
@@ -38,13 +43,17 @@ class Feed extends StatefulWidget {
   State<Feed> createState() => _FeedState();
 }
 
-class _FeedState extends State<Feed> {
+class _FeedState extends State<Feed> with RouteAware {
+
+  final RouteObserver<PageRoute> _routeObserver = RouteObserver<PageRoute>();
+
   bool _isLoading = true;
+  List<SimplifiedProfileDto> _searchResults = [];
+  SimplifiedProfileDto? _currentUser;
   String? _error;
   List<PostDto> _posts = [];
   int _unreadNotifications = 0;
   int _unreadMessages = 0;
-
 
   Map<String, ReactionType?> _currentUserReactions = {};
   Map<String, List<PostReactionDto>> _allPostReactions = {};
@@ -55,6 +64,29 @@ class _FeedState extends State<Feed> {
   ];
 
   String _currentUserId = '';
+  PostVisibility? selectedVisibility = PostVisibility.public; // Variável de instância
+
+  Future<void> _searchProfiles(String query) async {
+    if (query.isNotEmpty) {
+      try {
+        final results = await SocialService.searchProfileByNameAsync(query);
+        setState(() {
+          _searchResults = results;
+        });
+      } catch (e) {
+        if (kDebugMode) {
+          print("Erro ao buscar perfis: $e");
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao buscar perfis: $e')),
+        );
+      }
+    } else {
+      setState(() {
+        _searchResults = [];
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -63,13 +95,41 @@ class _FeedState extends State<Feed> {
     _listenToNotifications();
   }
 
+  Future<void> _getUserInfo() async {
+    _currentUser = await SocialService.viewProfileSimplifiedAsync(_currentUserId);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+    _reloadUnreadNotifications();
+  }
+
+  @override
+  void dispose() {
+    _routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    _reloadUnreadNotifications();
+  }
+
+  void _reloadUnreadNotifications() {
+    setState(() {
+      var notifications = NotificationService.getNotifications();
+
+      _unreadMessages = notifications.where((notification) => notification.topic == NotificationTopic.Comment).length;
+      _unreadNotifications = notifications.where((notification) => notification.topic != NotificationTopic.Comment).length;
+    });
+  }
+
   void _listenToNotifications() {
     NotificationService.notificationStream.listen((notification) {
       setState(() {
-        _unreadNotifications++;
-        if (notification.topic == NotificationTopic.Message) {
-          _unreadMessages++;
-        }
+        _reloadUnreadNotifications();
       });
     });
   }
@@ -78,6 +138,7 @@ class _FeedState extends State<Feed> {
     try {
       _currentUserId = await AuthenticationService.getProfileId();
       if (_currentUserId.isNotEmpty) {
+        await _getUserInfo();
         await _loadFeedData();
       }
     } catch (e) {
@@ -89,70 +150,18 @@ class _FeedState extends State<Feed> {
   }
 
   Future<void> _loadFeedData() async {
-    if (_currentUserId.isEmpty) {
-      try {
-        _currentUserId = await AuthenticationService.getProfileId();
-      } catch (e) {
-        setState(() {
-          _error = "Erro ao obter ID do usuário: $e";
-          _isLoading = false;
-        });
-        return;
-      }
-    }
-
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
     try {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+
       final posts = await SocialService.getActivityFeedAsync();
-
-
-      Map<String, ReactionType?> userReactions = {};
-      Map<String, List<PostReactionDto>> allReactions = {};
-      Map<String, List<PostCommentDto>> allComments = {};
-
-      for (var post in posts) {
-        try {
-          final results = await Future.wait([
-            SocialService.getPostReactionsAsync(post.id),
-            SocialService.getPostCommentsAsync(post.id),
-          ]);
-
-          final postReactions = results[0] as List<PostReactionDto>;
-          final postComments = results[1] as List<PostCommentDto>;
-
-          allReactions[post.id] = postReactions;
-          allComments[post.id] = postComments;
-
-          try {
-            userReactions[post.id] = postReactions
-                .firstWhere((r) => r.profileId == _currentUserId)
-                .reactionType;
-          } catch (e) {
-            userReactions[post.id] = null;
-          }
-
-        } catch (e) {
-          if (kDebugMode) {
-            print("Erro ao carregar dados para post ${post.id}: $e");
-          }
-          allReactions[post.id] = [];
-          allComments[post.id] = [];
-          userReactions[post.id] = null;
-        }
-      }
-
 
       setState(() {
         _posts = posts;
-        _currentUserReactions = userReactions;
-        _allPostReactions = allReactions;
-        _allPostComments = allComments;
         _isLoading = false;
       });
-
     } catch (e) {
       setState(() {
         _error = "Erro ao carregar feed: $e";
@@ -161,29 +170,29 @@ class _FeedState extends State<Feed> {
     }
   }
 
-
   Future<void> _handleReactionSelected(String postId, ReactionType selectedReaction) async {
     final currentReaction = _currentUserReactions[postId];
     final originalReactions = List<PostReactionDto>.from(_allPostReactions[postId] ?? []);
     final originalUserReaction = _currentUserReactions[postId];
 
-    setState(() {
-      if (currentReaction == selectedReaction) {
+    if (currentReaction == selectedReaction) {
+      setState(() {
         _currentUserReactions[postId] = null;
         _allPostReactions[postId]?.removeWhere((r) => r.profileId == _currentUserId);
-      } else {
+      });
+    } else {
+      setState(() {
         _currentUserReactions[postId] = selectedReaction;
         _allPostReactions[postId]?.removeWhere((r) => r.profileId == _currentUserId);
         _allPostReactions[postId]?.add(PostReactionDto(
-            _currentUserId,
-            DateTime.now().toIso8601String(), // Data/hora temporária
-            selectedReaction,
-            postId,
-            "temp_id_${DateTime.now().millisecondsSinceEpoch}" // ID temporário
+          _currentUserId,
+          DateTime.now().toIso8601String(),
+          selectedReaction,
+          postId,
+          "temp_id_${DateTime.now().millisecondsSinceEpoch}",
         ));
-      }
-      _allPostReactions[postId]?.sort((a, b) => DateTime.parse(b.createdAt).compareTo(DateTime.parse(a.createdAt)));
-    });
+      });
+    }
 
     try {
       if (currentReaction == selectedReaction) {
@@ -192,20 +201,18 @@ class _FeedState extends State<Feed> {
         await SocialService.reactToPostAsync(postId, selectedReaction);
       }
 
-      final updatedReactions = await SocialService.getPostReactionsAsync(postId);
-      setState(() {
-        _allPostReactions[postId] = updatedReactions;
-        try {
-          _currentUserReactions[postId] = updatedReactions
-              .firstWhere((r) => r.profileId == _currentUserId)
-              .reactionType;
-        } catch (e) {
-          _currentUserReactions[postId] = null;
-        }
-        _allPostReactions[postId]?.sort((a, b) => DateTime.parse(b.createdAt).compareTo(DateTime.parse(a.createdAt)));
-      });
+      // Buscar o post atualizado
+      final updatedPost = await SocialService.getPostAsync(postId);
 
+      // Atualizar o post na lista
+      setState(() {
+        final postIndex = _posts.indexWhere((post) => post.id == postId);
+        if (postIndex != -1) {
+          _posts[postIndex] = updatedPost;
+        }
+      });
     } catch (e) {
+      // Reverter alterações em caso de erro
       setState(() {
         _currentUserReactions[postId] = originalUserReaction;
         _allPostReactions[postId] = originalReactions;
@@ -214,9 +221,6 @@ class _FeedState extends State<Feed> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao ${currentReaction == selectedReaction ? "remover" : "salvar"} reação: ${e.toString().replaceFirst("Exception: ", "")}')),
         );
-      }
-      if (kDebugMode) {
-        print("Erro ao atualizar reação para post $postId: $e");
       }
     }
   }
@@ -233,7 +237,6 @@ class _FeedState extends State<Feed> {
     double top = buttonPosition.dy - popupHeight - 8;
     double left = buttonPosition.dx + buttonSize.width / 2 - popupWidth / 2;
 
-    // Ajustar para não sair da tela
     if (top < kToolbarHeight) {
       top = buttonPosition.dy + buttonSize.height - 100;
     }
@@ -265,6 +268,23 @@ class _FeedState extends State<Feed> {
     );
   }
 
+  Future<void> _loadCommentsForPost(String postId) async {
+    try {
+      final comments = await SocialService.getPostCommentsAsync(postId);
+      setState(() {
+        _allPostComments[postId] = comments;
+      });
+
+      showCommentsModal(context, postId, comments);
+    } catch (e) {
+      if (kDebugMode) {
+        print("Erro ao carregar comentários para o post $postId: $e");
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao carregar comentários: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -294,12 +314,9 @@ class _FeedState extends State<Feed> {
               ],
             ),
             onPressed: () {
-              // Lógica para abrir a página de notificações
-
-              Map<String, String> metadata = {
-
-              };
-              NotificationService.showNotification(new NotificationDto(topic: NotificationTopic.Comment, title: 'title', body: 'ttt', metadata: metadata));
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const Notifications()),
+              );
             },
           ),
           IconButton(
@@ -328,7 +345,37 @@ class _FeedState extends State<Feed> {
           ),
         ],
       ),
-      body: _buildBody(),
+      body: Column(
+        children: [
+          SearchBar.SearchBar(onSearch: _searchProfiles),
+          if (_searchResults.isNotEmpty)
+            Expanded(
+              child: ListView.builder(
+                itemCount: _searchResults.length,
+                itemBuilder: (context, index) {
+                  final profile = _searchResults[index];
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage: NetworkImage(profile.imageUrl),
+                    ),
+                    title: Text(
+                      '${profile.firstName} ${profile.lastName}',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => Profile(profileId: profile.id),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          if (_searchResults.isEmpty) Expanded(child: _buildBody()),
+        ],
+      ),
     );
   }
 
@@ -336,9 +383,7 @@ class _FeedState extends State<Feed> {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator(color: Colors.white));
     } else if (_error != null) {
-      return Center();
-    } else if (_posts.isEmpty) {
-      return Center();
+      return Center(child: Text(_error!, style: const TextStyle(color: Colors.white)));
     } else {
       return RefreshIndicator(
         onRefresh: _loadFeedData,
@@ -349,28 +394,32 @@ class _FeedState extends State<Feed> {
           itemCount: _posts.length + 1,
           itemBuilder: (context, index) {
             if (index == 0) {
-              return StorySection(storyStatus: _storyStatus);
+              return Column(
+                children: [
+                  StorySection(storyStatus: _storyStatus),
+                  const SizedBox(height: 16),
+                  PostCreationSection(profileImage: _currentUser!.imageUrl,),
+                ],
+              );
             } else {
               final postIndex = index - 1;
               if (postIndex >= _posts.length) return const SizedBox.shrink();
 
               final post = _posts[postIndex];
               final currentUserReaction = _currentUserReactions[post.id];
-              final reactionsList = _allPostReactions[post.id] ?? [];
-              final commentsList = _allPostComments[post.id] ?? [];
-              final reactionCount = reactionsList.length;
-              final commentCount = commentsList.length;
 
               return PostCard(
+                currentUserId: _currentUserId,
                 post: post,
                 currentUserReaction: currentUserReaction,
-                reactionCount: reactionCount,
-                commentCount: commentCount,
-                comments: commentsList,
+                reactionCount: post.reactionsCount,
+                commentCount: post.commentsCount,
+                comments: [],
                 onReactionButtonPressed: (buttonContext) => _showReactionPopup(buttonContext, post.id),
                 onReactionSelected: _handleReactionSelected,
-                buildReactionIcons: _buildReactionIcons,
-                onOptionsPressed: () { /* TODO: Implement options logic */ },
+                buildReactionIcons: (postId) => _buildReactionIconsFromPost(post),
+                onCommentButtonPressed: () => _loadCommentsForPost(post.id),
+                onPostDeleted: _loadFeedData
               );
             }
           },
@@ -379,34 +428,16 @@ class _FeedState extends State<Feed> {
     }
   }
 
-  Widget _buildReactionIcons(String postId) {
-    final reactions = _allPostReactions[postId] ?? [];
+  Widget _buildReactionIconsFromPost(PostDto post) {
+    final topReactions = post.topReactions;
 
-    if (reactions.isEmpty) {
+    if (topReactions.isEmpty) {
       return const Icon(Icons.thumb_up_alt_outlined, color: Colors.grey, size: 22);
     }
 
-    reactions.sort((a, b) {
-      try {
-        return DateTime.parse(b.createdAt).compareTo(DateTime.parse(a.createdAt));
-      } catch (_) {
-        return 0;
-      }
-    });
-
-    final uniqueRecentTypes = LinkedHashSet<ReactionType>(
-      equals: (a, b) => a == b,
-      hashCode: (a) => a.hashCode,
-    );
-    for (var reaction in reactions) {
-      uniqueRecentTypes.add(reaction.reactionType);
-    }
-
-    final topRecentTypes = uniqueRecentTypes.take(3).toList();
-
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: topRecentTypes.map((reactionType) {
+      children: topReactions.take(3).map((reactionType) {
         final emoji = reactionEmojiMap[reactionType] ?? kDefaultReactionEmoji;
         return Padding(
           padding: const EdgeInsets.only(right: 2.0),

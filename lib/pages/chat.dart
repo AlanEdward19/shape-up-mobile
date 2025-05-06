@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shape_up_app/components/personalized_circle_avatar.dart';
 import 'package:shape_up_app/dtos/socialService/simplified_profile_dto.dart';
 import 'package:shape_up_app/pages/chat_conversation.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
@@ -129,10 +130,7 @@ class _ChatState extends State<Chat> {
                 final profile = _filteredMessagesWithProfiles[index]['profile'] as SimplifiedProfileDto;
 
                 return ListTile(
-                  leading: CircleAvatar(
-                    radius: 25,
-                    backgroundImage: NetworkImage(profile.imageUrl),
-                  ),
+                  leading: personalizedCircleAvatar(profile.imageUrl, '${profile.firstName} ${profile.lastName}', 25),
                   title: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

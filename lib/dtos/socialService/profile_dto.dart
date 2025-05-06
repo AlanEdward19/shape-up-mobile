@@ -16,6 +16,8 @@ class ProfileDto {
   final int followers;
   final int following;
   final int posts;
+  final bool isFriend;
+  final bool isFollowing;
 
   ProfileDto(
       this.id,
@@ -32,6 +34,8 @@ class ProfileDto {
       this.followers,
       this.following,
       this.posts,
+      this.isFriend,
+      this.isFollowing,
       );
 
   factory ProfileDto.fromJson(Map<String, dynamic> json) {
@@ -58,6 +62,8 @@ class ProfileDto {
       json['followers'],
       json['following'],
       json['posts'],
+      json['isFriend'],
+      json['isFollowing']
     );
   }
 
