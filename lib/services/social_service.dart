@@ -69,7 +69,7 @@ class SocialService {
       body: jsonEncode({'Gender': gender, 'BirthDate': birthDate, 'Bio': bio}),
     );
 
-    if (response.statusCode != 201) {
+    if (response.statusCode != 200) {
       throw Exception("Erro ao editar perfil");
     }
   }
@@ -466,7 +466,29 @@ class SocialService {
     }
   }
 
-  //TODO implementar rota de UploadProfilePicture
+  static Future<void> uploadProfilePictureAsync(String filePath) async {
+    var token = await AuthenticationService.getToken();
+
+    var uri = Uri.parse('$baseUrl/v1/Profile/uploadProfilePicture');
+    var request = http.MultipartRequest('PUT', uri);
+
+    request.files.add(await http.MultipartFile.fromPath(
+      'image',
+      filePath,
+    ));
+
+    request.headers.addAll({
+      'Authorization': 'Bearer $token',
+    });
+
+    var response = await request.send();
+
+    if (response.statusCode == 204) {
+      print("Imagem de perfil enviada com sucesso!");
+    } else {
+      throw Exception("Erro ao enviar imagem de perfil: ${response.statusCode}");
+    }
+  }
 
   static Future<List<SimplifiedProfileDto>> searchProfileByNameAsync(
     String name,
