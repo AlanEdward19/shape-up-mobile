@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shape_up_app/dtos/socialService/follow_user_dto.dart';
 import 'package:shape_up_app/dtos/socialService/friend_dto.dart';
+import 'package:shape_up_app/dtos/socialService/friend_recommendation_dto.dart';
 import 'package:shape_up_app/dtos/socialService/friend_request_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_comment_dto.dart';
 import 'package:shape_up_app/dtos/socialService/post_dto.dart';
@@ -365,7 +366,21 @@ class SocialService {
     }
   }
 
-  //TODO implementar rota de getFriendRecommendation
+  static Future<List<FriendRecommendationDto>> getFriendRecommendationsAsync() async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/v1/Recommendation/friendRecommendations'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> jsonList = jsonDecode(response.body);
+      return FriendRecommendationDto.fromJsonList(jsonList);
+    } else {
+      throw Exception("Erro ao carregar recomendações de amizade");
+    }
+  }
 
   static Future<void> sendFriendRequestAsync(
     String profileId,
