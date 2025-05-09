@@ -226,16 +226,7 @@ class PostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String displayEmoji;
-    final Color displayColor;
-
-    if (currentUserReaction != null) {
-      displayEmoji = reactionEmojiMap[currentUserReaction] ?? kDefaultReactionEmoji;
-      displayColor = Colors.blue;
-    } else {
-      displayEmoji = kDefaultReactionEmoji;
-      displayColor = Colors.white;
-    }
+    final Color displayColor = post.hasUserReacted ? Colors.blue : Colors.white;
 
     return Card(
       margin: kCardMargin,
