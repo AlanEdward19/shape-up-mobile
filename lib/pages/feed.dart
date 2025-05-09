@@ -194,8 +194,10 @@ class _FeedState extends State<Feed> with RouteAware {
       });
     }
 
+    var post = _posts.firstWhere((post) => post.id == postId);
+
     try {
-      if (currentReaction == selectedReaction) {
+      if ((currentReaction == null && post.hasUserReacted) || currentReaction == selectedReaction) {
         await SocialService.deleteReactionAsync(postId);
       } else {
         await SocialService.reactToPostAsync(postId, selectedReaction);

@@ -65,7 +65,7 @@ class _PostCreationSectionState extends State<PostCreationSection> {
       var post = await SocialService.createPostAsync(_descriptionController.text, stringToVisibilityMap[_selectedVisibility]!);
 
       if (_selectedImages.isNotEmpty) {
-        await SocialService.uploadFilesAsync(post.id, _selectedImages);
+        await SocialService.uploadFilesAsync(post.id, _selectedImages, []);
       }
 
       ScaffoldMessenger.of(context).showSnackBar(

@@ -14,6 +14,8 @@ class PostDto {
   int reactionsCount;
   int commentsCount;
   List<ReactionType> topReactions;
+  bool hasUserReacted;
+  bool hasUserCommented;
 
   PostDto(
       this.id,
@@ -27,6 +29,8 @@ class PostDto {
       this.reactionsCount,
       this.commentsCount,
       this.topReactions,
+      this.hasUserReacted,
+      this.hasUserCommented,
       );
 
   factory PostDto.fromJson(Map<String, dynamic> json) {
@@ -56,7 +60,9 @@ class PostDto {
       json['commentsCount'],
       (json['topReactions'] as List<dynamic>)
           .map((reaction) => intReactionTypeMap[reaction]!)
-          .toList()
+          .toList(),
+      json['hasUserReacted'],
+      json['hasUserCommented']
     );
   }
 

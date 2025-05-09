@@ -185,9 +185,9 @@ class PostCard extends StatelessWidget {
                       try {
                         await SocialService.editPostAsync(post.id, contentController.text.trim(), selectedVisibility);
 
-                        if (newImages.isNotEmpty) {
-                          final List<String> finalImages = [...currentImages, ...newImages];
-                          await SocialService.uploadFilesAsync(post.id, finalImages);
+                        if (post.images.length != currentImages.length) {
+                          List<String> filesToKeep = currentImages.map((e) => e.split('/').last.split('.').first.toUpperCase()).toList();
+                          await SocialService.uploadFilesAsync(post.id, newImages, filesToKeep);
                         }
                         Navigator.of(context).pop();
                         onPostUpdated();
@@ -226,16 +226,7 @@ class PostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String displayEmoji;
-    final Color displayColor;
-
-    if (currentUserReaction != null) {
-      displayEmoji = reactionEmojiMap[currentUserReaction] ?? kDefaultReactionEmoji;
-      displayColor = Colors.blue;
-    } else {
-      displayEmoji = kDefaultReactionEmoji;
-      displayColor = Colors.white;
-    }
+    final Color displayColor = post.hasUserReacted ? Colors.blue : Colors.white;
 
     return Card(
       margin: kCardMargin,
