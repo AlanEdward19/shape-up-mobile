@@ -226,7 +226,7 @@ class SocialService {
     }
   }
 
-  static Future<void> uploadFilesAsync(String id, List<String> filePaths) async {
+  static Future<void> uploadFilesAsync(String id, List<String> filePaths, List<String> filesToKeep) async {
     var token = await AuthenticationService.getToken();
 
     var uri = Uri.parse('$baseUrl/v1/Post/$id/uploadPostImages');
@@ -237,6 +237,10 @@ class SocialService {
         'files',
         filePath
       ));
+    }
+
+    for (String fileToKeep in filesToKeep) {
+      request.fields.addAll({'filesToKeep': fileToKeep});
     }
 
     request.headers.addAll({
