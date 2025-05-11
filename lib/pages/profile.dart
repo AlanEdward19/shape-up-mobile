@@ -8,6 +8,7 @@ import 'package:shape_up_app/dtos/socialService/friend_request_dto.dart';
 import 'package:shape_up_app/enums/socialService/friend_request_status.dart';
 import 'package:shape_up_app/enums/socialService/gender.dart';
 import 'package:shape_up_app/pages/chat_conversation.dart';
+import 'package:shape_up_app/pages/profile_post.dart';
 import 'package:shape_up_app/pages/settings.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/social_service.dart';
@@ -288,119 +289,13 @@ class _ProfilePageState extends State<Profile> {
                             itemBuilder: (context, index) {
                               return GestureDetector(
                                 onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      final post = posts[index];
-                                      return Dialog(
-                                        backgroundColor: const Color(0xFF191F2B),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(10),
-                                        ),
-                                        child: SizedBox(
-                                          width: MediaQuery.of(context).size.width * 0.9,
-                                          height: MediaQuery.of(context).size.height * 0.8,
-                                          child: FutureBuilder<List<PostCommentDto>>(
-                                            future: SocialService.getPostCommentsAsync(post.id),
-                                            builder: (context, snapshot) {
-                                              if (snapshot.connectionState == ConnectionState.waiting) {
-                                                return const Center(child: CircularProgressIndicator());
-                                              } else if (snapshot.hasError) {
-                                                return Padding(
-                                                  padding: const EdgeInsets.all(16.0),
-                                                  child: Text(
-                                                    "Erro ao carregar comentários: ${snapshot.error}",
-                                                    style: const TextStyle(color: Colors.white),
-                                                  ),
-                                                );
-                                              } else if (snapshot.hasData) {
-                                                final comments = snapshot.data!;
-                                                return SingleChildScrollView(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(16.0),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      mainAxisSize: MainAxisSize.min,
-                                                      children: [
-                                                        if (post.images.isNotEmpty)
-                                                          ClipRRect(
-                                                            borderRadius: BorderRadius.circular(8),
-                                                            child: Image.network(
-                                                              post.images[0],
-                                                              fit: BoxFit.cover,
-                                                              width: double.infinity,
-                                                            ),
-                                                          ),
-                                                        const SizedBox(height: 16),
-                                                        Text(
-                                                          post.content,
-                                                          style: const TextStyle(color: Colors.white, fontSize: 16),
-                                                        ),
-                                                        const SizedBox(height: 16),
-                                                        Row(
-                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                          children: [
-                                                            Row(
-                                                              children: [
-                                                                const Icon(Icons.thumb_up, color: Colors.white),
-                                                                const SizedBox(width: 8),
-                                                                Text(
-                                                                  '${post.reactionsCount}',
-                                                                  style: const TextStyle(color: Colors.white),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                            Row(
-                                                              children: [
-                                                                const Icon(Icons.chat_bubble_outline, color: Colors.white),
-                                                                const SizedBox(width: 8),
-                                                                Text(
-                                                                  '${post.commentsCount}',
-                                                                  style: const TextStyle(color: Colors.white),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        const Divider(color: Colors.white24),
-                                                        const Text(
-                                                          "Comentários",
-                                                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                                                        ),
-                                                        const SizedBox(height: 8),
-                                                        ...comments.map((comment) {
-                                                          return ListTile(
-                                                            leading: CircleAvatar(
-                                                              backgroundImage: NetworkImage(comment.profileImageUrl),
-                                                            ),
-                                                            title: Text(
-                                                              '${comment.profileFirstName} ${comment.profileLastName}',
-                                                              style: const TextStyle(color: Colors.white),
-                                                            ),
-                                                            subtitle: Text(
-                                                              comment.content,
-                                                              style: const TextStyle(color: Colors.white70),
-                                                            ),
-                                                          );
-                                                        }).toList(),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                );
-                                              } else {
-                                                return const Padding(
-                                                  padding: EdgeInsets.all(16.0),
-                                                  child: Text(
-                                                    "Nenhum comentário disponível",
-                                                    style: TextStyle(color: Colors.white),
-                                                  ),
-                                                );
-                                              }
-                                            },
-                                          ),
-                                        ),
-                                      );
-                                    },
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => ProfilePost(
+                                        posts: posts,
+                                        initialIndex: index,
+                                      ),
+                                    ),
                                   );
                                 },
                                 child: posts[index].images.isNotEmpty
