@@ -94,8 +94,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             Future.microtask(() async {
               String token = (await snapshot.data!.getIdToken())!;
               String profileId = snapshot.data!.uid;
-              AuthenticationService.saveToken(token);
-              AuthenticationService.saveProfileId(profileId);
+              await AuthenticationService.saveToken(token);
+              await AuthenticationService.saveProfileId(profileId);
 
               String? deviceToken = await FirebaseMessaging.instance.getToken();
               if (deviceToken != null) {
