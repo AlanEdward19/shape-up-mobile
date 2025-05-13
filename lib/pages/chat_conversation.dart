@@ -322,17 +322,28 @@ class _ChatConversationState extends State<ChatConversation> {
   }
 
   Future<void> sendMessage(String value) async {
-    if (value.trim().isNotEmpty) {
-      await ChatService.sendMessageAsync(widget.profileId, value);
+    String text = value.trim();
 
-      // Rola para o final após enviar uma mensagem
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollController.hasClients) {
-          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-        }
-      });
+    if (text.isNotEmpty) {
 
-      _messageController.clear();
+      try{
+        _messageController.clear();
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController.hasClients) {
+            _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+          }
+        });
+
+        await ChatService.sendMessageAsync(widget.profileId, text);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erro ao enviar mensagem'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 }

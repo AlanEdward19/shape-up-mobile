@@ -44,14 +44,15 @@ class _NotificationState extends State<Notifications> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notificações'),
+        title: const Text('Notificações', style: TextStyle(color: Colors.white),),
         backgroundColor: Colors.blue,
+          iconTheme: const IconThemeData(color: Colors.white)
       ),
       body: _notifications.isEmpty
           ? const Center(
         child: Text(
           'Nenhuma notificação disponível',
-          style: TextStyle(color: Colors.grey),
+          style: TextStyle(color: Colors.white),
         ),
       )
           : ListView.builder(
@@ -67,12 +68,6 @@ class _NotificationState extends State<Notifications> {
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: const Icon(Icons.mark_email_read, color: Colors.white),
             ),
-            secondaryBackground: Container(
-              color: Colors.red,
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: const Icon(Icons.delete, color: Colors.white),
-            ),
             onDismissed: (direction) {
               final removedNotification = _notifications[index];
 
@@ -85,9 +80,14 @@ class _NotificationState extends State<Notifications> {
                 notification.title ?? 'Sem título',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
+                  color: Colors.white
                 ),
               ),
-              subtitle: Text(notification.body ?? ''),
+              subtitle: Text(notification.body ?? '',
+                style: TextStyle(
+                  color: Colors.grey
+                ),
+              ),
               onTap: () {
                 _markAsRead(notification);
                 // Substitua pelo redirecionamento para outra página

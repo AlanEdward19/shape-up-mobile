@@ -122,8 +122,10 @@ class _SettingsState extends State<Settings> {
                   await AuthenticationService.signOut();
                   Navigator.pushAndRemoveUntil(
                     context,
+                      await Navigator.of(context).pushReplacement(
                     MaterialPageRoute(builder: (context) => Main()),
-                        (Route<dynamic> route) => false,
+                  ),
+                    (route) => false,
                   );
                 },
               ),

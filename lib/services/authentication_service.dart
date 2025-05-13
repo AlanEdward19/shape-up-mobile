@@ -1,4 +1,6 @@
 
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -62,8 +64,37 @@ class AuthenticationService
     await auth.signInWithPopup(microsoftProvider);
   }
 
-  static Future<String> getToken() async{
-    return (await storage.read(key: 'auth_token'))!;
+  static Future<String> getToken() async {
+    final auth = FirebaseAuth.instance;
+    final user = auth.currentUser;
+
+    if (user == null) {
+      throw Exception("Usuário não autenticado.");
+    }
+
+    final storedToken = await storage.read(key: 'auth_token');
+    if (storedToken != null) {
+      final payload = _decodeJwtPayload(storedToken);
+      final expiration = DateTime.fromMillisecondsSinceEpoch(payload['exp'] * 1000);
+
+      if (DateTime.now().isBefore(expiration)) {
+        return storedToken;
+      }
+    }
+
+    final newToken = await user.getIdToken();
+    await saveToken(newToken!);
+    return newToken;
+  }
+
+  static Map<String, dynamic> _decodeJwtPayload(String token) {
+    final parts = token.split('.');
+    if (parts.length != 3) {
+      throw Exception("Token JWT inválido.");
+    }
+
+    final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+    return json.decode(payload) as Map<String, dynamic>;
   }
 
   static Future<String> getProfileId() async{
