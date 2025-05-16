@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shape_up_app/components/bottom_nav_bar.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
+import 'package:shape_up_app/services/social_service.dart';
 
 import '../components/back_button.dart';
 import '../components/shape_up_logo.dart';
@@ -287,8 +288,13 @@ class _LoginState extends State<Login> {
         onPressed: () async {
           if(_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
             await AuthenticationService.loginWithEmailAndPassword(_emailController.text, _passwordController.text);
-            if (FirebaseAuth.instance.currentUser != null) {
+
+            var currentUser = FirebaseAuth.instance.currentUser;
+            if (currentUser != null) {
               print("Login realizado com sucesso!");
+
+              await SocialService.viewProfileAsync(currentUser.uid);
+
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => BottomNavBar()),
