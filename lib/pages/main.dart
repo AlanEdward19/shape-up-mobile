@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:shape_up_app/functions/change_page.dart';
+import 'package:shape_up_app/pages/create_account.dart';
 import 'package:shape_up_app/pages/login.dart';
 
 import '../components/shape_up_logo.dart';
@@ -55,10 +56,13 @@ class Main extends StatelessWidget {
 
               SizedBox(height: 30),
 
-              const Padding(
+               Padding(
                 padding: EdgeInsets.only(top: 10), // Espaçamento acima do TextButton
                 child: TextButton(
-                  onPressed: null,
+                  onPressed: () {
+                    print("Botão Criar conta clicado");
+                    changePageStateful(context, CreateAccount());
+                  },
                   child: Text('Criar conta',
                   style: TextStyle(
                       fontSize: 16,

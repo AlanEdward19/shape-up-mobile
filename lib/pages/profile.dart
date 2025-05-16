@@ -161,14 +161,22 @@ class _ProfilePageState extends State<Profile> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      profile.bio,
-                      style: const TextStyle(fontSize: 16, color: Colors.white),
+
+                  if(profile.bio.isNotEmpty)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Text(
+                            profile.bio,
+                            style: const TextStyle(fontSize: 16, color: Colors.white),
+                          ),
+                        ),
+                        const SizedBox(height: 16)
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 16),
+
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Column(

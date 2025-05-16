@@ -3,12 +3,54 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+import 'package:shape_up_app/dtos/authService/user_data.dart';
 import 'package:shape_up_app/services/notification_service.dart';
 
 class AuthenticationService
 {
+  static final String baseUrl = dotenv.env['AUTH_SERVICE_BASE_URL']!;
   static final storage = FlutterSecureStorage();
+
+  static Map<String, String> createHeaders(String token) {
+    Map<String, String> headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+    return headers;
+  }
+
+  static Future<String> createAccountWithEmailAndPassword(String email, String password) async {
+    final auth = FirebaseAuth.instance;
+
+    try {
+      UserCredential userCredential = await auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      var token = await userCredential.user!.getIdToken();
+
+      return token!;
+
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        print('A senha fornecida é muito fraca.');
+      } else if (e.code == 'email-already-in-use') {
+        print('Já existe uma conta com este e-mail.');
+      } else if (e.code == 'invalid-email') {
+        print('O e-mail fornecido é inválido.');
+      } else {
+        print('Erro ao criar conta: ${e.message}');
+      }
+    } catch (e) {
+      print('Erro inesperado: $e');
+    }
+
+    return '';
+  }
 
   static Future<void> loginWithEmailAndPassword(String email, String password) async {
     final auth = FirebaseAuth.instance;
@@ -31,16 +73,31 @@ class AuthenticationService
   static Future<void> signOut() async {
     final auth = FirebaseAuth.instance;
 
-    await removeToken();
-    await removeProfileId();
-    await auth.signOut();
-
     String? deviceToken = await FirebaseMessaging.instance.getToken();
     if (deviceToken != null) {
       await NotificationService.signOut(deviceToken);
     }
 
+    await removeToken();
+    await removeProfileId();
+    await auth.signOut();
+
     NotificationService.stopConnection();
+  }
+
+  static Future<void> enhanceToken(UserData userData, String token) async{
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/v1/Authentication/enhanceToken'),
+      headers: createHeaders(token),
+      body: jsonEncode({
+        'scopes' : userData.toJson(),
+      })
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception("Erro ao atualizar token do usuário");
+    }
   }
 
   static Future<void> loginWithGoogle() async {
