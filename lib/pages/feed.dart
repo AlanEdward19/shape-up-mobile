@@ -399,7 +399,7 @@ class _FeedState extends State<Feed> with RouteAware {
               return Column(
                 children: [
                   StorySection(storyStatus: _storyStatus),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 5),
                   PostCreationSection(profileImage: _currentUser!.imageUrl,),
                 ],
               );
