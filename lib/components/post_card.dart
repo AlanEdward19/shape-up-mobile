@@ -185,7 +185,7 @@ class PostCard extends StatelessWidget {
                       try {
                         await SocialService.editPostAsync(post.id, contentController.text.trim(), selectedVisibility);
 
-                        if (post.images.length != currentImages.length) {
+                        if (newImages.isNotEmpty || post.images.length != currentImages.length) {
                           List<String> filesToKeep = currentImages.map((e) => e.split('/').last.split('.').first.toUpperCase()).toList();
                           await SocialService.uploadFilesAsync(post.id, newImages, filesToKeep);
                         }
