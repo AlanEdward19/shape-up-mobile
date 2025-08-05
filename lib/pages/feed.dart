@@ -11,6 +11,7 @@ import 'package:shape_up_app/enums/socialService/reaction_type.dart';
 import 'package:shape_up_app/enums/socialService/post_visibility.dart';
 import 'package:shape_up_app/pages/chat.dart';
 import 'package:shape_up_app/pages/notifications.dart';
+import 'package:shape_up_app/pages/professionals_hub.dart';
 import 'package:shape_up_app/pages/profile.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/notification_service.dart';
@@ -342,6 +343,18 @@ class _FeedState extends State<Feed> with RouteAware {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const Chat()),
+              );
+            },
+          ),
+          IconButton(
+            icon: Stack(
+              children: [
+                const Icon(Icons.work_rounded, color: Colors.white)
+              ],
+            ),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => ProfessionalsHub()),
               );
             },
           ),
