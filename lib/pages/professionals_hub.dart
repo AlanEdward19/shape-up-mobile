@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shape_up_app/dtos/professionalManagementService/client_dto.dart';
 import 'package:shape_up_app/dtos/professionalManagementService/professional_dto.dart';
+import 'package:shape_up_app/dtos/professionalManagementService/professional_score_dto.dart';
 import 'package:shape_up_app/enums/professionalManagementService/professional_type.dart';
 import 'package:shape_up_app/pages/professional_profile.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
@@ -16,6 +17,7 @@ class ProfessionalsHub extends StatefulWidget {
 class _ProfessionalsHubState extends State<ProfessionalsHub> {
   ClientDto? clientData;
   List<ProfessionalDto> recommendedProfessionals = [];
+  List<ProfessionalScoreDto> recommendedProfessionalsScore = [];
   bool isLoading = true;
   bool isLoadingRecommended = true;
 
@@ -31,8 +33,17 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
       final professionals =
           await ProfessionalManagementService.getProfessionalsAsync();
 
+      final List<ProfessionalScoreDto> professionalsScore = professionals.isNotEmpty ? await Future.wait(
+        professionals.map((professional) async {
+          return await ProfessionalManagementService.getProfessionalScoreByIdAsync(
+            professional.id,
+          );
+        }),
+      ) : [];
+
       setState(() {
         recommendedProfessionals = professionals;
+        recommendedProfessionalsScore = professionalsScore;
         isLoadingRecommended = false;
       });
     } catch (e) {
@@ -208,7 +219,16 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
                                   color: Colors.amber,
                                   size: 16,
                                 ),
-                                Text('5'),
+                                Text(
+                                  recommendedProfessionalsScore
+                                      .firstWhere((score) => score.professionalId == professional.id,
+                                    orElse: () => ProfessionalScoreDto('', 0, 0, DateTime.now()))
+                                      .averageScore
+                                      .toStringAsFixed(1),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                  ),
+                                ),
                               ],
                             ),
                             TextButton(
@@ -217,11 +237,7 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
                                   context,
                                   MaterialPageRoute(
                                     builder:
-                                        (context) => ProfessionalProfile(
-                                          professionalName: 'Dr. João Silva',
-                                          professionalImage:
-                                              'https://via.placeholder.com/150',
-                                        ),
+                                        (context) => ProfessionalProfile(professional: professional, professionalScore: recommendedProfessionalsScore.firstWhere((score) => score.professionalId == professional.id, orElse: () => ProfessionalScoreDto('', 0, 0, DateTime.now())))
                                   ),
                                 );
                               },
