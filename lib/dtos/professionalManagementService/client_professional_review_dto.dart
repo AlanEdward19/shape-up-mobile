@@ -3,7 +3,7 @@ class ClientProfessionalReviewDto {
   final String clientId;
   final String clientName;
   final String professionalId;
-  final String clientServicePlanId;
+  final String? clientServicePlanId;
   final int rating;
   final String comment;
   final DateTime lastUpdatedAt;
