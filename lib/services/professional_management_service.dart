@@ -20,6 +20,81 @@ class ProfessionalManagementService {
     return headers;
   }
 
+  static Future<ClientDto> deleteServicePlanFromClientAsync (String clientId, String servicePlanId) async{
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/v1/ServicePlan/$servicePlanId/Client/$clientId'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode == 200) {
+      return ClientDto.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Erro ao remover plano de serviço do cliente');
+    }
+  }
+
+  static Future<ClientDto> addServicePlanToClientAsync (String clientId, String servicePlanId) async{
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/v1/ServicePlan/$servicePlanId/Client/$clientId'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode == 201) {
+      return ClientDto.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Erro ao adicionar plano de serviço ao cliente');
+    }
+  }
+
+  static Future<ClientProfessionalReviewDto> createProfessionalReviewAsync(String professionalId, String servicePlanId, String? comment, int rating) async {
+    var token = await AuthenticationService.getToken();
+
+    final body = jsonEncode({
+      if(comment != null) 'comment': comment,
+      'rating': rating,
+    });
+
+    final response = await http.post(Uri.parse('$baseUrl/v1/Professional/$professionalId/ServicePlan/$servicePlanId/Review'), headers: createHeaders(token), body: body);
+
+    if (response.statusCode == 201) {
+      return ClientProfessionalReviewDto.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Erro ao criar avaliação do profissional');
+    }
+  }
+
+  static Future<void> deleteProfessionalReviewAsync(String id) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.delete(Uri.parse('$baseUrl/v1/Review/$id'), headers: createHeaders(token));
+
+    if (response.statusCode != 204) {
+      throw Exception('Erro ao deletar avaliação do profissional');
+    }
+  }
+
+  static Future<ClientProfessionalReviewDto> updateProfessionalReviewAsync(String id, String? comment, int? rating) async {
+    var token = await AuthenticationService.getToken();
+
+    final body = jsonEncode({
+      if (comment != null) 'comment': comment,
+      if (rating != null) 'rating': rating,
+    });
+
+    final response = await http.patch(Uri.parse('$baseUrl/v1/Review/$id'), headers: createHeaders(token), body: body);
+
+    if (response.statusCode == 200) {
+      return ClientProfessionalReviewDto.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Erro ao atualizar avaliação do profissional');
+    }
+
+  }
+
   static Future<List<ClientProfessionalReviewDto>> getProfessionalReviewsByIdAsync(String id) async {
     var token = await AuthenticationService.getToken();
 

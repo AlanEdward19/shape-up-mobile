@@ -160,13 +160,13 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
                   children: [
                     TextButton(
                       onPressed: () {
-                        // Implementar lógica de cancelar
+                        _showDeleteServicePlanDialog(plan.servicePlan.id);
                       },
                       child: const Text('Cancelar'),
                     ),
                     TextButton(
                       onPressed: () {
-                        // Implementar lógica de avaliar
+                        _showReviewDialog(plan.servicePlan.professionalId, plan.servicePlan.id);
                       },
                       child: const Text('Avaliar'),
                     ),
@@ -179,7 +179,6 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
   }
 
   Widget _buildRecommendedProfessionalsList(BuildContext context) {
-    // Exemplo de lista de profissionais recomendados
 
     return SizedBox(
       height: 175,
@@ -237,7 +236,7 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
                                   context,
                                   MaterialPageRoute(
                                     builder:
-                                        (context) => ProfessionalProfile(professional: professional, professionalScore: recommendedProfessionalsScore.firstWhere((score) => score.professionalId == professional.id, orElse: () => ProfessionalScoreDto('', 0, 0, DateTime.now())))
+                                        (context) => ProfessionalProfile(professional: professional, professionalScore: recommendedProfessionalsScore.firstWhere((score) => score.professionalId == professional.id, orElse: () => ProfessionalScoreDto('', 0, 0, DateTime.now())), loggedInUser: clientData!),
                                   ),
                                 );
                               },
@@ -252,6 +251,131 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
               );
             }).toList(),
       ),
+    );
+  }
+
+  void _showReviewDialog(String professionalId, String servicePlanId) {
+    final TextEditingController commentController =
+    TextEditingController();
+    int updatedRating = 1;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Avaliar profissional'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Nota:'),
+                  DropdownButton<int>(
+                    value: updatedRating,
+                    items: List.generate(5, (index) {
+                      return DropdownMenuItem(
+                        value: index + 1,
+                        child: Text('${index + 1}'),
+                      );
+                    }),
+                    onChanged: (value) {
+                      if (value != null) {
+                        updatedRating = value;
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: commentController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Comentário',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+
+                  await ProfessionalManagementService.createProfessionalReviewAsync(
+                    professionalId,
+                    servicePlanId,
+                    commentController.text,
+                    updatedRating,
+                  );
+
+                  await _loadRecommendedProfessionals();
+
+                  Navigator.of(context).pop();
+
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Profissional avaliado com sucesso!',
+                      ),
+                    ),
+                  );
+                } catch (e) {
+                  print('Erro ao avaliar professional: $e');
+                }
+              },
+              child: const Text('Salvar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDeleteServicePlanDialog(String servicePlanId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirmar Exclusão'),
+          content: const Text('Tem certeza que deseja cancelar esse plano de serviço?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  await ProfessionalManagementService.deleteServicePlanFromClientAsync(clientData!.id, servicePlanId);
+
+                  await _loadClientData();
+
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Plano de serviço cancelado com sucesso!'),
+                    ),
+                  );
+                } catch (e) {
+                  print('Erro ao cancelar plano de serviço: $e');
+                }
+              },
+              child: const Text('Excluir'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

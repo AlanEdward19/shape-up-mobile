@@ -4,15 +4,19 @@ import 'package:shape_up_app/dtos/professionalManagementService/client_service_p
 class ClientDto{
   final String id;
   final String email;
+  final bool isNutritionist;
+  final bool isTrainer;
   final List<ClientServicePlanDto> servicePlans;
   final List<ClientProfessionalReviewDto> reviews;
 
-  ClientDto(this.id, this.email, this.servicePlans, this.reviews);
+  ClientDto(this.id, this.email, this.isNutritionist, this.isTrainer,this.servicePlans, this.reviews);
 
   factory ClientDto.fromJson(Map<String, dynamic> json) {
     return ClientDto(
       json['id'],
       json['email'],
+      json['isNutritionist'],
+      json['isTrainer'],
       ClientServicePlanDto.fromJsonList(json['clientServicePlans']),
       ClientProfessionalReviewDto.fromJsonList(json['clientProfessionalReviews']),
     );
