@@ -12,6 +12,7 @@ import 'package:shape_up_app/pages/profile_post.dart';
 import 'package:shape_up_app/pages/settings.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/social_service.dart';
+import 'package:shape_up_app/widgets/socialService/follow/followers_or_following_list.dart';
 
 class Profile extends StatefulWidget {
   final String profileId;
@@ -146,12 +147,17 @@ class _ProfilePageState extends State<Profile> {
                               ),
                               const SizedBox(height: 8),
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   _buildStat("Publicações", profile.posts),
-                                  _buildStat("Seguidores", profile.followers),
-                                  _buildStat("Seguindo", profile.following),
+                                  GestureDetector(
+                                    onTap: () => _showFollowersOrFollowingPopup(context, profile.id, true),
+                                    child: _buildStat("Seguidores", profile.followers),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () => _showFollowersOrFollowingPopup(context, profile.id, false),
+                                    child: _buildStat("Seguindo", profile.following),
+                                  ),
                                 ],
                               ),
                             ],
@@ -492,6 +498,20 @@ class _ProfilePageState extends State<Profile> {
         style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
         child: const Icon(Icons.group_add, color: Colors.white),
       ),
+    );
+  }
+
+  void _showFollowersOrFollowingPopup(BuildContext context, String profileId, bool isFollowers) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF191F2B),
+      isScrollControlled: true,
+      builder: (context) {
+        return FollowersOrFollowingList(
+          profileId: profileId,
+          isFollowers: isFollowers,
+        );
+      },
     );
   }
 
