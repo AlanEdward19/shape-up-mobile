@@ -150,7 +150,10 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Services Section
-        _buildSectionTitle('Serviços Oferecidos'),
+        _buildSectionTitle('Serviços Oferecidos',action: IconButton(
+          icon: const Icon(Icons.add, color: Colors.white),
+          onPressed: _showCreateServicePlanDialog,
+        ),),
         if (professionalData == null || professionalData!.servicePlans.isEmpty)
           const Padding(
             padding: EdgeInsets.all(16.0),
@@ -257,6 +260,99 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
           );
         }).toList(),
       ],
+    );
+  }
+
+  void _showCreateServicePlanDialog() {
+    final TextEditingController titleController = TextEditingController();
+    final TextEditingController descriptionController = TextEditingController();
+    final TextEditingController durationController = TextEditingController();
+    final TextEditingController priceController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Criar Novo Serviço'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Título',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: descriptionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Descrição',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: durationController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Duração (em dias)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: priceController,
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    labelText: 'Preço',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  final String title = titleController.text;
+                  final String description = descriptionController.text;
+                  final int? duration = int.tryParse(durationController.text);
+                  final double? price = double.tryParse(priceController.text);
+
+                  if (title.isNotEmpty && description.isNotEmpty && duration != null && price != null) {
+                    await ProfessionalManagementService.createServicePlanAsync(
+                      title,
+                      description,
+                      duration,
+                      price,
+                    );
+
+                    await _loadClientData();
+
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Serviço criado com sucesso!')),
+                    );
+                  }
+                } catch (e) {
+                  print('Erro ao criar serviço: $e');
+                }
+              },
+              child: const Text('Salvar'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -399,16 +495,22 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, {Widget? action}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          if (action != null) action,
+        ],
       ),
     );
   }

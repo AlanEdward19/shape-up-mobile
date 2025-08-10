@@ -21,6 +21,25 @@ class ProfessionalManagementService {
     return headers;
   }
 
+  static Future<ServicePlanDto> createServicePlanAsync (String title, String description, int durationInDays, double price) async {
+    var token = await AuthenticationService.getToken();
+
+    final body = jsonEncode({
+      'title': title,
+      'description': description,
+      'durationInDays': durationInDays,
+      'price': price,
+    });
+
+    final response = await http.post(Uri.parse('$baseUrl/v1/ServicePlan'), headers: createHeaders(token), body: body);
+
+    if (response.statusCode == 201) {
+      return ServicePlanDto.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Erro ao criar plano de serviço');
+    }
+  }
+
   static Future<ClientDto> deleteServicePlanFromClientAsync (String clientId, String servicePlanId) async{
     var token = await AuthenticationService.getToken();
 
