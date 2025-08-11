@@ -4,10 +4,11 @@ import 'package:shape_up_app/dtos/professionalManagementService/client_dto.dart'
 import 'package:shape_up_app/dtos/professionalManagementService/professional_dto.dart';
 import 'package:shape_up_app/dtos/professionalManagementService/professional_score_dto.dart';
 import 'package:shape_up_app/enums/professionalManagementService/professional_type.dart';
+import 'package:shape_up_app/enums/professionalManagementService/subscription_status.dart';
 import 'package:shape_up_app/pages/professional_profile.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/professional_management_service.dart';
-import 'package:shape_up_app/services/social_service.dart';
+import 'package:shape_up_app/widgets/professionalManagementService/section_title.dart';
 
 class ProfessionalsHub extends StatefulWidget {
   @override
@@ -15,6 +16,7 @@ class ProfessionalsHub extends StatefulWidget {
 }
 
 class _ProfessionalsHubState extends State<ProfessionalsHub> {
+  String selectedStatus = 'Sem Filtro';
   ClientDto? clientData;
   ProfessionalDto? professionalData;
   List<ClientDto> professionalClients = [];
@@ -22,6 +24,26 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
   List<ProfessionalScoreDto> recommendedProfessionalsScore = [];
   bool isLoading = true;
   bool isLoadingRecommended = true;
+
+  List<ClientDto> _filterClientsByStatus() {
+    if (selectedStatus == 'Sem Filtro') {
+      return professionalClients;
+    }
+    return professionalClients.where((client) {
+      return client.servicePlans.any((plan) {
+        switch (selectedStatus) {
+          case 'Ativo':
+            return plan.status == SubscriptionStatus.Active;
+          case 'Cancelado':
+            return plan.status == SubscriptionStatus.Canceled;
+          case 'Expirado':
+            return plan.status == SubscriptionStatus.Expired;
+          default:
+            return false;
+        }
+      });
+    }).toList();
+  }
 
   @override
   void initState() {
@@ -126,10 +148,10 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
                   Expanded(
                     child: ListView(
                       children: [
-                        _buildSectionTitle('Planos Ativos'),
+                        SectionTitle(title:'Planos Ativos'),
                         _buildActivePlansList(),
 
-                        _buildSectionTitle('Profissionais Recomendados'),
+                        SectionTitle(title:'Profissionais Recomendados'),
                         _buildRecommendedProfessionalsList(context),
 
                         _buildProfessionalClientsAndServices(),
@@ -143,14 +165,15 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
 
   Widget _buildProfessionalClientsAndServices() {
     if (clientData == null || (!clientData!.isTrainer && !clientData!.isNutritionist)) {
-      return const SizedBox.shrink(); // Return empty if not a trainer or nutritionist
+      return const SizedBox.shrink();
     }
+
+    final filteredClients = _filterClientsByStatus();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Services Section
-        _buildSectionTitle('Serviços Oferecidos',action: IconButton(
+        SectionTitle(title:'Serviços Oferecidos',action: IconButton(
           icon: const Icon(Icons.add, color: Colors.white),
           onPressed: _showCreateServicePlanDialog,
         ),),
@@ -163,104 +186,147 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
             ),
           )
         else
-        ...professionalData!.servicePlans.map((service) {
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 16.0),
-            child: ListTile(
-              title: Text(service.title),
-              subtitle: Text(
-                'Descrição: ${service.description}\n'
-                    'Duração: ${service.durationInDays} dias\n'
-                    'Preço: R\$ ${service.price.toStringAsFixed(2)}',
+          ...professionalData!.servicePlans.map((service) {
+            return Card(
+              margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 16.0),
+              child: ListTile(
+                title: Text(service.title),
+                subtitle: Text(
+                  'Descrição: ${service.description}\n'
+                      'Duração: ${service.durationInDays} dias\n'
+                      'Preço: R\$ ${service.price.toStringAsFixed(2)}',
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () {
+                        _showEditServiceDialog(service.id, service.title, service.description, service.durationInDays, service.price);
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () async {
+                        await _deleteService(service.id);
+                      },
+                    ),
+                  ],
+                ),
               ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: () {
-                      _showEditServiceDialog(service.id, service.title, service.description, service.durationInDays, service.price);
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () async {
-                      await _deleteService(service.id);
-                    },
-                  ),
-                ],
-              ),
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
 
-        // Clients Section
-        _buildSectionTitle('Clientes'),
-        if (professionalClients.isEmpty)
+        SectionTitle(title:'Clientes', action: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: DropdownButton<String>(
+            value: selectedStatus,
+            items: ['Sem Filtro', 'Ativo', 'Cancelado', 'Expirado']
+                .map((status) => DropdownMenuItem(
+              value: status,
+              child: Text(status),
+            ))
+                .toList(),
+            onChanged: (value) {
+              setState(() {
+                selectedStatus = value!;
+              });
+            },
+          ),
+        )),
+        if (filteredClients.isEmpty)
           const Padding(
             padding: EdgeInsets.all(16.0),
             child: Text(
-              'Nenhum cliente cadastrado.',
+              'Nenhum cliente encontrado.',
               style: TextStyle(fontSize: 16, color: Colors.white54),
             ),
           )
         else
-        ...professionalClients.map((client) {
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 16.0),
-            child: ExpansionTile(
-              title: Text(client.name),
-              subtitle: Text('E-mail: ${client.email}'),
-              children: [
-                ...client.servicePlans.map((plan) {
-                  return ListTile(
-                    title: Text(plan.servicePlan.title),
-                    subtitle: Text(
-                      'Período: ${DateFormat('dd/MM/yyyy').format(plan.startDate)} - ${DateFormat('dd/MM/yyyy').format(plan.endDate)}',
-                    ),
-                    trailing: TextButton(
-                      onPressed: () async {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: const Text('Cancelar Plano de Serviço'),
-                              content: Text('Tem certeza que deseja cancelar este plano de serviço para ${client.name}?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: const Text('Cancelar'),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () async {
-                                    await _cancelClientServicePlan(client.id, plan.servicePlan.id);
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: const Text('Confirmar'),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                      child: const Text('Cancelar'),
-                    ),
-                  );
-                }).toList(),
-                TextButton(
-                  onPressed: () {
-                    // Add logic to message the client
-                  },
-                  child: const Text('Mensagem'),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
+          ...filteredClients.map((client) {
+            return Card(
+              margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 16.0),
+              child: ExpansionTile(
+                title: Text(client.name),
+                subtitle: Text('E-mail: ${client.email}'),
+                children: [
+                  ...client.servicePlans.map((plan) {
+                    return ListTile(
+                      title: Text(plan.servicePlan.title),
+                      subtitle: Text(
+                        'Período: ${DateFormat('dd/MM/yyyy').format(plan.startDate)} - ${DateFormat('dd/MM/yyyy').format(plan.endDate)}\nStatus: ${_getStatusText(plan.status)}',
+                      ),
+                      trailing: TextButton(
+                        onPressed: () async {
+                          if (plan.status != SubscriptionStatus.Active) {
+                            await _reactivateClientServicePlan(client.id, plan.servicePlan.id);
+                          } else {
+                            await _cancelClientServicePlan(client.id, plan.servicePlan.id);
+                          }
+                        },
+                        child: Text(plan.status != SubscriptionStatus.Active ? 'Reativar' : 'Desativar'),
+                      ),
+                      enabled: plan.status == SubscriptionStatus.Active
+                    );
+                  }).toList(),
+                  TextButton(
+                    onPressed: () {
+                      // Add logic to message the client
+                    },
+                    child: const Text('Mensagem'),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
       ],
     );
+  }
+
+  String _getStatusText(SubscriptionStatus status) {
+    switch (status) {
+      case SubscriptionStatus.Active:
+        return 'Ativo';
+      case SubscriptionStatus.Canceled:
+        return 'Cancelado';
+      case SubscriptionStatus.Expired:
+        return 'Expirado';
+    }
+  }
+
+  Future<void> _reactivateClientServicePlan(String clientId, String servicePlanId) async {
+    try {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Reativar Plano de Serviço'),
+            content: const Text('Você tem certeza que deseja reativar este plano de serviço?'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  await ProfessionalManagementService.activateServicePlanFromClientAsync(clientId, servicePlanId);
+                  await _loadClientData();
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Plano de serviço reativado com sucesso!')),
+                  );
+                },
+                child: const Text('Reativar'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      print('Erro ao reativar plano de serviço: $e');
+    }
   }
 
   void _showCreateServicePlanDialog() {
@@ -392,15 +458,65 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
   }
 
   Future<void> _cancelClientServicePlan(String clientId, String servicePlanId) async {
-    try {
-      await ProfessionalManagementService.deleteServicePlanFromClientAsync(clientId, servicePlanId);
-      await _loadClientData();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Plano de serviço cancelado com sucesso!')),
-      );
-    } catch (e) {
-      print('Erro ao cancelar plano de serviço: $e');
-    }
+    final TextEditingController reasonController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Desativar Plano de Serviço'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Por favor, insira a razão para o cancelamento:'),
+              const SizedBox(height: 8),
+              TextField(
+                controller: reasonController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Razão',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (reasonController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('A razão do cancelamento é obrigatória!')),
+                  );
+                  return;
+                }
+
+                try {
+                  await ProfessionalManagementService.deactivateServicePlanFromClientAsync(
+                    clientId,
+                    servicePlanId,
+                    reasonController.text,
+                  );
+                  await _loadClientData();
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Plano de serviço cancelado com sucesso!')),
+                  );
+                } catch (e) {
+                  print('Erro ao cancelar plano de serviço: $e');
+                }
+              },
+              child: const Text('Confirmar'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showEditServiceDialog(String servicePlanId, String currentTitle, String currentDescription, int currentDuration, double currentPrice) {
@@ -495,26 +611,6 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
     );
   }
 
-  Widget _buildSectionTitle(String title, {Widget? action}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          if (action != null) action,
-        ],
-      ),
-    );
-  }
-
   Widget _buildActivePlansList() {
     if(clientData!.servicePlans.isEmpty){
       return const Padding(
@@ -539,16 +635,20 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
               child: ListTile(
                 title: Text(plan.servicePlan.title),
                 subtitle: Text(
-                  '${dateFormat.format(plan.startDate)} até ${dateFormat.format(plan.endDate)}',
+                  '${dateFormat.format(plan.startDate)} até ${dateFormat.format(plan.endDate)}\nStatus: ${_getStatusText(plan.status)}\n',
                 ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextButton(
                       onPressed: () {
-                        _showDeleteServicePlanDialog(plan.servicePlan.id);
+                        if(plan.status != SubscriptionStatus.Active) {
+                          _reactivateClientServicePlan(clientData!.id, plan.servicePlan.id);
+                        } else {
+                          _cancelClientServicePlan(clientData!.id, plan.servicePlan.id);
+                        }
                       },
-                      child: const Text('Cancelar'),
+                      child: Text(plan.status != SubscriptionStatus.Active ? 'Reativar' : 'Cancelar'),
                     ),
                     TextButton(
                       onPressed: () {
@@ -558,6 +658,7 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
                     ),
                   ],
                 ),
+                  enabled: plan.status == SubscriptionStatus.Active
               ),
             );
           }).toList(),
@@ -729,45 +830,6 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
                 }
               },
               child: const Text('Salvar'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showDeleteServicePlanDialog(String servicePlanId) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirmar Exclusão'),
-          content: const Text('Tem certeza que deseja cancelar esse plano de serviço?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  await ProfessionalManagementService.deleteServicePlanFromClientAsync(clientData!.id, servicePlanId);
-
-                  await _loadClientData();
-
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Plano de serviço cancelado com sucesso!'),
-                    ),
-                  );
-                } catch (e) {
-                  print('Erro ao cancelar plano de serviço: $e');
-                }
-              },
-              child: const Text('Excluir'),
             ),
           ],
         );

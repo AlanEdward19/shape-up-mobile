@@ -40,18 +40,45 @@ class ProfessionalManagementService {
     }
   }
 
-  static Future<ClientDto> deleteServicePlanFromClientAsync (String clientId, String servicePlanId) async{
+  static Future<ClientDto> deactivateServicePlanFromClientAsync (String clientId, String servicePlanId, String reason) async{
     var token = await AuthenticationService.getToken();
 
-    final response = await http.delete(
+    final body = jsonEncode({
+      'status': 1,
+      'reason': reason,
+    });
+
+    final response = await http.put(
       Uri.parse('$baseUrl/v1/ServicePlan/$servicePlanId/Client/$clientId'),
       headers: createHeaders(token),
+      body: body
     );
 
     if (response.statusCode == 200) {
       return ClientDto.fromJson(jsonDecode(response.body));
     } else {
-      throw Exception('Erro ao remover plano de serviço do cliente');
+      throw Exception('Erro ao cancelar plano de serviço do cliente');
+    }
+  }
+
+  static Future<ClientDto> activateServicePlanFromClientAsync (String clientId, String servicePlanId) async{
+    var token = await AuthenticationService.getToken();
+
+    final body = jsonEncode({
+      'status': 0,
+      'reason': '',
+    });
+
+    final response = await http.put(
+        Uri.parse('$baseUrl/v1/ServicePlan/$servicePlanId/Client/$clientId'),
+        headers: createHeaders(token),
+        body: body
+    );
+
+    if (response.statusCode == 200) {
+      return ClientDto.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Erro ao cancelar plano de serviço do cliente');
     }
   }
 

@@ -8,6 +8,7 @@ import 'package:shape_up_app/dtos/socialService/simplified_profile_dto.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/professional_management_service.dart';
 import 'package:shape_up_app/services/social_service.dart';
+import 'package:shape_up_app/widgets/professionalManagementService/section_title.dart';
 
 class ProfessionalProfile extends StatefulWidget {
   final ProfessionalDto professional;
@@ -133,7 +134,7 @@ class _ProfessionalProfileState extends State<ProfessionalProfile> {
                     ),
 
                     // Available Plans Section
-                    _buildSectionTitle('Planos Disponíveis'),
+                    SectionTitle(title:'Planos Disponíveis'),
                     ...widget.professional.servicePlans.map((plan) {
                       final isPlanAlreadyHired = widget.loggedInUser.servicePlans
                           .any((servicePlan) => servicePlan.servicePlan.id == plan.id);
@@ -165,7 +166,7 @@ class _ProfessionalProfileState extends State<ProfessionalProfile> {
                     }).toList(),
 
                     // Reviews Section
-                    _buildSectionTitle('Avaliações'),
+                    SectionTitle(title:'Avaliações'),
                     if (reviews.isEmpty)
                       const Padding(
                         padding: EdgeInsets.all(16.0),
@@ -441,20 +442,6 @@ class _ProfessionalProfileState extends State<ProfessionalProfile> {
           ],
         );
       },
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      ),
     );
   }
 }
