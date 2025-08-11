@@ -25,6 +25,13 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
   bool isLoading = true;
   bool isLoadingRecommended = true;
 
+  @override
+  void initState() {
+    super.initState();
+    _loadClientData();
+    _loadRecommendedProfessionals();
+  }
+
   List<ClientDto> _filterClientsByStatus() {
     if (selectedStatus == 'Sem Filtro') {
       return professionalClients;
@@ -43,13 +50,6 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
         }
       });
     }).toList();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadClientData();
-    _loadRecommendedProfessionals();
   }
 
   Future<void> _loadRecommendedProfessionals() async {
@@ -123,43 +123,51 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
       body:
           isLoading || isLoadingRecommended
               ? const Center(child: CircularProgressIndicator())
-              : Column(
-                children: [
-                  // Search Bar
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Buscar profissionais...',
-                        hintStyle: const TextStyle(color: Colors.white54),
-                        fillColor: Colors.white24,
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                      ),
-                      onChanged: (value) {
-                        // Implementar lógica de busca
-                      },
+              : RefreshIndicator(child: Column(
+            children: [
+              // Search Bar
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Buscar profissionais...',
+                    hintStyle: const TextStyle(color: Colors.white54),
+                    fillColor: Colors.white24,
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
-
-                  // Active Plans Section
-                  Expanded(
-                    child: ListView(
-                      children: [
-                        SectionTitle(title:'Planos Ativos'),
-                        _buildActivePlansList(),
-
-                        SectionTitle(title:'Profissionais Recomendados'),
-                        _buildRecommendedProfessionalsList(context),
-
-                        _buildProfessionalClientsAndServices(),
-                      ],
-                    ),
-                  ),
-                ],
+                  onChanged: (value) {
+                    // Implementar lógica de busca
+                  },
+                ),
               ),
+
+              // Active Plans Section
+              Expanded(
+                child: ListView(
+                  children: [
+                    SectionTitle(title:'Planos Ativos'),
+                    _buildActivePlansList(),
+
+                    SectionTitle(title:'Profissionais Recomendados'),
+                    _buildRecommendedProfessionalsList(context),
+
+                    _buildProfessionalClientsAndServices(),
+                  ],
+                ),
+              ),
+            ],
+          ), onRefresh: () async {
+            setState(() {
+              isLoadingRecommended = true;
+              isLoading = true;
+            });
+
+            await _loadClientData();
+            await _loadRecommendedProfessionals();
+          }),
     );
   }
 
@@ -283,6 +291,146 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
     );
   }
 
+  Widget _buildActivePlansList() {
+    if(clientData!.servicePlans.isEmpty){
+      return const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Text(
+          'Nenhum plano está ativo no momento.',
+          style: TextStyle(fontSize: 16, color: Colors.white54),
+        ),
+      );
+    }
+
+    var dateFormat = DateFormat('dd/MM/yyyy');
+
+    return Column(
+      children:
+      clientData!.servicePlans.map((plan) {
+        return Card(
+          margin: const EdgeInsets.symmetric(
+            vertical: 4.0,
+            horizontal: 16.0,
+          ),
+          child: ListTile(
+              title: Text(plan.servicePlan.title),
+              subtitle: Text(
+                '${dateFormat.format(plan.startDate)} até ${dateFormat.format(plan.endDate)}\nStatus: ${_getStatusText(plan.status)}\n',
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      if(plan.status != SubscriptionStatus.Active) {
+                        _reactivateClientServicePlan(clientData!.id, plan.servicePlan.id);
+                      } else {
+                        _cancelClientServicePlan(clientData!.id, plan.servicePlan.id);
+                      }
+                    },
+                    child: Text(plan.status != SubscriptionStatus.Active ? 'Reativar' : 'Cancelar'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      _showReviewDialog(plan.servicePlan.professionalId, plan.servicePlan.id);
+                    },
+                    child: const Text('Avaliar'),
+                  ),
+                ],
+              ),
+              enabled: plan.status == SubscriptionStatus.Active
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildRecommendedProfessionalsList(BuildContext context) {
+    if(recommendedProfessionals.isEmpty)
+    {
+      return const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Text(
+          'Nenhum profissional recomendado no momento.',
+          style: TextStyle(fontSize: 16, color: Colors.white54),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 175,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children:
+        recommendedProfessionals.map((professional) {
+          return Card(
+            margin: const EdgeInsets.all(8.0),
+            child: SizedBox(
+              width: 200,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          professional.name!,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(switch (professional.type) {
+                          ProfessionalType.Nutritionist => 'Nutricionista',
+                          ProfessionalType.Trainer => 'Personal Trainer',
+                          ProfessionalType.Both =>
+                          'Nutricionista e Personal Trainer',
+                        }),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.star,
+                              color: Colors.amber,
+                              size: 16,
+                            ),
+                            Text(
+                              recommendedProfessionalsScore
+                                  .firstWhere((score) => score.professionalId == professional.id,
+                                  orElse: () => ProfessionalScoreDto('', 0, 0, DateTime.now()))
+                                  .averageScore
+                                  .toStringAsFixed(1),
+                              style: const TextStyle(
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => ProfessionalProfile(professional: professional, professionalScore: recommendedProfessionalsScore.firstWhere((score) => score.professionalId == professional.id, orElse: () => ProfessionalScoreDto('', 0, 0, DateTime.now())), loggedInUser: clientData!),
+                              ),
+                            );
+                          },
+                          child: const Text('Ver Perfil'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   String _getStatusText(SubscriptionStatus status) {
     switch (status) {
       case SubscriptionStatus.Active:
@@ -327,99 +475,6 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
     } catch (e) {
       print('Erro ao reativar plano de serviço: $e');
     }
-  }
-
-  void _showCreateServicePlanDialog() {
-    final TextEditingController titleController = TextEditingController();
-    final TextEditingController descriptionController = TextEditingController();
-    final TextEditingController durationController = TextEditingController();
-    final TextEditingController priceController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Criar Novo Serviço'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Título',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Descrição',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: durationController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Duração (em dias)',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: priceController,
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(
-                    labelText: 'Preço',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  final String title = titleController.text;
-                  final String description = descriptionController.text;
-                  final int? duration = int.tryParse(durationController.text);
-                  final double? price = double.tryParse(priceController.text);
-
-                  if (title.isNotEmpty && description.isNotEmpty && duration != null && price != null) {
-                    await ProfessionalManagementService.createServicePlanAsync(
-                      title,
-                      description,
-                      duration,
-                      price,
-                    );
-
-                    await _loadClientData();
-
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Serviço criado com sucesso!')),
-                    );
-                  }
-                } catch (e) {
-                  print('Erro ao criar serviço: $e');
-                }
-              },
-              child: const Text('Salvar'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   Future<void> _deleteService(String serviceId) async {
@@ -611,146 +666,6 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
     );
   }
 
-  Widget _buildActivePlansList() {
-    if(clientData!.servicePlans.isEmpty){
-      return const Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Text(
-          'Nenhum plano está ativo no momento.',
-          style: TextStyle(fontSize: 16, color: Colors.white54),
-        ),
-      );
-    }
-
-    var dateFormat = DateFormat('dd/MM/yyyy');
-
-    return Column(
-      children:
-          clientData!.servicePlans.map((plan) {
-            return Card(
-              margin: const EdgeInsets.symmetric(
-                vertical: 4.0,
-                horizontal: 16.0,
-              ),
-              child: ListTile(
-                title: Text(plan.servicePlan.title),
-                subtitle: Text(
-                  '${dateFormat.format(plan.startDate)} até ${dateFormat.format(plan.endDate)}\nStatus: ${_getStatusText(plan.status)}\n',
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        if(plan.status != SubscriptionStatus.Active) {
-                          _reactivateClientServicePlan(clientData!.id, plan.servicePlan.id);
-                        } else {
-                          _cancelClientServicePlan(clientData!.id, plan.servicePlan.id);
-                        }
-                      },
-                      child: Text(plan.status != SubscriptionStatus.Active ? 'Reativar' : 'Cancelar'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        _showReviewDialog(plan.servicePlan.professionalId, plan.servicePlan.id);
-                      },
-                      child: const Text('Avaliar'),
-                    ),
-                  ],
-                ),
-                  enabled: plan.status == SubscriptionStatus.Active
-              ),
-            );
-          }).toList(),
-    );
-  }
-
-  Widget _buildRecommendedProfessionalsList(BuildContext context) {
-    if(recommendedProfessionals.isEmpty)
-    {
-      return const Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Text(
-          'Nenhum profissional recomendado no momento.',
-          style: TextStyle(fontSize: 16, color: Colors.white54),
-        ),
-      );
-    }
-
-    return SizedBox(
-      height: 175,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        children:
-            recommendedProfessionals.map((professional) {
-              return Card(
-                margin: const EdgeInsets.all(8.0),
-                child: SizedBox(
-                  width: 200,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              professional.name!,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(switch (professional.type) {
-                              ProfessionalType.Nutritionist => 'Nutricionista',
-                              ProfessionalType.Trainer => 'Personal Trainer',
-                              ProfessionalType.Both =>
-                                'Nutricionista e Personal Trainer',
-                            }),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.star,
-                                  color: Colors.amber,
-                                  size: 16,
-                                ),
-                                Text(
-                                  recommendedProfessionalsScore
-                                      .firstWhere((score) => score.professionalId == professional.id,
-                                    orElse: () => ProfessionalScoreDto('', 0, 0, DateTime.now()))
-                                      .averageScore
-                                      .toStringAsFixed(1),
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) => ProfessionalProfile(professional: professional, professionalScore: recommendedProfessionalsScore.firstWhere((score) => score.professionalId == professional.id, orElse: () => ProfessionalScoreDto('', 0, 0, DateTime.now())), loggedInUser: clientData!),
-                                  ),
-                                );
-                              },
-                              child: const Text('Ver Perfil'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-      ),
-    );
-  }
-
   void _showReviewDialog(String professionalId, String servicePlanId) {
     final TextEditingController commentController =
     TextEditingController();
@@ -827,6 +742,99 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
                   );
                 } catch (e) {
                   print('Erro ao avaliar professional: $e');
+                }
+              },
+              child: const Text('Salvar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showCreateServicePlanDialog() {
+    final TextEditingController titleController = TextEditingController();
+    final TextEditingController descriptionController = TextEditingController();
+    final TextEditingController durationController = TextEditingController();
+    final TextEditingController priceController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Criar Novo Serviço'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Título',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: descriptionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Descrição',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: durationController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Duração (em dias)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: priceController,
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    labelText: 'Preço',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  final String title = titleController.text;
+                  final String description = descriptionController.text;
+                  final int? duration = int.tryParse(durationController.text);
+                  final double? price = double.tryParse(priceController.text);
+
+                  if (title.isNotEmpty && description.isNotEmpty && duration != null && price != null) {
+                    await ProfessionalManagementService.createServicePlanAsync(
+                      title,
+                      description,
+                      duration,
+                      price,
+                    );
+
+                    await _loadClientData();
+
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Serviço criado com sucesso!')),
+                    );
+                  }
+                } catch (e) {
+                  print('Erro ao criar serviço: $e');
                 }
               },
               child: const Text('Salvar'),
