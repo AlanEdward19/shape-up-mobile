@@ -5,9 +5,11 @@ import 'package:shape_up_app/dtos/professionalManagementService/client_professio
 import 'package:shape_up_app/dtos/professionalManagementService/professional_score_dto.dart';
 import 'package:shape_up_app/dtos/professionalManagementService/service_plan_dto.dart';
 import 'package:shape_up_app/dtos/socialService/simplified_profile_dto.dart';
+import 'package:shape_up_app/enums/professionalManagementService/service_plan_type.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/professional_management_service.dart';
 import 'package:shape_up_app/services/social_service.dart';
+import 'package:shape_up_app/widgets/professionalManagementService/section_title.dart';
 
 class ProfessionalProfile extends StatefulWidget {
   final ProfessionalDto professional;
@@ -34,15 +36,15 @@ class _ProfessionalProfileState extends State<ProfessionalProfile> {
   @override
   void initState() {
     super.initState();
-    _loadProfessionalData();
+    _loadProfessionalImageAndReviewList();
   }
 
-  Future<void> _loadProfessionalData() async {
+  Future<void> _loadProfessionalImageAndReviewList() async {
     try {
       final reviewList =
-          await ProfessionalManagementService.getProfessionalReviewsByIdAsync(
-            widget.professional.id,
-          );
+      await ProfessionalManagementService.getProfessionalReviewsByIdAsync(
+        widget.professional.id,
+      );
 
       final profile = await SocialService.viewProfileSimplifiedAsync(
         widget.professional.id,
@@ -64,10 +66,42 @@ class _ProfessionalProfileState extends State<ProfessionalProfile> {
     }
   }
 
+  Future<void> _loadProfessionalData() async {
+    try {
+      final updatedProfessionalScore = await ProfessionalManagementService.getProfessionalScoreByIdAsync(
+        widget.professional.id,
+      );
+
+      final updatedProfessional = await ProfessionalManagementService.getProfessionalByIdAsync(
+        widget.professional.id,
+      );
+
+      setState(() {
+        widget.professionalScore?.averageScore = updatedProfessionalScore.averageScore;
+        widget.professionalScore?.totalReviews = updatedProfessionalScore.totalReviews;
+        widget.professionalScore?.lastUpdated = updatedProfessionalScore.lastUpdated;
+
+        widget.professional.name = updatedProfessional.name;
+        widget.professional.email = updatedProfessional.email;
+        widget.professional.type = updatedProfessional.type;
+        widget.professional.isVerified = updatedProfessional.isVerified;
+        widget.professional.servicePlans.clear();
+        widget.professional.servicePlans.addAll(updatedProfessional.servicePlans);
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      print('Error loading professional data: $e');
+    }
+  }
+
   Future<void> _loadClientData() async {
-    try{
+    try {
       final loggedInUserId = await AuthenticationService.getProfileId();
-      final client = await ProfessionalManagementService.getClientByIdAsync(loggedInUserId);
+      final client = await ProfessionalManagementService.getClientByIdAsync(
+        loggedInUserId,
+      );
 
       setState(() {
         widget.loggedInUser.servicePlans.clear();
@@ -92,138 +126,128 @@ class _ProfessionalProfileState extends State<ProfessionalProfile> {
       body:
           isLoading
               ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Professional Header
-                    Container(
-                      color: const Color(0xFF2A2F3C),
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundImage: NetworkImage(
-                              simplifiedProfile?.imageUrl ??
-                                  'https://via.placeholder.com/150',
-                            ), // Placeholder image
-                            radius: 40,
-                          ),
-                          const SizedBox(width: 16),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.professional.name,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              if (widget.professionalScore != null)
+              : RefreshIndicator(
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Professional Header
+                      Container(
+                        color: const Color(0xFF2A2F3C),
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundImage: NetworkImage(
+                                simplifiedProfile?.imageUrl ??
+                                    'https://via.placeholder.com/150',
+                              ), // Placeholder image
+                              radius: 40,
+                            ),
+                            const SizedBox(width: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
                                 Text(
-                                  'Avaliação: ${widget.professionalScore!.averageScore.toStringAsFixed(1)} (${widget.professionalScore!.totalReviews} reviews)',
-                                  style: const TextStyle(color: Colors.white),
+                                  widget.professional.name,
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
                                 ),
-                            ],
-                          ),
-                        ],
+                                if (widget.professionalScore != null)
+                                  Text(
+                                    'Avaliação: ${widget.professionalScore!.averageScore.toStringAsFixed(1)} (${widget.professionalScore!.totalReviews} reviews)',
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
 
-                    // Available Plans Section
-                    _buildSectionTitle('Planos Disponíveis'),
-                    ...widget.professional.servicePlans.map((plan) {
-                      final isPlanAlreadyHired = widget.loggedInUser.servicePlans
-                          .any((servicePlan) => servicePlan.servicePlan.id == plan.id);
+                      // Available Plans Section
+                      SectionTitle(title: 'Planos Disponíveis'),
+                      ...widget.professional.servicePlans.map((plan) {
+                        final isPlanAlreadyHired = widget
+                            .loggedInUser
+                            .servicePlans
+                            .any(
+                              (servicePlan) =>
+                                  servicePlan.servicePlan.id == plan.id,
+                            );
 
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                          vertical: 4.0,
-                          horizontal: 16.0,
-                        ),
-                        child: ListTile(
-                          title: Text(plan.title),
-                          subtitle: Text(plan.description),
-                          trailing: isPlanAlreadyHired
-                              ? const Text(
-                            'Já contratado',
-                            style: TextStyle(color: Colors.grey),
-                          )
-                              : Text(
-                            'R\$ ${plan.price.toStringAsFixed(2)}',
-                          ),
-                          onTap: isPlanAlreadyHired
-                              ? null
-                              : () {
-                            _showHireServicePlanDialog(plan);
-                          },
-                          enabled: !isPlanAlreadyHired,
-                        ),
-                      );
-                    }).toList(),
-
-                    // Reviews Section
-                    _buildSectionTitle('Avaliações'),
-                    if (reviews.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text(
-                          'Nenhuma avaliação disponível.',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      )
-                    else
-                      ...reviews.map((review) {
                         return Card(
                           margin: const EdgeInsets.symmetric(
                             vertical: 4.0,
                             horizontal: 16.0,
                           ),
-                          color: const Color(0xFF2A2F3C),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Nome e Nota
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      review.clientName,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                        color: Colors.white,
-                                      ),
+                          child: ListTile(
+                            title: Text(plan.title),
+                            subtitle: Text('${plan.description}\n${plan.type == ServicePlanType.Training ? 'Treino' : 'Dieta'}'),
+                            trailing:
+                                isPlanAlreadyHired
+                                    ? const Text(
+                                      'Já contratado',
+                                      style: TextStyle(color: Colors.grey),
+                                    )
+                                    : Text(
+                                      'R\$ ${plan.price.toStringAsFixed(2)}',
                                     ),
-                                    Text(
-                                      'Nota: ${review.rating}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                        color: Colors.amber,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                // Comentário (se houver)
-                                if (review.comment.isNotEmpty)
+                            onTap:
+                                isPlanAlreadyHired
+                                    ? null
+                                    : () {
+                                      _showHireServicePlanDialog(plan);
+                                    },
+                            enabled: !isPlanAlreadyHired,
+                          ),
+                        );
+                      }).toList(),
+
+                      // Reviews Section
+                      SectionTitle(title: 'Avaliações'),
+                      if (reviews.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Text(
+                            'Nenhuma avaliação disponível.',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        )
+                      else
+                        ...reviews.map((review) {
+                          return Card(
+                            margin: const EdgeInsets.symmetric(
+                              vertical: 4.0,
+                              horizontal: 16.0,
+                            ),
+                            color: const Color(0xFF2A2F3C),
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 12.0, left: 12.0, bottom: 8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
                                   Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Expanded(
-                                        child: Text(
-                                          review.comment,
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.white70,
-                                          ),
+                                      Text(
+                                        review.clientName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Nota: ${review.rating}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.amber,
                                         ),
                                       ),
                                       if (review.clientId ==
@@ -246,29 +270,59 @@ class _ProfessionalProfileState extends State<ProfessionalProfile> {
                                               ),
                                               onPressed: () {
                                                 _showDeleteReviewDialog(
-                                                    review.id);
+                                                  review.id,
+                                                );
                                               },
                                             ),
                                           ],
                                         ),
                                     ],
                                   ),
-                                const SizedBox(height: 8),
-                                // Última atualização
-                                Text(
-                                  'Última atualização: ${review.lastUpdatedAt.toLocal().toString().split(' ')[0]}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white54,
+                                  const SizedBox(height: 5),
+                                  // Comentário (se houver)
+                                  if (review.comment.isNotEmpty)
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            review.comment,
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.white70,
+                                            ),
+                                          ),
+                                        )
+
+                                      ],
+                                    ),
+                                  const SizedBox(height: 8),
+                                  // Última atualização
+                                  Text(
+                                    'Última atualização: ${review.lastUpdatedAt.toLocal().toString().split(' ')[0]}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white54,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      }).toList(),
-                  ],
+                          );
+                        }).toList(),
+                    ],
+                  ),
                 ),
+                onRefresh: () async {
+                  setState(() {
+                    isLoading = true;
+                  });
+
+                  await _loadClientData();
+                  await _loadProfessionalData();
+                  await _loadProfessionalImageAndReviewList();
+                },
               ),
     );
   }
@@ -290,8 +344,11 @@ class _ProfessionalProfileState extends State<ProfessionalProfile> {
             ElevatedButton(
               onPressed: () async {
                 try {
-                  await ProfessionalManagementService.deleteProfessionalReviewAsync(reviewId);
+                  await ProfessionalManagementService.deleteProfessionalReviewAsync(
+                    reviewId,
+                  );
 
+                  await _loadProfessionalImageAndReviewList();
                   await _loadProfessionalData();
 
                   Navigator.of(context).pop();
@@ -312,7 +369,7 @@ class _ProfessionalProfileState extends State<ProfessionalProfile> {
     );
   }
 
-  void _showHireServicePlanDialog(ServicePlanDto plan){
+  void _showHireServicePlanDialog(ServicePlanDto plan) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -331,22 +388,17 @@ class _ProfessionalProfileState extends State<ProfessionalProfile> {
             ElevatedButton(
               onPressed: () async {
                 try {
-                  await ProfessionalManagementService
-                      .addServicePlanToClientAsync(
+                  await ProfessionalManagementService.addServicePlanToClientAsync(
                     loggedInUserProfileId,
                     plan.id,
                   );
 
                   await _loadClientData();
-                  await _loadProfessionalData();
 
                   Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(
+                  ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text(
-                        'Plano contratado com sucesso!',
-                      ),
+                      content: Text('Plano contratado com sucesso!'),
                     ),
                   );
                 } catch (e) {
@@ -362,8 +414,9 @@ class _ProfessionalProfileState extends State<ProfessionalProfile> {
   }
 
   void _showEditReviewDialog(ClientProfessionalReviewDto review) {
-    final TextEditingController commentController =
-    TextEditingController(text: review.comment);
+    final TextEditingController commentController = TextEditingController(
+      text: review.comment,
+    );
     int updatedRating = review.rating;
 
     showDialog(
@@ -423,6 +476,7 @@ class _ProfessionalProfileState extends State<ProfessionalProfile> {
                     updatedRating,
                   );
 
+                  await _loadProfessionalImageAndReviewList();
                   await _loadProfessionalData();
 
                   Navigator.of(context).pop();
@@ -441,20 +495,6 @@ class _ProfessionalProfileState extends State<ProfessionalProfile> {
           ],
         );
       },
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      ),
     );
   }
 }

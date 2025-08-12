@@ -5,6 +5,7 @@ import 'package:shape_up_app/dtos/professionalManagementService/client_professio
 import 'package:shape_up_app/dtos/professionalManagementService/professional_dto.dart';
 import 'package:shape_up_app/dtos/professionalManagementService/professional_score_dto.dart';
 import 'package:shape_up_app/dtos/professionalManagementService/service_plan_dto.dart';
+import 'package:shape_up_app/enums/professionalManagementService/service_plan_type.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:http/http.dart' as http;
 
@@ -21,7 +22,7 @@ class ProfessionalManagementService {
     return headers;
   }
 
-  static Future<ServicePlanDto> createServicePlanAsync (String title, String description, int durationInDays, double price) async {
+  static Future<ServicePlanDto> createServicePlanAsync (String title, String description, int durationInDays, double price, ServicePlanType type) async {
     var token = await AuthenticationService.getToken();
 
     final body = jsonEncode({
@@ -29,6 +30,7 @@ class ProfessionalManagementService {
       'description': description,
       'durationInDays': durationInDays,
       'price': price,
+      'type': type.index,
     });
 
     final response = await http.post(Uri.parse('$baseUrl/v1/ServicePlan'), headers: createHeaders(token), body: body);
@@ -40,22 +42,49 @@ class ProfessionalManagementService {
     }
   }
 
-  static Future<ClientDto> deleteServicePlanFromClientAsync (String clientId, String servicePlanId) async{
+  static Future<ClientDto> deactivateServicePlanFromClientAsync (String clientId, String servicePlanId, String reason) async{
     var token = await AuthenticationService.getToken();
 
-    final response = await http.delete(
+    final body = jsonEncode({
+      'status': 1,
+      'reason': reason,
+    });
+
+    final response = await http.put(
       Uri.parse('$baseUrl/v1/ServicePlan/$servicePlanId/Client/$clientId'),
       headers: createHeaders(token),
+      body: body
     );
 
     if (response.statusCode == 200) {
       return ClientDto.fromJson(jsonDecode(response.body));
     } else {
-      throw Exception('Erro ao remover plano de serviço do cliente');
+      throw Exception('Erro ao cancelar plano de serviço do cliente');
     }
   }
 
-  static Future<ServicePlanDto> updateServicePlanByIdAsync(String servicePlanId, String? title, String? description, int? durationInDays, double? price ) async {
+  static Future<ClientDto> activateServicePlanFromClientAsync (String clientId, String servicePlanId) async{
+    var token = await AuthenticationService.getToken();
+
+    final body = jsonEncode({
+      'status': 0,
+      'reason': '',
+    });
+
+    final response = await http.put(
+        Uri.parse('$baseUrl/v1/ServicePlan/$servicePlanId/Client/$clientId'),
+        headers: createHeaders(token),
+        body: body
+    );
+
+    if (response.statusCode == 200) {
+      return ClientDto.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Erro ao cancelar plano de serviço do cliente');
+    }
+  }
+
+  static Future<ServicePlanDto> updateServicePlanByIdAsync(String servicePlanId, String? title, String? description, int? durationInDays, double? price, ServicePlanType? type ) async {
     var token = await AuthenticationService.getToken();
 
     final body = jsonEncode({
@@ -63,6 +92,7 @@ class ProfessionalManagementService {
       if (description != null) 'description': description,
       if (durationInDays != null) 'durationInDays': durationInDays,
       if (price != null) 'price': price,
+      if (type != null) 'type': type.index,
     });
 
     final response = await http.patch(Uri.parse('$baseUrl/v1/ServicePlan/$servicePlanId'), headers: createHeaders(token), body: body);

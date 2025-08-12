@@ -1,8 +1,8 @@
 class ProfessionalScoreDto{
   final String professionalId;
-  final double averageScore;
-  final int totalReviews;
-  final DateTime lastUpdated;
+  double averageScore;
+  int totalReviews;
+  DateTime lastUpdated;
 
   ProfessionalScoreDto(
     this.professionalId,
