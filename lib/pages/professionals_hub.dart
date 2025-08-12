@@ -4,6 +4,7 @@ import 'package:shape_up_app/dtos/professionalManagementService/client_dto.dart'
 import 'package:shape_up_app/dtos/professionalManagementService/professional_dto.dart';
 import 'package:shape_up_app/dtos/professionalManagementService/professional_score_dto.dart';
 import 'package:shape_up_app/enums/professionalManagementService/professional_type.dart';
+import 'package:shape_up_app/enums/professionalManagementService/service_plan_type.dart';
 import 'package:shape_up_app/enums/professionalManagementService/subscription_status.dart';
 import 'package:shape_up_app/pages/professional_profile.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
@@ -202,7 +203,8 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
                 subtitle: Text(
                   'Descrição: ${service.description}\n'
                       'Duração: ${service.durationInDays} dias\n'
-                      'Preço: R\$ ${service.price.toStringAsFixed(2)}',
+                      'Preço: R\$ ${service.price.toStringAsFixed(2)}\n'
+                      'Tipo: ${service.type == ServicePlanType.Training ? 'Treino' : 'Dieta'}',
                 ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -210,7 +212,7 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
                     IconButton(
                       icon: const Icon(Icons.edit),
                       onPressed: () {
-                        _showEditServiceDialog(service.id, service.title, service.description, service.durationInDays, service.price);
+                        _showEditServiceDialog(service.id, service.title, service.description, service.durationInDays, service.price, service.type);
                       },
                     ),
                     IconButton(
@@ -262,7 +264,7 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
                     return ListTile(
                       title: Text(plan.servicePlan.title),
                       subtitle: Text(
-                        'Período: ${DateFormat('dd/MM/yyyy').format(plan.startDate)} - ${DateFormat('dd/MM/yyyy').format(plan.endDate)}\nStatus: ${_getStatusText(plan.status)}',
+                        'Período: ${DateFormat('dd/MM/yyyy').format(plan.startDate)} - ${DateFormat('dd/MM/yyyy').format(plan.endDate)}\nStatus: ${_getStatusText(plan.status)}\n${plan.servicePlan.type == ServicePlanType.Training ? 'Treino' : 'Dieta'}',
                       ),
                       trailing: TextButton(
                         onPressed: () async {
@@ -315,7 +317,7 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
           child: ListTile(
               title: Text(plan.servicePlan.title),
               subtitle: Text(
-                '${dateFormat.format(plan.startDate)} até ${dateFormat.format(plan.endDate)}\nStatus: ${_getStatusText(plan.status)}\n',
+                '${dateFormat.format(plan.startDate)} até ${dateFormat.format(plan.endDate)}\nStatus: ${_getStatusText(plan.status)}\n${plan.servicePlan.type == ServicePlanType.Training ? 'Treino' : 'Dieta'}',
               ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -574,11 +576,12 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
     );
   }
 
-  void _showEditServiceDialog(String servicePlanId, String currentTitle, String currentDescription, int currentDuration, double currentPrice) {
+  void _showEditServiceDialog(String servicePlanId, String currentTitle, String currentDescription, int currentDuration, double currentPrice, ServicePlanType currentType) {
     final TextEditingController titleController = TextEditingController(text: currentTitle);
     final TextEditingController descriptionController = TextEditingController(text: currentDescription);
     final TextEditingController durationController = TextEditingController(text: currentDuration.toString());
     final TextEditingController priceController = TextEditingController(text: currentPrice.toStringAsFixed(2));
+    ServicePlanType updatedType = currentType;
 
     showDialog(
       context: context,
@@ -622,6 +625,21 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
                     border: OutlineInputBorder(),
                   ),
                 ),
+                const SizedBox(height: 8),
+                DropdownButton<ServicePlanType>(
+                  value: updatedType,
+                  items: ServicePlanType.values.map((type) {
+                    return DropdownMenuItem(
+                      value: type,
+                      child: Text(type.toString().split('.').last),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      updatedType = value;
+                    }
+                  },
+                ),
               ],
             ),
           ),
@@ -646,6 +664,7 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
                     updatedDescription,
                     updatedDuration,
                     updatedPrice,
+                    updatedType,
                   );
 
                   await _loadClientData();
@@ -757,6 +776,7 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
     final TextEditingController descriptionController = TextEditingController();
     final TextEditingController durationController = TextEditingController();
     final TextEditingController priceController = TextEditingController();
+    ServicePlanType selectedType = ServicePlanType.Training; // Default value
 
     showDialog(
       context: context,
@@ -800,6 +820,21 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
                     border: OutlineInputBorder(),
                   ),
                 ),
+                const SizedBox(height: 8),
+                DropdownButton<ServicePlanType>(
+                  value: selectedType,
+                  items: ServicePlanType.values.map((type) {
+                    return DropdownMenuItem(
+                      value: type,
+                      child: Text(type.toString().split('.').last),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      selectedType = value;
+                    }
+                  },
+                ),
               ],
             ),
           ),
@@ -824,6 +859,7 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
                       description,
                       duration,
                       price,
+                      selectedType,
                     );
 
                     await _loadClientData();

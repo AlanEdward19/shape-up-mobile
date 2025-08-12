@@ -5,6 +5,7 @@ import 'package:shape_up_app/dtos/professionalManagementService/client_professio
 import 'package:shape_up_app/dtos/professionalManagementService/professional_score_dto.dart';
 import 'package:shape_up_app/dtos/professionalManagementService/service_plan_dto.dart';
 import 'package:shape_up_app/dtos/socialService/simplified_profile_dto.dart';
+import 'package:shape_up_app/enums/professionalManagementService/service_plan_type.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/professional_management_service.dart';
 import 'package:shape_up_app/services/social_service.dart';
@@ -185,7 +186,7 @@ class _ProfessionalProfileState extends State<ProfessionalProfile> {
                           ),
                           child: ListTile(
                             title: Text(plan.title),
-                            subtitle: Text(plan.description),
+                            subtitle: Text('${plan.description}\n${plan.type == ServicePlanType.Training ? 'Treino' : 'Dieta'}'),
                             trailing:
                                 isPlanAlreadyHired
                                     ? const Text(

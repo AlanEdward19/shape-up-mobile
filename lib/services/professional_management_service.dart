@@ -5,6 +5,7 @@ import 'package:shape_up_app/dtos/professionalManagementService/client_professio
 import 'package:shape_up_app/dtos/professionalManagementService/professional_dto.dart';
 import 'package:shape_up_app/dtos/professionalManagementService/professional_score_dto.dart';
 import 'package:shape_up_app/dtos/professionalManagementService/service_plan_dto.dart';
+import 'package:shape_up_app/enums/professionalManagementService/service_plan_type.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:http/http.dart' as http;
 
@@ -21,7 +22,7 @@ class ProfessionalManagementService {
     return headers;
   }
 
-  static Future<ServicePlanDto> createServicePlanAsync (String title, String description, int durationInDays, double price) async {
+  static Future<ServicePlanDto> createServicePlanAsync (String title, String description, int durationInDays, double price, ServicePlanType type) async {
     var token = await AuthenticationService.getToken();
 
     final body = jsonEncode({
@@ -29,6 +30,7 @@ class ProfessionalManagementService {
       'description': description,
       'durationInDays': durationInDays,
       'price': price,
+      'type': type.index,
     });
 
     final response = await http.post(Uri.parse('$baseUrl/v1/ServicePlan'), headers: createHeaders(token), body: body);
@@ -82,7 +84,7 @@ class ProfessionalManagementService {
     }
   }
 
-  static Future<ServicePlanDto> updateServicePlanByIdAsync(String servicePlanId, String? title, String? description, int? durationInDays, double? price ) async {
+  static Future<ServicePlanDto> updateServicePlanByIdAsync(String servicePlanId, String? title, String? description, int? durationInDays, double? price, ServicePlanType? type ) async {
     var token = await AuthenticationService.getToken();
 
     final body = jsonEncode({
@@ -90,6 +92,7 @@ class ProfessionalManagementService {
       if (description != null) 'description': description,
       if (durationInDays != null) 'durationInDays': durationInDays,
       if (price != null) 'price': price,
+      if (type != null) 'type': type.index,
     });
 
     final response = await http.patch(Uri.parse('$baseUrl/v1/ServicePlan/$servicePlanId'), headers: createHeaders(token), body: body);
