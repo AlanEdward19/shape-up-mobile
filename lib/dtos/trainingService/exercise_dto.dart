@@ -22,7 +22,7 @@ class ExerciseDto{
       id: json['id'],
       name: json['name'],
       muscleGroups: (json['muscleGroups'] as List)
-          .map((group) => MuscleGroup.values[group])
+          .map((group) => muscleGroupByString(group))
           .toList(),
       requiresWeight: json['requiresWeight'],
       imageUrl: json['imageUrl'],

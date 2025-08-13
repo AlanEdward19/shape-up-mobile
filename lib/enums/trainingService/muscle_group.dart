@@ -1,26 +1,32 @@
 enum MuscleGroup {
   chest,
+  middleChest,
   upperChest,
   lowerChest,
 
+  arms,
   triceps,
   biceps,
   forearms,
 
+  shoulders,
   deltoidAnterior,
   deltoidLateral,
   deltoidPosterior,
-  traps,
 
+  back,
+  traps,
   upperBack,
   middleBack,
   lowerBack,
   lats,
 
+  abs,
   absUpper,
   absLower,
   absObliques,
 
+  legs,
   quadriceps,
   hamstrings,
   glutes,
@@ -31,9 +37,15 @@ enum MuscleGroup {
 
   @override
   String toString() {
+    return this.name.split('.').last;
+  }
+
+  String toStringPtBr() {
     switch (this){
       case MuscleGroup.chest:
         return 'Peitoral';
+      case MuscleGroup.middleChest:
+        return 'Peitoral Médio';
       case MuscleGroup.upperChest:
         return 'Peitoral Superior';
       case MuscleGroup.lowerChest:
@@ -78,6 +90,59 @@ enum MuscleGroup {
         return 'Flexores do Quadril';
       case MuscleGroup.fullBody:
         return 'Corpo Inteiro';
+      case MuscleGroup.arms:
+        return 'Braços';
+      case MuscleGroup.shoulders:
+        return 'Ombros';
+      case MuscleGroup.back:
+        return 'Costas';
+      case MuscleGroup.abs:
+        return 'Abdômen';
+      case MuscleGroup.legs:
+        return 'Pernas';
     }
   }
+}
+
+List<MuscleGroup> getMainMuscleGroups() {
+  return [
+    MuscleGroup.chest,
+    MuscleGroup.arms,
+    MuscleGroup.shoulders,
+    MuscleGroup.back,
+    MuscleGroup.abs,
+    MuscleGroup.legs,
+    MuscleGroup.fullBody
+  ];
+}
+
+List<MuscleGroup> getSecondaryMuscleGroups() {
+  return [
+    MuscleGroup.middleChest,
+    MuscleGroup.upperChest,
+    MuscleGroup.lowerChest,
+    MuscleGroup.triceps,
+    MuscleGroup.biceps,
+    MuscleGroup.forearms,
+    MuscleGroup.deltoidAnterior,
+    MuscleGroup.deltoidLateral,
+    MuscleGroup.deltoidPosterior,
+    MuscleGroup.traps,
+    MuscleGroup.upperBack,
+    MuscleGroup.middleBack,
+    MuscleGroup.lowerBack,
+    MuscleGroup.lats,
+    MuscleGroup.absUpper,
+    MuscleGroup.absLower,
+    MuscleGroup.absObliques,
+    MuscleGroup.quadriceps,
+    MuscleGroup.hamstrings,
+    MuscleGroup.glutes,
+    MuscleGroup.calves,
+    MuscleGroup.hipFlexors
+  ];
+}
+
+MuscleGroup muscleGroupByString(String muscleGroup) {
+  return MuscleGroup.values.firstWhere((e) => e.toString().toLowerCase() == muscleGroup.toLowerCase());
 }
