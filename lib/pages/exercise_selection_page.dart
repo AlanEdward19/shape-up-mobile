@@ -11,10 +11,11 @@ class ExerciseSelectionPage extends StatefulWidget {
 }
 
 class _ExerciseSelectionPageState extends State<ExerciseSelectionPage> {
-  List<ExerciseDto> allExercises = []; // Carregar da API
+  List<ExerciseDto> allExercises = [];
   List<ExerciseDto> filteredExercises = [];
   List<ExerciseDto> selectedExercises = [];
   MuscleGroup? selectedFilter;
+  List<MuscleGroup> selectedFilters = [];
 
   @override
   void initState() {
@@ -23,7 +24,6 @@ class _ExerciseSelectionPageState extends State<ExerciseSelectionPage> {
   }
 
   Future<void> _loadExercises() async {
-    // Simulação de carregamento de exercícios
     final exercises = await TrainingService.getExercisesByMuscleGroupAsync(null);
     setState(() {
       allExercises = exercises;
@@ -41,13 +41,16 @@ class _ExerciseSelectionPageState extends State<ExerciseSelectionPage> {
     });
   }
 
-  void _applyFilter(MuscleGroup? filter) {
+  void _applyFilter(List<MuscleGroup> filters) {
     setState(() {
-      selectedFilter = filter;
-      filteredExercises = allExercises
-          .where((exercise) =>
-      selectedFilter == null || exercise.muscleGroups.contains(selectedFilter))
-          .toList();
+      selectedFilter = null;
+      List<MuscleGroup> selectedFilters = filters.expand((filter) {
+        return [filter, ...getRelatedMuscleGroups(filter)];
+      }).toList();
+
+      filteredExercises = allExercises.where((exercise) {
+        return selectedFilters.isEmpty || selectedFilters.any((filter) => exercise.muscleGroups.contains(filter));
+      }).toList();
     });
   }
 
@@ -123,7 +126,6 @@ class _ExerciseSelectionPageState extends State<ExerciseSelectionPage> {
   void _showMuscleGroupFilterDialog() async {
     final mainMuscleGroups = getMainMuscleGroups();
     final secondaryMuscleGroups = getSecondaryMuscleGroups();
-    List<MuscleGroup> selectedFilters = [];
 
     await showDialog(
       context: context,

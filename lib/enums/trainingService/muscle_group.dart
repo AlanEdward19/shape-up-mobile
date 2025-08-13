@@ -116,6 +116,53 @@ List<MuscleGroup> getMainMuscleGroups() {
   ];
 }
 
+List<MuscleGroup> getRelatedMuscleGroups(MuscleGroup group) {
+  switch (group) {
+    case MuscleGroup.chest:
+      return [
+        MuscleGroup.middleChest,
+        MuscleGroup.upperChest,
+        MuscleGroup.lowerChest,
+      ];
+    case MuscleGroup.back:
+      return [
+        MuscleGroup.upperBack,
+        MuscleGroup.middleBack,
+        MuscleGroup.lowerBack,
+        MuscleGroup.lats,
+        MuscleGroup.traps,
+      ];
+    case MuscleGroup.abs:
+      return [
+        MuscleGroup.absUpper,
+        MuscleGroup.absLower,
+        MuscleGroup.absObliques,
+      ];
+    case MuscleGroup.legs:
+      return [
+        MuscleGroup.quadriceps,
+        MuscleGroup.hamstrings,
+        MuscleGroup.glutes,
+        MuscleGroup.calves,
+        MuscleGroup.hipFlexors,
+      ];
+    case MuscleGroup.shoulders:
+      return [
+        MuscleGroup.deltoidAnterior,
+        MuscleGroup.deltoidLateral,
+        MuscleGroup.deltoidPosterior,
+      ];
+    case MuscleGroup.arms:
+      return [
+        MuscleGroup.biceps,
+        MuscleGroup.triceps,
+        MuscleGroup.forearms,
+      ];
+    default:
+      return [];
+  }
+}
+
 List<MuscleGroup> getSecondaryMuscleGroups() {
   return [
     MuscleGroup.middleChest,
