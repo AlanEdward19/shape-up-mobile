@@ -28,6 +28,8 @@ class _TrainingState extends State<Training> with SingleTickerProviderStateMixin
         iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: const Color(0xFF191F2B),
         bottom: TabBar(
+          indicatorColor: Colors.blueAccent,
+          labelColor: Colors.white,
           controller: _tabController,
           tabs: const [
             Tab(text: "Meus Treinos"),
@@ -78,13 +80,13 @@ class _TrainingState extends State<Training> with SingleTickerProviderStateMixin
           ),
           const SizedBox(height: 16),
           SizedBox(
-            height: 120, // Altura da barra horizontal
+            height: 120,
             child: ListView.builder(
-              scrollDirection: Axis.horizontal, // Define a rolagem horizontal
-              itemCount: 5, // Substituir com a quantidade real de treinos
+              scrollDirection: Axis.horizontal,
+              itemCount: 5,
               itemBuilder: (context, index) {
                 return Container(
-                  width: 200, // Largura de cada item
+                  width: 200,
                   margin: const EdgeInsets.only(right: 16),
                   decoration: BoxDecoration(
                     color: Colors.blueGrey,
