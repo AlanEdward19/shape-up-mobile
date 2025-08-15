@@ -18,4 +18,8 @@ enum WorkoutVisibility {
   String toString() {
     return name;
   }
+
+  static WorkoutVisibility getWithString(String value) {
+    return WorkoutVisibility.values.firstWhere((e) => e.name == value, orElse: () => WorkoutVisibility.private);
+  }
 }

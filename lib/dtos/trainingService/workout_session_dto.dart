@@ -27,7 +27,7 @@ class WorkoutSessionDto {
       workoutId: json['workoutId'],
       startedAt: DateTime.parse(json['startedAt']),
       endedAt: json['endedAt'] != null ? DateTime.parse(json['endedAt']) : null,
-      status: WorkoutStatus.values[json['status']],
+      status: WorkoutStatus.getWithString(json['status']),
       exercises: WorkoutSessionExerciseDto.fromJsonList(json['exercises']),
     );
   }

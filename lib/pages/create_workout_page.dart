@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shape_up_app/dtos/trainingService/exercise_dto.dart';
 import 'package:shape_up_app/enums/trainingService/workout_visibility.dart';
 import 'package:shape_up_app/pages/exercise_selection_page.dart';
+import 'package:shape_up_app/services/training_service.dart';
 
 class CreateWorkoutPage extends StatefulWidget {
   @override
@@ -26,13 +27,8 @@ class _CreateWorkoutPageState extends State<CreateWorkoutPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
-            onPressed: () {
-              // Lógica para salvar o treino
-              print("Nome: $workoutName");
-              print("Visibilidade: $selectedVisibility");
-              print(
-                "Exercícios: ${selectedExercises.map((e) => e.name).join(", ")}",
-              );
+            onPressed: () async {
+              await TrainingService.createWorkoutAsync(workoutName, selectedVisibility, selectedExercises.map( (e) => e.id).toList());
               Navigator.pop(context);
             },
           ),
@@ -55,6 +51,7 @@ class _CreateWorkoutPageState extends State<CreateWorkoutPage> {
             const SizedBox(height: 8),
             // TextField para o nome do treino
             TextField(
+              style: TextStyle(color: Colors.white),
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 hintText: "Digite o nome do treino",

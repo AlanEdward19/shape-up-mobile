@@ -18,7 +18,7 @@ class WorkoutSessionExerciseDto{
     return WorkoutSessionExerciseDto(
       weight: json['weight'],
       repetitions: json['repetitions'],
-      measureUnit: MeasureUnit.values[json['measureUnit']],
+      measureUnit: MeasureUnit.getWithString(json['measureUnit']),
       metadata: ExerciseDto.fromJson(json['metadata']),
     );
   }

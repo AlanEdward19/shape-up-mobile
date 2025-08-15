@@ -24,7 +24,7 @@ class WorkoutDto{
       creatorId: json['creatorId'],
       userId: json['userId'],
       name: json['name'],
-      visibility: WorkoutVisibility.values[json['visibility']],
+      visibility: WorkoutVisibility.getWithString(json['visibility']),
       exercises: ExerciseDto.fromJsonList(json['exercises']),
     );
   }
