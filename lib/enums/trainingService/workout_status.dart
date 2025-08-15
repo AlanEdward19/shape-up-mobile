@@ -3,8 +3,7 @@ enum WorkoutStatus{
   finished,
   cancelled;
 
-  @override
-  String toString() {
+  String toStringPtBr() {
     switch (this) {
       case WorkoutStatus.inProgress:
         return 'Em progresso';
@@ -15,9 +14,14 @@ enum WorkoutStatus{
     }
   }
 
+  @override
+  String toString() {
+    return this.name.split('.').last;
+  }
+
   static WorkoutStatus getWithString(String value) {
     return WorkoutStatus.values.firstWhere(
-      (e) => e.toString() == value,
+      (e) => e.toString().toLowerCase() == value.toLowerCase(),
       orElse: () => WorkoutStatus.inProgress,
     );
   }

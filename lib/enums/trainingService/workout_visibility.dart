@@ -14,12 +14,16 @@ enum WorkoutVisibility {
     }
   }
 
-  @override
-  String toString() {
+  String toStringPtBr() {
     return name;
   }
 
+  @override
+  String toString() {
+    return this.name.split('.').last;
+  }
+
   static WorkoutVisibility getWithString(String value) {
-    return WorkoutVisibility.values.firstWhere((e) => e.name == value, orElse: () => WorkoutVisibility.private);
+    return WorkoutVisibility.values.firstWhere((e) => e.toString().toLowerCase() == value.toLowerCase(), orElse: () => WorkoutVisibility.private);
   }
 }

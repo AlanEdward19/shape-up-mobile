@@ -4,6 +4,7 @@ import 'package:shape_up_app/dtos/trainingService/workout_dto.dart';
 import 'package:shape_up_app/enums/trainingService/workout_visibility.dart';
 import 'package:shape_up_app/pages/create_workout_page.dart';
 import 'package:shape_up_app/pages/exercise_selection_page.dart';
+import 'package:shape_up_app/pages/workout_details.dart';
 import 'package:shape_up_app/pages/workout_session.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/training_service.dart';
@@ -157,104 +158,11 @@ class _TrainingState extends State<Training>
   }
 
   void _showWorkoutDetails(BuildContext context, WorkoutDto workout) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF191F2B),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                workout.name,
-                style: const TextStyle(color: Colors.white),
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.play_arrow, color: Colors.green),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => WorkoutSession(workout: workout),
-                        ),
-                      );
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.blue),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _navigateToEditWorkoutPage(context, workout);
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () async {
-                      Navigator.pop(context);
-                      await TrainingService.deleteWorkoutByIdAsync(workout.id);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Treino deletado com sucesso"),
-                        ),
-                      );
-                      setState(() {
-                        _workoutsFuture = _fetchWorkouts();
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Visibilidade: ${workout.visibility}",
-                style: const TextStyle(color: Colors.white70),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                "Exercícios:",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              ...workout.exercises.map((exercise) {
-                return ListTile(
-                  leading:
-                      exercise.imageUrl != null
-                          ? Image.network(
-                            exercise.imageUrl!,
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
-                          )
-                          : const Icon(
-                            Icons.image_not_supported,
-                            color: Colors.grey,
-                          ),
-                  title: Text(
-                    exercise.name,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                );
-              }).toList(),
-            ],
-          ),
-        );
-      },
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WorkoutDetails(workout: workout),
+      ),
     );
   }
 

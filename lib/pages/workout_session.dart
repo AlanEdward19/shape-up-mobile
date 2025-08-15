@@ -3,13 +3,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shape_up_app/dtos/trainingService/workout_dto.dart';
 import 'package:shape_up_app/enums/trainingService/measure_unit.dart';
+import 'package:shape_up_app/enums/trainingService/workout_status.dart';
 import 'package:shape_up_app/services/training_service.dart';
 import 'package:shape_up_app/valueObjects/trainingService/workout_exercise_value_object.dart';
 
 class WorkoutSession extends StatefulWidget {
+  final String sessionId;
   final WorkoutDto workout;
 
-  const WorkoutSession({super.key, required this.workout});
+  const WorkoutSession({super.key, required this.sessionId,required this.workout});
 
   @override
   State<WorkoutSession> createState() => _WorkoutSessionState();
@@ -71,10 +73,8 @@ class _WorkoutSessionState extends State<WorkoutSession> {
                   }).toList();
                 }).expand((e) => e).toList();
 
-                // Call the createWorkoutSessionAsync function
-                await TrainingService.createWorkoutSessionAsync(widget.workout.id, exercises);
+                await TrainingService.updateWorkoutSessionAsync(widget.sessionId, WorkoutStatus.finished, exercises);
 
-                // Show success message and navigate back
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Treino finalizado com sucesso!")),
                 );

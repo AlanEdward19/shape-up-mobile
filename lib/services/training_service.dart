@@ -180,6 +180,21 @@ class TrainingService {
     }
   }
 
+  static Future<List<WorkoutSessionDto>> getWorkoutSessionsByWorkoutIdAsync(String workoutId) async {
+    var token = await AuthenticationService.getToken();
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/v1/Workout/$workoutId/WorkoutSession'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode == 200) {
+      return WorkoutSessionDto.fromJsonList(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to load workout sessions');
+    }
+  }
+
   static Future<WorkoutSessionDto> getWorkoutSessionByIdAsync(String sessionId) async {
     var token = await AuthenticationService.getToken();
 
@@ -212,7 +227,7 @@ class TrainingService {
       }).toList(),
     });
 
-    final response = await http.patch(
+    final response = await http.put(
       Uri.parse('$baseUrl/v1/WorkoutSession/$sessionId'),
       headers: createHeaders(token),
       body: body,
