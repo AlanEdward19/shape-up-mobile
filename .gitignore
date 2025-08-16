@@ -117,3 +117,16 @@ app.*.symbols
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
+
+#Firebase files
+lib/firebase_options.dart
+firebase.json
+pubspec.lock
+
+.idea/deviceManager.xml
+.idea/shape_up_app.iml
+.idea/workspace.xml
+.idea/shape-up-mobile.iml
+
+android/app/google-services.json
+/.idea/.name
