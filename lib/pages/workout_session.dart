@@ -24,6 +24,11 @@ class WorkoutSession extends StatefulWidget {
 class _WorkoutSessionState extends State<WorkoutSession> {
   Duration _elapsedTime = Duration.zero;
   Timer? _timer;
+
+  Timer? _restTimer;
+  Duration _restTime = Duration.zero;
+  bool _isRestTimerRunning = false;
+
   Map<String, bool> _expandedCards = {};
   Map<String, List<Map<String, dynamic>>> _exerciseSeries = {};
 
@@ -50,7 +55,87 @@ class _WorkoutSessionState extends State<WorkoutSession> {
 
   void dispose() {
     _timer?.cancel();
+    _restTimer?.cancel();
     super.dispose();
+  }
+
+  void _startRestTimer() {
+    if (_restTime.inSeconds > 0) {
+      setState(() {
+        _isRestTimerRunning = true;
+      });
+      _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        setState(() {
+          if (_restTime.inSeconds > 0) {
+            _restTime -= const Duration(seconds: 1);
+          } else {
+            _restTimer?.cancel();
+            _isRestTimerRunning = false;
+          }
+        });
+      });
+    }
+  }
+
+  void _showRestPopup() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Rest Timer"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "${_restTime.inMinutes.toString().padLeft(2, '0')}:${_restTime.inSeconds.remainder(60).toString().padLeft(2, '0')}",
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _restTime = _restTime - const Duration(seconds: 15);
+                        if (_restTime.isNegative) _restTime = Duration.zero;
+                      });
+                    },
+                    child: const Text("-15"),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _restTime += const Duration(seconds: 15);
+                      });
+                    },
+                    child: const Text("+15"),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _startRestTimer();
+              },
+              child: const Text("Start"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -149,7 +234,32 @@ class _WorkoutSessionState extends State<WorkoutSession> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 10),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_isRestTimerRunning || _restTime.inSeconds > 0)
+                    Text(
+                      "${_restTime.inMinutes.toString().padLeft(2, '0')}:${_restTime.inSeconds.remainder(60).toString().padLeft(2, '0')}",
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  if (_isRestTimerRunning || _restTime.inSeconds > 0)
+                    const SizedBox(width: 16),
+                  IconButton(
+                    icon: const Icon(Icons.access_time, size: 32, color: Colors.white,),
+                    onPressed: _showRestPopup,
+                  ),
+                  const Text("Descanso", style: TextStyle(fontSize: 16, color: Colors.white)),
+                ],
+              ),
+
+              const SizedBox(height: 10),
+
               // List of exercises
               Expanded(
                 child: ListView.builder(
