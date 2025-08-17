@@ -5,7 +5,7 @@ class WorkoutDto{
   final String id;
   final String creatorId;
   final String userId;
-  final String name;
+  String name;
   WorkoutVisibility visibility;
   List<ExerciseDto> exercises;
 

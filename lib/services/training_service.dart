@@ -141,7 +141,7 @@ class TrainingService {
       'exercises': exercises,
     });
 
-    final response = await http.patch(
+    final response = await http.put(
       Uri.parse('$baseUrl/v1/Workout/$workoutId'),
       headers: createHeaders(token),
       body: body,

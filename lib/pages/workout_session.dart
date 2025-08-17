@@ -30,7 +30,7 @@ class _WorkoutSessionState extends State<WorkoutSession> {
     for (var exercise in widget.workout.exercises) {
       _expandedCards[exercise.id] = false;
       _exerciseSeries[exercise.id] = [];
-      _exerciseSeries[exercise.id]!.add({'weight': null, 'reps': null});
+      _exerciseSeries[exercise.id]!.add({'weight': null, 'reps': null, 'completed': false});
     }
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -47,7 +47,12 @@ class _WorkoutSessionState extends State<WorkoutSession> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WillPopScope(
+        onWillPop: () async {
+          await TrainingService.deleteWorkoutSessionByIdAsync(widget.sessionId);
+      return true;
+    },
+    child: Scaffold(
       appBar: AppBar(
         title: Text(
           widget.workout.name,
@@ -60,7 +65,7 @@ class _WorkoutSessionState extends State<WorkoutSession> {
             icon: const Icon(Icons.check_circle, color: Colors.blue),
             onPressed: () async {
               try {
-                // Convert exercise data to WorkoutExerciseValueObject
+
                 final exercises = widget.workout.exercises.map((exercise) {
                   final series = _exerciseSeries[exercise.id]!;
                   return series.map((s) {
@@ -68,7 +73,7 @@ class _WorkoutSessionState extends State<WorkoutSession> {
                       exerciseId: exercise.id,
                       weight: s['weight'],
                       repetitions: s['reps'],
-                      measureUnit: MeasureUnit.kilogram, // Example: Adjust as needed
+                      measureUnit: MeasureUnit.kilogram,
                     );
                   }).toList();
                 }).expand((e) => e).toList();
@@ -164,57 +169,75 @@ class _WorkoutSessionState extends State<WorkoutSession> {
                                         SnackBar(content: Text('Série ${seriesIndex + 1} removida!')),
                                       );
                                     },
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: TextField(
-                                            decoration: const InputDecoration(
-                                              labelText: "Peso",
-                                              labelStyle: TextStyle(color: Colors.white70),
-                                              enabledBorder: UnderlineInputBorder(
-                                                borderSide: BorderSide(color: Colors.white70),
+                                    child: Container(
+                                      color: series['complete'] == true ? Colors.white12 : Colors.white10,
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: TextField(
+                                              decoration: const InputDecoration(
+                                                labelText: "Peso",
+                                                labelStyle: TextStyle(color: Colors.white70),
+                                                enabledBorder: UnderlineInputBorder(
+                                                  borderSide: BorderSide(color: Colors.white70),
+                                                ),
+                                                focusedBorder: UnderlineInputBorder(
+                                                  borderSide: BorderSide(color: Colors.blue),
+                                                ),
                                               ),
-                                              focusedBorder: UnderlineInputBorder(
-                                                borderSide: BorderSide(color: Colors.blue),
-                                              ),
+                                              keyboardType: TextInputType.number,
+                                              style: const TextStyle(color: Colors.white),
+                                              onChanged: (value) {
+                                                series['weight'] = int.tryParse(value);
+                                              },
                                             ),
-                                            keyboardType: TextInputType.number,
-                                            style: const TextStyle(color: Colors.white),
-                                            onChanged: (value) {
-                                              series['weight'] = int.tryParse(value);
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                            child: TextField(
+                                              decoration: const InputDecoration(
+                                                labelText: "Reps",
+                                                labelStyle: TextStyle(color: Colors.white70),
+                                                enabledBorder: UnderlineInputBorder(
+                                                  borderSide: BorderSide(color: Colors.white70),
+                                                ),
+                                                focusedBorder: UnderlineInputBorder(
+                                                  borderSide: BorderSide(color: Colors.blue),
+                                                ),
+                                              ),
+                                              keyboardType: TextInputType.number,
+                                              style: const TextStyle(color: Colors.white),
+                                              onChanged: (value) {
+                                                series['reps'] = int.tryParse(value);
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          IconButton(
+                                            icon: const Icon(Icons.check, color: Colors.green),
+                                            onPressed: () {
+                                              setState(() {
+                                                if (series['weight'] == null || series['reps'] == null) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    const SnackBar(content: Text("Preencha peso e repetições antes de marcar como completa.")),
+                                                  );
+                                                  return;
+                                                }
+                                                else if(series['weight']! <= 0 || series['reps']! <= 0){
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    const SnackBar(content: Text("Peso e repetições devem ser maiores que zero.")),
+                                                  );
+                                                  return;
+                                                }
+                                                else if(series['complete'] == null || series['complete'] == false)
+                                                  series['complete'] = true;
+                                                else
+                                                  series['complete'] = false;
+                                              });
                                             },
                                           ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Expanded(
-                                          child: TextField(
-                                            decoration: const InputDecoration(
-                                              labelText: "Reps",
-                                              labelStyle: TextStyle(color: Colors.white70),
-                                              enabledBorder: UnderlineInputBorder(
-                                                borderSide: BorderSide(color: Colors.white70),
-                                              ),
-                                              focusedBorder: UnderlineInputBorder(
-                                                borderSide: BorderSide(color: Colors.blue),
-                                              ),
-                                            ),
-                                            keyboardType: TextInputType.number,
-                                            style: const TextStyle(color: Colors.white),
-                                            onChanged: (value) {
-                                              series['reps'] = int.tryParse(value);
-                                            },
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        IconButton(
-                                          icon: const Icon(Icons.check, color: Colors.green),
-                                          onPressed: () {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(content: Text("Série salva!")),
-                                            );
-                                          },
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   );
                                 }).toList(),
@@ -244,7 +267,7 @@ class _WorkoutSessionState extends State<WorkoutSession> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   String _formatDuration(Duration duration) {
