@@ -111,178 +111,177 @@ class _WorkoutSessionState extends State<WorkoutSession> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Timer
-            Center(
-              child: Text(
-                _formatDuration(_elapsedTime),
-                style: const TextStyle(
-                  fontSize: 48,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+    padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          // Timer
+          Center(
+            child: Text(
+              _formatDuration(_elapsedTime),
+              style: const TextStyle(
+                fontSize: 48,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
-            const SizedBox(height: 24),
-            // List of exercises
-            Expanded(
-              child: ListView.builder(
-                itemCount: widget.workout.exercises.length,
-                itemBuilder: (context, index) {
-                  final exercise = widget.workout.exercises[index];
-                  final isExpanded = _expandedCards[exercise.id] ?? false;
+          ),
+          const SizedBox(height: 24),
+          // List of exercises
+          Expanded(
+            child: ListView.builder(
+              itemCount: widget.workout.exercises.length,
+              itemBuilder: (context, index) {
+                final exercise = widget.workout.exercises[index];
+                final isExpanded = _expandedCards[exercise.id] ?? false;
 
-                  return Card(
-                    color: Colors.white10,
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: exercise.imageUrl != null
-                              ? Image.network(
-                            exercise.imageUrl!,
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
-                          )
-                              : const Icon(Icons.image_not_supported, color: Colors.grey),
-                          title: Text(
-                            exercise.name,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                          onTap: () {
-                            setState(() {
-                              _expandedCards[exercise.id] = !isExpanded;
-                            });
-                          },
+                return Card(
+                  color: Colors.white10,
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: exercise.imageUrl != null
+                            ? Image.network(
+                          exercise.imageUrl!,
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
+                        )
+                            : const Icon(Icons.image_not_supported, color: Colors.grey),
+                        title: Text(
+                          exercise.name,
+                          style: const TextStyle(color: Colors.white),
                         ),
-                        if (isExpanded)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: Column(
-                              children: [
-                                // List of series
-                                ..._exerciseSeries[exercise.id]!.asMap().entries.map((entry) {
-                                  final seriesIndex = entry.key;
-                                  final series = entry.value;
+                        onTap: () {
+                          setState(() {
+                            _expandedCards[exercise.id] = !isExpanded;
+                          });
+                        },
+                      ),
+                      if (isExpanded)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Column(
+                            children: [
+                              // List of series
+                              ..._exerciseSeries[exercise.id]!.asMap().entries.map((entry) {
+                                final seriesIndex = entry.key;
+                                final series = entry.value;
 
-                                  return Dismissible(
-                                    key: Key('${exercise.id}_$seriesIndex'),
-                                    direction: DismissDirection.startToEnd,
-                                    background: Container(
-                                      color: Colors.red,
-                                      alignment: Alignment.centerRight,
-                                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                                      child: const Icon(Icons.delete, color: Colors.white),
-                                    ),
-                                    onDismissed: (direction) {
-                                      setState(() {
-                                        _exerciseSeries[exercise.id]!.removeAt(seriesIndex);
-                                      });
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Série ${seriesIndex + 1} removida!')),
-                                      );
-                                    },
-                                    child: Container(
-                                      color: series['complete'] == true ? Colors.blueAccent : Colors.black12,
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: TextField(
-                                              decoration: const InputDecoration(
-                                                labelText: "Peso",
-                                                labelStyle: TextStyle(color: Colors.white70),
-                                                enabledBorder: UnderlineInputBorder(
-                                                  borderSide: BorderSide(color: Colors.white70),
-                                                ),
-                                                focusedBorder: UnderlineInputBorder(
-                                                  borderSide: BorderSide(color: Colors.blue),
-                                                ),
+                                return Dismissible(
+                                  key: Key('${exercise.id}_$seriesIndex'),
+                                  direction: DismissDirection.startToEnd,
+                                  background: Container(
+                                    color: Colors.red,
+                                    alignment: Alignment.centerRight,
+                                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                                    child: const Icon(Icons.delete, color: Colors.white),
+                                  ),
+                                  onDismissed: (direction) {
+                                    setState(() {
+                                      _exerciseSeries[exercise.id]!.removeAt(seriesIndex);
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Série ${seriesIndex + 1} removida!')),
+                                    );
+                                  },
+                                  child: Container(
+                                    color: series['complete'] == true ? Colors.blueAccent : Colors.black12,
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: TextField(
+                                            decoration: const InputDecoration(
+                                              labelText: "Peso",
+                                              labelStyle: TextStyle(color: Colors.white70),
+                                              enabledBorder: UnderlineInputBorder(
+                                                borderSide: BorderSide(color: Colors.white70),
                                               ),
-                                              keyboardType: TextInputType.number,
-                                              style: const TextStyle(color: Colors.white),
-                                              onChanged: (value) {
-                                                series['weight'] = int.tryParse(value);
-                                              },
-                                            ),
-                                          ),
-                                          const SizedBox(width: 16),
-                                          Expanded(
-                                            child: TextField(
-                                              decoration: const InputDecoration(
-                                                labelText: "Reps",
-                                                labelStyle: TextStyle(color: Colors.white70),
-                                                enabledBorder: UnderlineInputBorder(
-                                                  borderSide: BorderSide(color: Colors.white70),
-                                                ),
-                                                focusedBorder: UnderlineInputBorder(
-                                                  borderSide: BorderSide(color: Colors.blue),
-                                                ),
+                                              focusedBorder: UnderlineInputBorder(
+                                                borderSide: BorderSide(color: Colors.blue),
                                               ),
-                                              keyboardType: TextInputType.number,
-                                              style: const TextStyle(color: Colors.white),
-                                              onChanged: (value) {
-                                                series['reps'] = int.tryParse(value);
-                                              },
                                             ),
-                                          ),
-                                          const SizedBox(width: 16),
-                                          IconButton(
-                                            icon: Icon(Icons.check_circle, color: series['complete'] == true ? Colors.white : Colors.grey),
-                                            onPressed: () {
-                                              setState(() {
-                                                if (series['weight'] == null || series['reps'] == null) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    const SnackBar(content: Text("Preencha peso e repetições antes de marcar como completa.")),
-                                                  );
-                                                  return;
-                                                }
-                                                else if(series['weight']! <= 0 || series['reps']! <= 0){
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    const SnackBar(content: Text("Peso e repetições devem ser maiores que zero.")),
-                                                  );
-                                                  return;
-                                                }
-                                                else if(series['complete'] == null || series['complete'] == false)
-                                                  series['complete'] = true;
-                                                else
-                                                  series['complete'] = false;
-                                              });
+                                            keyboardType: TextInputType.number,
+                                            style: const TextStyle(color: Colors.white),
+                                            onChanged: (value) {
+                                              series['weight'] = int.tryParse(value);
                                             },
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: TextField(
+                                            decoration: const InputDecoration(
+                                              labelText: "Reps",
+                                              labelStyle: TextStyle(color: Colors.white70),
+                                              enabledBorder: UnderlineInputBorder(
+                                                borderSide: BorderSide(color: Colors.white70),
+                                              ),
+                                              focusedBorder: UnderlineInputBorder(
+                                                borderSide: BorderSide(color: Colors.blue),
+                                              ),
+                                            ),
+                                            keyboardType: TextInputType.number,
+                                            style: const TextStyle(color: Colors.white),
+                                            onChanged: (value) {
+                                              series['reps'] = int.tryParse(value);
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        IconButton(
+                                          icon: Icon(Icons.check_circle, color: series['complete'] == true ? Colors.white : Colors.grey),
+                                          onPressed: () {
+                                            setState(() {
+                                              if (series['weight'] == null || series['reps'] == null) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text("Preencha peso e repetições antes de marcar como completa.")),
+                                                );
+                                                return;
+                                              } else if (series['weight']! <= 0 || series['reps']! <= 0) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text("Peso e repetições devem ser maiores que zero.")),
+                                                );
+                                                return;
+                                              } else if (series['complete'] == null || series['complete'] == false) {
+                                                series['complete'] = true;
+                                              } else {
+                                                series['complete'] = false;
+                                              }
+                                            });
+                                          },
+                                        ),
+                                      ],
                                     ),
-                                  );
-                                }).toList(),
-                                const SizedBox(height: 8),
-                                // Add Series Button
-                                TextButton.icon(
-                                  onPressed: () {
-                                    setState(() {
-                                      _exerciseSeries[exercise.id]!.add({'weight': null, 'reps': null});
-                                    });
-                                  },
-                                  icon: const Icon(Icons.add, color: Colors.blue),
-                                  label: const Text(
-                                    "Adicionar Série",
-                                    style: TextStyle(color: Colors.blue),
                                   ),
+                                );
+                              }).toList(),
+                              const SizedBox(height: 8),
+                              // Add Series Button
+                              TextButton.icon(
+                                onPressed: () {
+                                  setState(() {
+                                    _exerciseSeries[exercise.id]!.add({'weight': null, 'reps': null});
+                                  });
+                                },
+                                icon: const Icon(Icons.add, color: Colors.blue),
+                                label: const Text(
+                                  "Adicionar Série",
+                                  style: TextStyle(color: Colors.blue),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                        ),
+                    ],
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
+    ),
     ));
   }
 
