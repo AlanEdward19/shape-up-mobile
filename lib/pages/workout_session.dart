@@ -65,25 +65,41 @@ class _WorkoutSessionState extends State<WorkoutSession> {
             icon: const Icon(Icons.check_circle, color: Colors.blue),
             onPressed: () async {
               try {
+                if(_exerciseSeries.values .any((seriesList) => seriesList.any((s) => s['completed'] == null || s['completed'] == false))){
+                  showDialog (
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text("Atenção"),
+                      content: const Text("Todas as séries devem ser marcadas como completas antes de finalizar o treino."),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("OK"),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                else{
+                  final exercises = widget.workout.exercises.map((exercise) {
+                    final series = _exerciseSeries[exercise.id]!;
+                    return series.map((s) {
+                      return WorkoutExerciseValueObject(
+                        exerciseId: exercise.id,
+                        weight: s['weight'],
+                        repetitions: s['reps'],
+                        measureUnit: MeasureUnit.kilogram,
+                      );
+                    }).toList();
+                  }).expand((e) => e).toList();
 
-                final exercises = widget.workout.exercises.map((exercise) {
-                  final series = _exerciseSeries[exercise.id]!;
-                  return series.map((s) {
-                    return WorkoutExerciseValueObject(
-                      exerciseId: exercise.id,
-                      weight: s['weight'],
-                      repetitions: s['reps'],
-                      measureUnit: MeasureUnit.kilogram,
-                    );
-                  }).toList();
-                }).expand((e) => e).toList();
+                  await TrainingService.updateWorkoutSessionAsync(widget.sessionId, WorkoutStatus.finished, exercises);
 
-                await TrainingService.updateWorkoutSessionAsync(widget.sessionId, WorkoutStatus.finished, exercises);
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Treino finalizado com sucesso!")),
-                );
-                Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Treino finalizado com sucesso!")),
+                  );
+                  Navigator.pop(context);
+                }
               } catch (e) {
                 // Handle errors
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -170,7 +186,7 @@ class _WorkoutSessionState extends State<WorkoutSession> {
                                       );
                                     },
                                     child: Container(
-                                      color: series['complete'] == true ? Colors.white12 : Colors.white10,
+                                      color: series['complete'] == true ? Colors.blueAccent : Colors.black12,
                                       child: Row(
                                         children: [
                                           Expanded(
@@ -214,7 +230,7 @@ class _WorkoutSessionState extends State<WorkoutSession> {
                                           ),
                                           const SizedBox(width: 16),
                                           IconButton(
-                                            icon: const Icon(Icons.check, color: Colors.green),
+                                            icon: Icon(Icons.check_circle, color: series['complete'] == true ? Colors.white : Colors.grey),
                                             onPressed: () {
                                               setState(() {
                                                 if (series['weight'] == null || series['reps'] == null) {
