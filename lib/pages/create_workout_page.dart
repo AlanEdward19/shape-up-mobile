@@ -13,6 +13,8 @@ class _CreateWorkoutPageState extends State<CreateWorkoutPage> {
   String workoutName = '';
   WorkoutVisibility selectedVisibility = WorkoutVisibility.private;
   List<ExerciseDto> selectedExercises = [];
+  int restMinutes = 0;
+  int restSeconds = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +30,8 @@ class _CreateWorkoutPageState extends State<CreateWorkoutPage> {
           IconButton(
             icon: const Icon(Icons.check),
             onPressed: () async {
-              await TrainingService.createWorkoutAsync(workoutName, selectedVisibility, selectedExercises.map( (e) => e.id).toList());
+              var restingTimeInSeconds = Duration(minutes: restMinutes, seconds: restSeconds).inSeconds;
+              await TrainingService.createWorkoutAsync(workoutName, selectedVisibility, selectedExercises.map( (e) => e.id).toList(), restingTimeInSeconds);
               Navigator.pop(context);
             },
           ),
@@ -61,6 +64,63 @@ class _CreateWorkoutPageState extends State<CreateWorkoutPage> {
                   workoutName = value;
                 });
               },
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              "Intervalo de descanso",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                // Dropdown for minutes
+                Expanded(
+                  child: DropdownButton<int>(
+                    value: restMinutes,
+                    dropdownColor: const Color(0xFF191F2B),
+                    items: List.generate(60, (index) => index).map((minute) {
+                      return DropdownMenuItem<int>(
+                        value: minute,
+                        child: Text(
+                          "$minute min",
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        restMinutes = value!;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Dropdown for seconds
+                Expanded(
+                  child: DropdownButton<int>(
+                    value: restSeconds,
+                    dropdownColor: const Color(0xFF191F2B),
+                    items: List.generate(60, (index) => index).map((second) {
+                      return DropdownMenuItem<int>(
+                        value: second,
+                        child: Text(
+                          "$second sec",
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        restSeconds = value!;
+                      });
+                    },
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 24),
             // Título "Exercícios" com ícone "+"

@@ -9,6 +9,8 @@ import 'package:shape_up_app/pages/workout_session.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/training_service.dart';
 
+import '../main.dart';
+
 class Training extends StatefulWidget {
   const Training({super.key});
 
@@ -17,7 +19,7 @@ class Training extends StatefulWidget {
 }
 
 class _TrainingState extends State<Training>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, RouteAware {
   late TabController _tabController;
   late Future<List<WorkoutDto>> _workoutsFuture;
 
@@ -31,6 +33,25 @@ class _TrainingState extends State<Training>
   Future<List<WorkoutDto>> _fetchWorkouts() async {
     var userId = await AuthenticationService.getProfileId();
     return await TrainingService.getWorkoutsByUserIdAsync(userId);
+  }
+
+  @override
+  void didPopNext() {
+    _workoutsFuture = _fetchWorkouts();
+    setState(() {});
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute<dynamic>);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
