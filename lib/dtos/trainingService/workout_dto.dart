@@ -8,6 +8,7 @@ class WorkoutDto{
   String name;
   WorkoutVisibility visibility;
   List<ExerciseDto> exercises;
+  int restingTimeInSeconds;
 
   WorkoutDto({
     required this.id,
@@ -16,6 +17,7 @@ class WorkoutDto{
     required this.name,
     required this.visibility,
     required this.exercises,
+    required this.restingTimeInSeconds
   });
 
   factory WorkoutDto.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class WorkoutDto{
       name: json['name'],
       visibility: WorkoutVisibility.getWithString(json['visibility']),
       exercises: ExerciseDto.fromJsonList(json['exercises']),
+      restingTimeInSeconds: json['restingTimeInSeconds']
     );
   }
 
