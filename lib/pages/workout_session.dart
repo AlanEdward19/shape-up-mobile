@@ -25,8 +25,11 @@ class _WorkoutSessionState extends State<WorkoutSession> {
   Duration _elapsedTime = Duration.zero;
   Timer? _timer;
 
+  final ValueNotifier<Duration> _restTimeNotifier = ValueNotifier(
+    Duration.zero,
+  );
+
   Timer? _restTimer;
-  Duration _restTime = Duration.zero;
   bool _isRestTimerRunning = false;
 
   Map<String, bool> _expandedCards = {};
@@ -35,6 +38,9 @@ class _WorkoutSessionState extends State<WorkoutSession> {
   @override
   void initState() {
     super.initState();
+    _restTimeNotifier.value = Duration(
+      seconds: widget.workout.restingTimeInSeconds,
+    );
 
     for (var exercise in widget.workout.exercises) {
       _expandedCards[exercise.id] = false;
@@ -56,23 +62,42 @@ class _WorkoutSessionState extends State<WorkoutSession> {
   void dispose() {
     _timer?.cancel();
     _restTimer?.cancel();
+    _restTimeNotifier.dispose();
     super.dispose();
   }
 
   void _startRestTimer() {
-    if (_restTime.inSeconds > 0) {
+    if (_restTimeNotifier.value.inSeconds > 0) {
       setState(() {
         _isRestTimerRunning = true;
       });
       _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        setState(() {
-          if (_restTime.inSeconds > 0) {
-            _restTime -= const Duration(seconds: 1);
-          } else {
-            _restTimer?.cancel();
+        if (_restTimeNotifier.value.inSeconds > 0) {
+          _restTimeNotifier.value -= const Duration(seconds: 1);
+        } else {
+          _restTimer?.cancel();
+          setState(() {
             _isRestTimerRunning = false;
-          }
-        });
+          });
+
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text("Tempo de descanso concluído"),
+                content: const Text("Você pode continuar com o treino."),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text("OK"),
+                  ),
+                ],
+              );
+            },
+          );
+        }
       });
     }
   }
@@ -82,55 +107,77 @@ class _WorkoutSessionState extends State<WorkoutSession> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Rest Timer"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "${_restTime.inMinutes.toString().padLeft(2, '0')}:${_restTime.inSeconds.remainder(60).toString().padLeft(2, '0')}",
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          title: const Text("Descanso"),
+          content: ValueListenableBuilder<Duration>(
+            valueListenable: _restTimeNotifier,
+            builder: (context, restTime, child) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _restTime = _restTime - const Duration(seconds: 15);
-                        if (_restTime.isNegative) _restTime = Duration.zero;
-                      });
-                    },
-                    child: const Text("-15"),
+                  Text(
+                    "${restTime.inMinutes.toString().padLeft(2, '0')}:${restTime.inSeconds.remainder(60).toString().padLeft(2, '0')}",
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _restTime += const Duration(seconds: 15);
-                      });
-                    },
-                    child: const Text("+15"),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          _restTimeNotifier.value -= const Duration(
+                            seconds: 15,
+                          );
+                          if (_restTimeNotifier.value.isNegative) {
+                            _restTimeNotifier.value = Duration.zero;
+                          }
+                        },
+                        child: const Text("-15"),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          _restTimeNotifier.value += const Duration(
+                            seconds: 15,
+                          );
+                        },
+                        child: const Text("+15"),
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const Text("Cancel"),
+              child: const Text("Fechar"),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _startRestTimer();
+            ValueListenableBuilder<Duration>(
+              valueListenable: _restTimeNotifier,
+              builder: (context, restTime, child) {
+                return ElevatedButton(
+                  onPressed: () {
+                    if (!_isRestTimerRunning) {
+                      setState(() {
+                        _isRestTimerRunning = true;
+                      });
+                      _startRestTimer();
+                    } else {
+                      _restTimer?.cancel();
+                      setState(() {
+                        _isRestTimerRunning = false;
+                        _restTimeNotifier.value = Duration(seconds: widget.workout.restingTimeInSeconds);
+                      });
+                    }
+                  },
+                  child: Text(_isRestTimerRunning ? "Pular" : "Iniciar"),
+                );
               },
-              child: const Text("Start"),
             ),
           ],
         );
@@ -239,22 +286,39 @@ class _WorkoutSessionState extends State<WorkoutSession> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (_isRestTimerRunning || _restTime.inSeconds > 0)
-                    Text(
-                      "${_restTime.inMinutes.toString().padLeft(2, '0')}:${_restTime.inSeconds.remainder(60).toString().padLeft(2, '0')}",
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  if (_isRestTimerRunning || _restTime.inSeconds > 0)
-                    const SizedBox(width: 16),
+                  ValueListenableBuilder<Duration>(
+                    valueListenable: _restTimeNotifier,
+                    builder: (context, restTime, child) {
+                      if (_isRestTimerRunning) {
+                        return Row(
+                          children: [
+                            Text(
+                              "${restTime.inMinutes.toString().padLeft(2, '0')}:${restTime.inSeconds.remainder(60).toString().padLeft(2, '0')}",
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                          ],
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
                   IconButton(
-                    icon: const Icon(Icons.access_time, size: 32, color: Colors.white,),
+                    icon: const Icon(
+                      Icons.access_time,
+                      size: 32,
+                      color: Colors.white,
+                    ),
                     onPressed: _showRestPopup,
                   ),
-                  const Text("Descanso", style: TextStyle(fontSize: 16, color: Colors.white)),
+                  const Text(
+                    "Descanso",
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
                 ],
               ),
 
@@ -551,6 +615,12 @@ class _WorkoutSessionState extends State<WorkoutSession> {
                                                                 false) {
                                                           series['completed'] =
                                                               true;
+
+                                                          _restTimeNotifier.value = Duration(
+                                                            seconds: widget.workout.restingTimeInSeconds,
+                                                          );
+
+                                                          _startRestTimer();
                                                         } else {
                                                           series['completed'] =
                                                               false;
