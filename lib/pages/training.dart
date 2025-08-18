@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:shape_up_app/dtos/professionalManagementService/client_dto.dart';
 import 'package:shape_up_app/dtos/trainingService/exercise_dto.dart';
 import 'package:shape_up_app/dtos/trainingService/workout_dto.dart';
+import 'package:shape_up_app/dtos/trainingService/workout_session_dto.dart';
 import 'package:shape_up_app/enums/trainingService/workout_visibility.dart';
 import 'package:shape_up_app/pages/create_workout_page.dart';
 import 'package:shape_up_app/pages/exercise_selection_page.dart';
 import 'package:shape_up_app/pages/workout_details.dart';
 import 'package:shape_up_app/pages/workout_session.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
+import 'package:shape_up_app/services/professional_management_service.dart';
 import 'package:shape_up_app/services/training_service.dart';
 
 import '../main.dart';
@@ -21,13 +24,18 @@ class Training extends StatefulWidget {
 class _TrainingState extends State<Training>
     with SingleTickerProviderStateMixin, RouteAware {
   late TabController _tabController;
+  ClientDto? clientData;
   late Future<List<WorkoutDto>> _workoutsFuture;
+  late Future<WorkoutSessionDto?> _currentSessionFuture;
+  bool _dialogShown = false;
 
   @override
   void initState() {
     super.initState();
+    _loadClientData();
     _tabController = TabController(length: 2, vsync: this);
     _workoutsFuture = _fetchWorkouts();
+    _currentSessionFuture = _fetchCurrentSession();
   }
 
   Future<List<WorkoutDto>> _fetchWorkouts() async {
@@ -35,9 +43,31 @@ class _TrainingState extends State<Training>
     return await TrainingService.getWorkoutsByUserIdAsync(userId);
   }
 
+  Future<void> _loadClientData() async {
+    try {
+      final profileId = await AuthenticationService.getProfileId();
+      final client = await ProfessionalManagementService.getClientByIdAsync(
+        profileId,
+      );
+
+      setState(() {
+        clientData = client;
+      });
+    } catch (e) {
+      print('Error loading client data: $e');
+    }
+  }
+
+  Future<WorkoutSessionDto?> _fetchCurrentSession() async {
+    var userId = await AuthenticationService.getProfileId();
+    return await TrainingService.getCurrentWorkoutSessionAsync(userId);
+  }
+
   @override
   void didPopNext() {
     _workoutsFuture = _fetchWorkouts();
+    _currentSessionFuture = _fetchCurrentSession();
+    _dialogShown = false;
     setState(() {});
   }
 
@@ -55,41 +85,105 @@ class _TrainingState extends State<Training>
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Treino', style: TextStyle(color: Colors.white)),
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: const Color(0xFF191F2B),
-        bottom: TabBar(
-          indicatorColor: Colors.blueAccent,
-          labelColor: Colors.white,
-          controller: _tabController,
-          tabs: const [Tab(text: "Meus Treinos"), Tab(text: "Meus Clientes")],
-          onTap: (index) {
-            if (index == 1) {
-              // Desabilitar "Meus Clientes"
-              _tabController.animateTo(0);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    "Aba 'Meus Clientes' está desabilitada no momento.",
+    return FutureBuilder<WorkoutSessionDto?>(
+      future: _currentSessionFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasData && snapshot.data != null && !_dialogShown) {
+          _dialogShown = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _showSessionInProgressDialog(context, snapshot.data!);
+          });
+          return const SizedBox();
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Treino', style: TextStyle(color: Colors.white)),
+            iconTheme: const IconThemeData(color: Colors.white),
+            backgroundColor: const Color(0xFF191F2B),
+            bottom: TabBar(
+              indicatorColor: Colors.blueAccent,
+              labelColor: Colors.white,
+              controller: _tabController,
+              tabs: [Tab(text: "Meus Treinos"), if(clientData!.isNutritionist || clientData!.isTrainer) Tab(text: "Meus Clientes")],
+              onTap: (index) {
+                if (index == 1) {
+                  _tabController.animateTo(0);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        "Aba 'Meus Clientes' está desabilitada no momento.",
+                      ),
+                    ),
+                  );
+                }
+              },
+            ),
+          ),
+          body: TabBarView(
+            controller: _tabController,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              _buildMyWorkoutsSection(),
+              const Center(child: Text("Meus Clientes (Desabilitado)")),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showSessionInProgressDialog(BuildContext context, WorkoutSessionDto session) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Impede o fechamento ao clicar fora do diálogo
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Sessão em andamento"),
+          content: const Text(
+            "Você ainda tem uma sessão em andamento. Deseja apagá-la ou continuar?",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                await TrainingService.deleteWorkoutSessionByIdAsync(session.sessionId);
+                setState(() {
+                  _currentSessionFuture = _fetchCurrentSession();
+                });
+                Navigator.of(context).pop(); // Fecha o diálogo após atualizar o estado
+              },
+              child: const Text("Apagar"),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Fecha o diálogo antes de navegar
+
+                WorkoutDto workout = await _workoutsFuture.then((workouts) => workouts.firstWhere(
+                      (w) => w.id == session.workoutId,
+                ));
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => WorkoutSession(
+                      sessionId: session.sessionId,
+                      workout: workout,
+                      startedAt: session.startedAt,
+                    ),
                   ),
-                ),
-              );
-            }
-          },
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        physics:
-            const NeverScrollableScrollPhysics(), // Evita swipe para aba desabilitada
-        children: [
-          _buildMyWorkoutsSection(),
-          const Center(child: Text("Meus Clientes (Desabilitado)")),
-        ],
-      ),
+                );
+              },
+              child: const Text("Continuar"),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -131,7 +225,7 @@ class _TrainingState extends State<Training>
                     child: Text("Erro ao carregar treinos: ${snapshot.error}"),
                   );
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text("Nenhum treino encontrado."));
+                  return const Center(child: Text("Nenhum treino encontrado.", style: TextStyle(color: Colors.white),));
                 }
 
                 final workouts = snapshot.data!;

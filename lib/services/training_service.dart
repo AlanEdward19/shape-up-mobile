@@ -255,18 +255,18 @@ class TrainingService {
     }
   }
 
-  static Future<WorkoutSessionDto> getCurrentWorkoutSessionAsync(String userId) async {
+  static Future<WorkoutSessionDto?> getCurrentWorkoutSessionAsync(String userId) async {
     var token = await AuthenticationService.getToken();
 
     final response = await http.get(
-      Uri.parse('$baseUrl/v1/User/$userId/WorkoutSession/CurrentWorkoutSession'),
+      Uri.parse('$baseUrl/v1/WorkoutSession/CurrentWorkoutSession'),
       headers: createHeaders(token),
     );
 
     if (response.statusCode == 200) {
       return WorkoutSessionDto.fromJson(jsonDecode(response.body));
     } else if (response.statusCode == 404) {
-      throw Exception('No current workout session found for user');
+      return null;
     } else {
       throw Exception('Failed to load current workout session');
     }

@@ -121,6 +121,7 @@ class _WorkoutDetailsState extends State<WorkoutDetails>
                         (context) => WorkoutSession(
                           sessionId: workoutSession.sessionId,
                           workout: widget.workout,
+                          startedAt: workoutSession.startedAt,
                         ),
                   ),
                 );

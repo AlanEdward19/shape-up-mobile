@@ -10,11 +10,13 @@ import 'package:shape_up_app/valueObjects/trainingService/workout_exercise_value
 class WorkoutSession extends StatefulWidget {
   final String sessionId;
   final WorkoutDto workout;
+  final DateTime startedAt;
 
   const WorkoutSession({
     super.key,
     required this.sessionId,
     required this.workout,
+    required this.startedAt,
   });
 
   @override
@@ -38,6 +40,7 @@ class _WorkoutSessionState extends State<WorkoutSession> {
   @override
   void initState() {
     super.initState();
+    _elapsedTime = DateTime.now().difference(widget.startedAt);
     _restTimeNotifier.value = Duration(
       seconds: widget.workout.restingTimeInSeconds,
     );
@@ -190,6 +193,7 @@ class _WorkoutSessionState extends State<WorkoutSession> {
     return WillPopScope(
       onWillPop: () async {
         await TrainingService.deleteWorkoutSessionByIdAsync(widget.sessionId);
+        await Future.delayed(const Duration(milliseconds: 100));
         return true;
       },
       child: Scaffold(
