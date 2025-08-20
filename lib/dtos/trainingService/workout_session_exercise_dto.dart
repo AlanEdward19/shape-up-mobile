@@ -2,7 +2,7 @@ import 'package:shape_up_app/dtos/trainingService/exercise_dto.dart';
 import 'package:shape_up_app/enums/trainingService/measure_unit.dart';
 
 class WorkoutSessionExerciseDto{
-  int? weight;
+  double? weight;
   int? repetitions;
   MeasureUnit measureUnit;
   ExerciseDto metadata;

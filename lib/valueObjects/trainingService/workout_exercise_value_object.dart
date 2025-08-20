@@ -2,7 +2,7 @@ import 'package:shape_up_app/enums/trainingService/measure_unit.dart';
 
 class WorkoutExerciseValueObject {
   final String exerciseId;
-  int? weight;
+  double? weight;
   int? repetitions;
   MeasureUnit measureUnit;
 
