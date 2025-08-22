@@ -371,6 +371,7 @@ class _ProfilePageState extends State<Profile> {
                 profileId: profile.id,
                 profileName: "${profile.firstName} ${profile.lastName}",
                 profileImageUrl: profile.imageUrl,
+                isProfessionalChat: false,
               ),
             ),
           );

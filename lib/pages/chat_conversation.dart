@@ -10,12 +10,14 @@ class ChatConversation extends StatefulWidget {
   final String profileId;
   final String profileName;
   final String profileImageUrl;
+  final bool isProfessionalChat;
 
   const ChatConversation({
     super.key,
     required this.profileId,
     required this.profileName,
     required this.profileImageUrl,
+    required this.isProfessionalChat
   });
 
   @override
@@ -84,6 +86,7 @@ class _ChatConversationState extends State<ChatConversation> {
       List<MessageDto> messages = await ChatService.getMessagesAsync(
         widget.profileId,
         1,
+        widget.isProfessionalChat
       );
       setState(() {
         _messages = messages;
@@ -113,6 +116,7 @@ class _ChatConversationState extends State<ChatConversation> {
       List<MessageDto> newMessages = await ChatService.getMessagesAsync(
         widget.profileId,
         _currentPage + 1,
+        widget.isProfessionalChat
       );
 
       if (newMessages.isNotEmpty) {
@@ -135,7 +139,7 @@ class _ChatConversationState extends State<ChatConversation> {
 
   Future<void> _initializeWebSocket() async {
     try {
-      await ChatService.initializeConnection(widget.profileId);
+      await ChatService.initializeConnection(widget.profileId, widget.isProfessionalChat);
     } catch (e) {
       print('Erro ao inicializar conexão WebSocket: $e');
     }
@@ -335,7 +339,7 @@ class _ChatConversationState extends State<ChatConversation> {
           }
         });
 
-        await ChatService.sendMessageAsync(widget.profileId, text);
+        await ChatService.sendMessageAsync(widget.profileId, text, widget.isProfessionalChat);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
