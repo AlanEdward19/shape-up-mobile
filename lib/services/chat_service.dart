@@ -22,11 +22,11 @@ class ChatService {
   static final StreamController<MessageDto> _messageStreamController = StreamController<MessageDto>.broadcast();
   static Stream<MessageDto> get messageStream => _messageStreamController.stream;
 
-  static Future<void> initializeConnection(String profileId) async {
+  static Future<void> initializeConnection(String profileId, bool isProfessionalChat) async {
     _hubConnection =
         HubConnectionBuilder()
             .withUrl(
-              '$baseUrl/chat?ProfileId=$profileId',
+              isProfessionalChat ? '$baseUrl/chat?ProfileId=$profileId&isProfessionalChat=true' : '$baseUrl/chat?ProfileId=$profileId',
               HttpConnectionOptions(
                 accessTokenFactory: () async {
                   return await AuthenticationService.getToken();
@@ -63,12 +63,12 @@ class ChatService {
     print('Conexão com o SignalR encerrada.');
   }
 
-  static Future<List<MessageDto>> getRecentMessagesAsync() async {
+  static Future<List<MessageDto>> getRecentMessagesAsync(bool isProfessionalChat) async {
     var token = await AuthenticationService.getToken();
     var headers = createHeaders(token);
 
     var response = await http.get(
-      Uri.parse('$baseUrl/v1/Chat/messages/getRecentMessages'),
+      Uri.parse(isProfessionalChat ? '$baseUrl/v1/Professional/Chat/messages/getRecentMessages' : '$baseUrl/v1/Chat/messages/getRecentMessages'),
       headers: headers,
     );
 
@@ -81,12 +81,12 @@ class ChatService {
     }
   }
 
-  static Future<List<MessageDto>> getMessagesAsync(String profileId, int page) async{
+  static Future<List<MessageDto>> getMessagesAsync(String profileId, int page, bool isProfessionalChat) async{
     var token = await AuthenticationService.getToken();
     var headers = createHeaders(token);
 
     var response = await http.get(
-      Uri.parse('$baseUrl/v1/Chat/messages/getMessages/$profileId?page=$page'),
+      Uri.parse(isProfessionalChat ? '$baseUrl/v1/Professional/Chat/messages/getMessages/$profileId?page=$page' : '$baseUrl/v1/Chat/messages/getMessages/$profileId?page=$page'),
       headers: headers,
     );
 
@@ -99,7 +99,7 @@ class ChatService {
     }
   }
 
-  static Future<void> sendMessageAsync(String profileId, String message) async {
+  static Future<void> sendMessageAsync(String profileId, String message, bool isProfessionalChat) async {
     var token = await AuthenticationService.getToken();
     var headers = createHeaders(token);
 
@@ -109,7 +109,7 @@ class ChatService {
     });
 
     var response = await http.post(
-      Uri.parse('$baseUrl/v1/Chat/messages/send'),
+      Uri.parse(isProfessionalChat ? '$baseUrl/v1/Professional/Chat/messages/send' : '$baseUrl/v1/Chat/messages/send'),
       headers: headers,
       body: body,
     );

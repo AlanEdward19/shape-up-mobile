@@ -16,16 +16,19 @@ class Chat extends StatefulWidget {
 }
 
 class _ChatState extends State<Chat> {
-  List<Map<String, dynamic>> _messagesWithProfiles = [];
-  List<Map<String, dynamic>> _filteredMessagesWithProfiles = [];
+  List<Map<String, dynamic>> _personalMessagesWithProfiles = [];
+  List<Map<String, dynamic>> _professionalMessagesWithProfiles = [];
+  List<Map<String, dynamic>> _filteredPersonalMessagesWithProfiles = [];
+  List<Map<String, dynamic>> _filteredProfessionalMessagesWithProfiles = [];
   bool _isLoading = true;
+  bool _isProfessionalChat = false;
   final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadRecentMessages();
     _searchController.addListener(_filterMessages);
+    _loadRecentMessages(false); // Default to "Pessoal"
   }
 
   @override
@@ -34,10 +37,10 @@ class _ChatState extends State<Chat> {
     super.dispose();
   }
 
-  Future<void> _loadRecentMessages() async {
+  Future<void> _loadRecentMessages(bool isProfessionalChat) async {
     try {
       final userId = await AuthenticationService.getProfileId();
-      List<MessageDto> messages = await ChatService.getRecentMessagesAsync();
+      List<MessageDto> messages = await ChatService.getRecentMessagesAsync(isProfessionalChat);
 
       List<Map<String, dynamic>> messagesWithProfiles = [];
       for (var message in messages) {
@@ -52,8 +55,13 @@ class _ChatState extends State<Chat> {
       }
 
       setState(() {
-        _messagesWithProfiles = messagesWithProfiles;
-        _filteredMessagesWithProfiles = messagesWithProfiles;
+        if (isProfessionalChat) {
+          _professionalMessagesWithProfiles = messagesWithProfiles;
+          _filteredProfessionalMessagesWithProfiles = messagesWithProfiles;
+        } else {
+          _personalMessagesWithProfiles = messagesWithProfiles;
+          _filteredPersonalMessagesWithProfiles = messagesWithProfiles;
+        }
         _isLoading = false;
       });
     } catch (e) {
@@ -68,107 +76,155 @@ class _ChatState extends State<Chat> {
     final query = _searchController.text.toLowerCase();
     if (query.isEmpty) {
       setState(() {
-        _filteredMessagesWithProfiles = _messagesWithProfiles;
+        if(_isProfessionalChat) {
+          _filteredProfessionalMessagesWithProfiles = _professionalMessagesWithProfiles;
+        } else {
+          _filteredPersonalMessagesWithProfiles = _personalMessagesWithProfiles;
+        }
       });
       return;
     }
 
     setState(() {
-      _filteredMessagesWithProfiles = _messagesWithProfiles.where((item) {
-        final profile = item['profile'] as SimplifiedProfileDto;
-        final fullName = '${profile.firstName} ${profile.lastName}'.toLowerCase();
-        return fullName.split(' ').any((namePart) =>
-        StringSimilarity.compareTwoStrings(namePart.toLowerCase(), query.toLowerCase()) > 0.6 ||
-            profile.firstName.toLowerCase().contains(query.toLowerCase()) ||
-            profile.lastName.toLowerCase().contains(query.toLowerCase()));
-      }).toList();
+      if(_isProfessionalChat)
+        {
+          _filteredProfessionalMessagesWithProfiles = _professionalMessagesWithProfiles.where((item) {
+            final profile = item['profile'] as SimplifiedProfileDto;
+            final fullName = '${profile.firstName} ${profile.lastName}'.toLowerCase();
+            return fullName.split(' ').any((namePart) =>
+            StringSimilarity.compareTwoStrings(namePart.toLowerCase(), query.toLowerCase()) > 0.6 ||
+                profile.firstName.toLowerCase().contains(query.toLowerCase()) ||
+                profile.lastName.toLowerCase().contains(query.toLowerCase()));
+          }).toList();
+        }
+      else{
+        _filteredPersonalMessagesWithProfiles = _personalMessagesWithProfiles.where((item) {
+          final profile = item['profile'] as SimplifiedProfileDto;
+          final fullName = '${profile.firstName} ${profile.lastName}'.toLowerCase();
+          return fullName.split(' ').any((namePart) =>
+          StringSimilarity.compareTwoStrings(namePart.toLowerCase(), query.toLowerCase()) > 0.6 ||
+              profile.firstName.toLowerCase().contains(query.toLowerCase()) ||
+              profile.lastName.toLowerCase().contains(query.toLowerCase()));
+        }).toList();
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Conversas', style: TextStyle(color: Colors.white)),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Conversas', style: TextStyle(color: Colors.white)),
+          backgroundColor: const Color(0xFF191F2B),
+          iconTheme: const IconThemeData(color: Colors.white),
+          bottom: TabBar(
+            indicatorColor: Colors.blueAccent,
+            labelColor: Colors.white,
+            onTap: (index) {
+              setState(() {
+                _isProfessionalChat = index == 1; // true for "Profissional", false for "Pessoal"
+              });
+              _loadRecentMessages(_isProfessionalChat);
+            },
+            tabs: const [
+              Tab(text: 'Pessoal'),
+              Tab(text: 'Profissional'),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            _buildChatList(false), // Pessoal
+            _buildChatList(true),  // Profissional
+          ],
+        ),
         backgroundColor: const Color(0xFF191F2B),
-        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: 'Procurar contato...',
-                hintStyle: const TextStyle(color: Colors.grey),
-                filled: true,
-                fillColor: const Color(0xFF2A2F3C),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                  borderSide: BorderSide.none,
+    );
+  }
+
+  Widget _buildChatList(bool isProfessionalChat) {
+    final messages = isProfessionalChat
+        ? _filteredProfessionalMessagesWithProfiles
+        : _filteredPersonalMessagesWithProfiles;
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: TextField(
+            controller: _searchController,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Procurar contato...',
+              hintStyle: const TextStyle(color: Colors.grey),
+              filled: true,
+              fillColor: const Color(0xFF2A2F3C),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.0),
+                borderSide: BorderSide.none,
+              ),
+              prefixIcon: const Icon(Icons.search, color: Colors.grey),
+            ),
+          ),
+        ),
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : messages.isEmpty
+              ? const Center(
+            child: Text(
+              "Nenhuma mensagem recente.",
+              style: TextStyle(fontSize: 18, color: Colors.white),
+            ),
+          )
+              : ListView.builder(
+            itemCount: messages.length,
+            itemBuilder: (context, index) {
+              final message = messages[index]['message'] as MessageDto;
+              final profile = messages[index]['profile'] as SimplifiedProfileDto;
+
+              return ListTile(
+                leading: personalizedCircleAvatar(profile.imageUrl, '${profile.firstName} ${profile.lastName}', 25),
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${profile.firstName} ${profile.lastName}',
+                      style: const TextStyle(color: Colors.white, fontSize: 18),
+                    ),
+                    Text(
+                      '${message.timestamp?.hour.toString().padLeft(2, '0')}:${message.timestamp?.minute.toString().padLeft(2, '0')} - ${message.timestamp?.day.toString().padLeft(2, '0')}/${message.timestamp?.month.toString().padLeft(2, '0')}/${message.timestamp?.year}',
+                      style: const TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
+                  ],
                 ),
-                prefixIcon: const Icon(Icons.search, color: Colors.grey),
-              ),
-            ),
-          ),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _filteredMessagesWithProfiles.isEmpty
-                ? const Center(
-              child: Text(
-                "Nenhuma mensagem recente.",
-                style: TextStyle(fontSize: 18, color: Colors.white),
-              ),
-            )
-                : ListView.builder(
-              itemCount: _filteredMessagesWithProfiles.length,
-              itemBuilder: (context, index) {
-                final message = _filteredMessagesWithProfiles[index]['message'] as MessageDto;
-                final profile = _filteredMessagesWithProfiles[index]['profile'] as SimplifiedProfileDto;
+                subtitle: Text(
+                  message.content ?? '',
+                  style: const TextStyle(color: Colors.grey, fontSize: 16),
+                ),
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatConversation(
+                        profileId: profile.id,
+                        profileName: '${profile.firstName} ${profile.lastName}',
+                        profileImageUrl: profile.imageUrl,
+                        isProfessionalChat: isProfessionalChat,
+                      ),
+                    ),
+                  );
 
-                return ListTile(
-                  leading: personalizedCircleAvatar(profile.imageUrl, '${profile.firstName} ${profile.lastName}', 25),
-                  title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${profile.firstName} ${profile.lastName}',
-                        style: const TextStyle(color: Colors.white, fontSize: 18),
-                      ),
-                      Text(
-                        '${message.timestamp?.hour.toString().padLeft(2, '0')}:${message.timestamp?.minute.toString().padLeft(2, '0')} - ${message.timestamp?.day.toString().padLeft(2, '0')}/${message.timestamp?.month.toString().padLeft(2, '0')}/${message.timestamp?.year}',
-                        style: const TextStyle(color: Colors.grey, fontSize: 14),
-                      ),
-                    ],
-                  ),
-                  subtitle: Text(
-                    message.content ?? '',
-                    style: const TextStyle(color: Colors.grey, fontSize: 16),
-                  ),
-                  onTap: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ChatConversation(
-                          profileId: profile.id,
-                          profileName: '${profile.firstName} ${profile.lastName}',
-                          profileImageUrl: profile.imageUrl,
-                        ),
-                      ),
-                    );
-
-                    _loadRecentMessages();
-                  },
-                );
-              },
-            ),
+                  _loadRecentMessages(isProfessionalChat);
+                },
+              );
+            },
           ),
-        ],
-      ),
-      backgroundColor: const Color(0xFF191F2B),
+        ),
+      ],
     );
   }
 }

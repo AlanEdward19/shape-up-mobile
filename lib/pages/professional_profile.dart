@@ -11,6 +11,8 @@ import 'package:shape_up_app/services/professional_management_service.dart';
 import 'package:shape_up_app/services/social_service.dart';
 import 'package:shape_up_app/widgets/professionalManagementService/section_title.dart';
 
+import 'chat_conversation.dart';
+
 class ProfessionalProfile extends StatefulWidget {
   final ProfessionalDto professional;
   final ProfessionalScoreDto? professionalScore;
@@ -122,6 +124,28 @@ class _ProfessionalProfileState extends State<ProfessionalProfile> {
         ),
         backgroundColor: const Color(0xFF191F2B),
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          if (widget.loggedInUser.servicePlans.any(
+                (servicePlan) => servicePlan.servicePlan.professionalId == widget.professional.id,
+          ))
+            IconButton(
+              icon: const Icon(Icons.message, color: Colors.white),
+              onPressed: () {
+                // Navegar para a tela de mensagens
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatConversation(
+                      profileId: widget.professional.id,
+                      profileName: widget.professional.name,
+                      profileImageUrl: simplifiedProfile?.imageUrl ?? '',
+                      isProfessionalChat: true,
+                    ),
+                  ),
+                );
+              },
+            ),
+        ],
       ),
       body:
           isLoading
