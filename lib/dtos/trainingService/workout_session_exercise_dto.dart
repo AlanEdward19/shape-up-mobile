@@ -16,7 +16,7 @@ class WorkoutSessionExerciseDto{
 
   factory WorkoutSessionExerciseDto.fromJson(Map<String, dynamic> json) {
     return WorkoutSessionExerciseDto(
-      weight: json['weight'],
+      weight: double.parse(json['weight'].toString()),
       repetitions: json['repetitions'],
       measureUnit: MeasureUnit.getWithString(json['measureUnit']),
       metadata: ExerciseDto.fromJson(json['metadata']),

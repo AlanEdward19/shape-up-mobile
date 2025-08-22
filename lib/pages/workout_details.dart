@@ -13,8 +13,11 @@ import 'workout_session.dart';
 
 class WorkoutDetails extends StatefulWidget {
   final WorkoutDto workout;
+  final bool isClientTraining;
+  final String clientId;
+  final String loggedUserId;
 
-  const WorkoutDetails({Key? key, required this.workout}) : super(key: key);
+  const WorkoutDetails({Key? key, required this.workout, required this.isClientTraining, required this.clientId, required this.loggedUserId}) : super(key: key);
 
   @override
   _WorkoutDetailsState createState() => _WorkoutDetailsState();
@@ -98,7 +101,7 @@ class _WorkoutDetailsState extends State<WorkoutDetails>
       ),
       body: Column(
         children: [
-          const SizedBox(height: 100),
+          const SizedBox(height: 150),
           // Row 1: SVG
           Center(
             child: SvgPicture.string(highlightMuscleGroupsSvg!, height: 300),
@@ -106,6 +109,7 @@ class _WorkoutDetailsState extends State<WorkoutDetails>
           const SizedBox(height: 16),
 
           // Row 2: Iniciar treino
+          if(!widget.isClientTraining)
           Center(
             child: FloatingActionButton.extended(
               onPressed: () async {
@@ -138,6 +142,7 @@ class _WorkoutDetailsState extends State<WorkoutDetails>
           const SizedBox(height: 24),
 
           // Row 3: Editar e Deletar treino
+          if(widget.workout.creatorId == widget.loggedUserId)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [

@@ -27,6 +27,7 @@ class _TrainingState extends State<Training>
   ClientDto? clientData;
   late Future<List<WorkoutDto>> _workoutsFuture;
   late Future<WorkoutSessionDto?> _currentSessionFuture;
+  List<ClientDto> clients = [];
   bool _dialogShown = false;
 
   @override
@@ -36,6 +37,20 @@ class _TrainingState extends State<Training>
     _tabController = TabController(length: 2, vsync: this);
     _workoutsFuture = _fetchWorkouts();
     _currentSessionFuture = _fetchCurrentSession();
+  }
+
+  Future<void> _fetchClients() async {
+    try {
+      final professionalId = await AuthenticationService.getProfileId();
+      final fetchedClients = await ProfessionalManagementService.getProfessionalClientsAsync(professionalId);
+
+      setState(() {
+        clients = fetchedClients;
+      });
+    } catch (e) {
+      // Handle error
+      print("Error fetching clients: $e");
+    }
   }
 
   Future<List<WorkoutDto>> _fetchWorkouts() async {
@@ -49,6 +64,10 @@ class _TrainingState extends State<Training>
       final client = await ProfessionalManagementService.getClientByIdAsync(
         profileId,
       );
+
+      if(client.isNutritionist || client.isTrainer){
+        await _fetchClients();
+      }
 
       setState(() {
         clientData = client;
@@ -107,33 +126,22 @@ class _TrainingState extends State<Training>
             title: const Text('Treino', style: TextStyle(color: Colors.white)),
             iconTheme: const IconThemeData(color: Colors.white),
             backgroundColor: const Color(0xFF191F2B),
-            bottom: TabBar(
+            bottom: clientData != null && (clientData!.isNutritionist || clientData!.isTrainer) ? TabBar(
               indicatorColor: Colors.blueAccent,
               labelColor: Colors.white,
               controller: _tabController,
               tabs: [Tab(text: "Meus Treinos"), if(clientData!.isNutritionist || clientData!.isTrainer) Tab(text: "Meus Clientes")],
-              onTap: (index) {
-                if (index == 1) {
-                  _tabController.animateTo(0);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        "Aba 'Meus Clientes' está desabilitada no momento.",
-                      ),
-                    ),
-                  );
-                }
-              },
-            ),
+            ) : null,
           ),
-          body: TabBarView(
+          body: clientData != null && (clientData!.isNutritionist || clientData!.isTrainer) ? TabBarView(
             controller: _tabController,
             physics: const NeverScrollableScrollPhysics(),
             children: [
               _buildMyWorkoutsSection(),
-              const Center(child: Text("Meus Clientes (Desabilitado)")),
+              if (clientData!.isNutritionist || clientData!.isTrainer)
+                _buildClientsWorkoutsSection(),
             ],
-          ),
+          ) : _buildMyWorkoutsSection(),
         );
       },
     );
@@ -187,6 +195,132 @@ class _TrainingState extends State<Training>
     );
   }
 
+  Widget _buildClientsWorkoutsSection() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+            const Text(
+              "Treinos",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            IconButton(
+            icon: const Icon(Icons.add, color: Colors.white),
+            onPressed: () {
+              _navigateToCreateWorkoutPage(context, true);
+            },
+          ),]),
+          const SizedBox(height: 24),
+          Expanded(
+            child: ListView.builder(
+              itemCount: clients.length,
+              itemBuilder: (context, index) {
+                final client = clients[index];
+                return Card(
+                  color: const Color(0xFF2A2A3D),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: ExpansionTile(
+                    title: Text(
+                      client.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    subtitle: const Text(
+                      "Toque para ver treinos",
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                    children: [
+                      FutureBuilder<List<WorkoutDto>>(
+                        future: TrainingService.getWorkoutsByUserIdAsync(client.id),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          } else if (snapshot.hasError) {
+                            return Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                "Erro ao carregar treinos: ${snapshot.error}",
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            );
+                          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                            return const Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Text(
+                                "Nenhum treino encontrado.",
+                                style: TextStyle(color: Colors.white70),
+                              ),
+                            );
+                          }
+
+                          var workouts = snapshot.data!;
+                          workouts = workouts.where((workout) => workout.creatorId == clientData!.id).toList();
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 5), // Padding entre os treinos e a seção
+                            child: SizedBox(
+                              height: 120,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: workouts.length,
+                                itemBuilder: (context, index) {
+                                  final workout = workouts[index];
+                                  return Container(
+                                    width: 200,
+                                    margin: const EdgeInsets.only(right: 16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: ListTile(
+                                      title: Text(
+                                        workout.name,
+                                        style: const TextStyle(color: Colors.white),
+                                      ),
+                                      subtitle: const Text(
+                                        "Toque para ver detalhes",
+                                        style: TextStyle(color: Colors.white70),
+                                      ),
+                                      onTap: () {
+                                        _showWorkoutDetails(context, workout, true, client.id);
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMyWorkoutsSection() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -197,7 +331,7 @@ class _TrainingState extends State<Training>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                "Treinos Criados",
+                "Meus Treinos",
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -207,7 +341,7 @@ class _TrainingState extends State<Training>
               IconButton(
                 icon: const Icon(Icons.add, color: Colors.white),
                 onPressed: () {
-                  _navigateToCreateWorkoutPage(context);
+                  _navigateToCreateWorkoutPage(context, false);
                 },
               ),
             ],
@@ -238,7 +372,7 @@ class _TrainingState extends State<Training>
                       width: 200,
                       margin: const EdgeInsets.only(right: 16),
                       decoration: BoxDecoration(
-                        color: Colors.blueGrey,
+                        color: workout.creatorId == clientData!.id ? Colors.blue : Colors.black38,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: ListTile(
@@ -251,7 +385,7 @@ class _TrainingState extends State<Training>
                           style: TextStyle(color: Colors.white70),
                         ),
                         onTap: () {
-                          _showWorkoutDetails(context, workout);
+                          _showWorkoutDetails(context, workout, false, '');
                         },
                       ),
                     );
@@ -265,26 +399,19 @@ class _TrainingState extends State<Training>
     );
   }
 
-  void _navigateToCreateWorkoutPage(BuildContext context) {
+  void _navigateToCreateWorkoutPage(BuildContext context, bool isClientWorkout) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => CreateWorkoutPage()),
+      MaterialPageRoute(builder: (context) => CreateWorkoutPage(isClientWorkout:isClientWorkout)),
     );
   }
 
-  void _showWorkoutDetails(BuildContext context, WorkoutDto workout) {
+  void _showWorkoutDetails(BuildContext context, WorkoutDto workout, bool isClient, String clientId) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => WorkoutDetails(workout: workout),
+        builder: (context) => WorkoutDetails(workout: workout, isClientTraining: isClient,clientId: clientId, loggedUserId: clientData!.id,),
       ),
-    );
-  }
-
-  void _navigateToEditWorkoutPage(BuildContext context, WorkoutDto workout) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => CreateWorkoutPage()),
     );
   }
 }

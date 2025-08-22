@@ -236,7 +236,7 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
             items: ['Sem Filtro', 'Ativo', 'Cancelado', 'Expirado']
                 .map((status) => DropdownMenuItem(
               value: status,
-              child: Text(status),
+              child: Text(status, style: TextStyle(color: Colors.blue)),
             ))
                 .toList(),
             onChanged: (value) {
