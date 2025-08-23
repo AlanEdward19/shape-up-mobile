@@ -1,12 +1,12 @@
 enum SubscriptionStatus{
   Active,
-  Canceled,
+  Cancelled,
   Expired
 }
 
 Map <int, SubscriptionStatus> subscriptionStatusMap = {
   0: SubscriptionStatus.Active,
-  1: SubscriptionStatus.Canceled,
+  1: SubscriptionStatus.Cancelled,
   2: SubscriptionStatus.Expired
 };
 

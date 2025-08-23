@@ -45,7 +45,7 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
           case 'Ativo':
             return plan.status == SubscriptionStatus.Active;
           case 'Cancelado':
-            return plan.status == SubscriptionStatus.Canceled;
+            return plan.status == SubscriptionStatus.Cancelled;
           case 'Expirado':
             return plan.status == SubscriptionStatus.Expired;
           default:
@@ -452,7 +452,7 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
     switch (status) {
       case SubscriptionStatus.Active:
         return 'Ativo';
-      case SubscriptionStatus.Canceled:
+      case SubscriptionStatus.Cancelled:
         return 'Cancelado';
       case SubscriptionStatus.Expired:
         return 'Expirado';
