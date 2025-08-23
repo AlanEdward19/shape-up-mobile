@@ -6,9 +6,11 @@ import 'package:shape_up_app/dtos/professionalManagementService/professional_sco
 import 'package:shape_up_app/enums/professionalManagementService/professional_type.dart';
 import 'package:shape_up_app/enums/professionalManagementService/service_plan_type.dart';
 import 'package:shape_up_app/enums/professionalManagementService/subscription_status.dart';
+import 'package:shape_up_app/pages/chat_conversation.dart';
 import 'package:shape_up_app/pages/professional_profile.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/professional_management_service.dart';
+import 'package:shape_up_app/services/social_service.dart';
 import 'package:shape_up_app/widgets/professionalManagementService/section_title.dart';
 
 class ProfessionalsHub extends StatefulWidget {
@@ -234,7 +236,7 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
             items: ['Sem Filtro', 'Ativo', 'Cancelado', 'Expirado']
                 .map((status) => DropdownMenuItem(
               value: status,
-              child: Text(status),
+              child: Text(status, style: TextStyle(color: Colors.blue)),
             ))
                 .toList(),
             onChanged: (value) {
@@ -280,8 +282,21 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
                     );
                   }).toList(),
                   TextButton(
-                    onPressed: () {
-                      // Add logic to message the client
+                    onPressed: () async{
+
+                      final profile = await SocialService.viewProfileSimplifiedAsync(client.id);
+
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatConversation(
+                            profileId: client.id,
+                            profileName: '${client.name}',
+                            profileImageUrl: profile.imageUrl,
+                            isProfessionalChat: true,
+                          ),
+                        ),
+                      );
                     },
                     child: const Text('Mensagem'),
                   ),

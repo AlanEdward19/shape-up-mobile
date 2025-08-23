@@ -12,6 +12,8 @@ import 'package:shape_up_app/services/notification_service.dart';
 
 import 'firebase_options.dart';
 
+final RouteObserver<PageRoute<dynamic>> routeObserver = RouteObserver<PageRoute<dynamic>>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -30,6 +32,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+
   @override
   void initState() {
     super.initState();
@@ -86,6 +89,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+        navigatorObservers: [routeObserver],
       theme: ThemeData(scaffoldBackgroundColor: const Color(0xFF191F2B)),
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
