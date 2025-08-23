@@ -476,7 +476,7 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  await ProfessionalManagementService.activateServicePlanFromClientAsync(clientId, servicePlanId);
+                  await ProfessionalManagementService.activateServicePlanToClientAsync(clientId, servicePlanId);
                   await _loadClientData();
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
