@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:shape_up_app/dtos/professionalManagementService/client_dto.dart';
 import 'package:shape_up_app/dtos/trainingService/exercise_dto.dart';
 import 'package:shape_up_app/enums/trainingService/workout_visibility.dart';
 import 'package:shape_up_app/pages/exercise_selection_page.dart';
+import 'package:shape_up_app/services/authentication_service.dart';
+import 'package:shape_up_app/services/professional_management_service.dart';
 import 'package:shape_up_app/services/training_service.dart';
 
 class CreateWorkoutPage extends StatefulWidget {
+  final bool isClientWorkout;
+
+  CreateWorkoutPage({required this.isClientWorkout});
+
   @override
   _CreateWorkoutPageState createState() => _CreateWorkoutPageState();
 }
@@ -13,8 +20,32 @@ class _CreateWorkoutPageState extends State<CreateWorkoutPage> {
   String workoutName = '';
   WorkoutVisibility selectedVisibility = WorkoutVisibility.private;
   List<ExerciseDto> selectedExercises = [];
+  List<ClientDto> clients = [];
+  ClientDto? selectedClient;
   int restMinutes = 0;
   int restSeconds = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isClientWorkout) {
+      _fetchClients();
+    }
+  }
+
+  Future<void> _fetchClients() async {
+    try {
+      final professionalId = await AuthenticationService.getProfileId();
+      final fetchedClients = await ProfessionalManagementService.getProfessionalClientsAsync(professionalId);
+
+      setState(() {
+        clients = fetchedClients;
+      });
+    } catch (e) {
+      // Handle error
+      print("Error fetching clients: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +62,43 @@ class _CreateWorkoutPageState extends State<CreateWorkoutPage> {
             icon: const Icon(Icons.check),
             onPressed: () async {
               var restingTimeInSeconds = Duration(minutes: restMinutes, seconds: restSeconds).inSeconds;
-              await TrainingService.createWorkoutAsync(workoutName, selectedVisibility, selectedExercises.map( (e) => e.id).toList(), restingTimeInSeconds);
+
+              if(workoutName.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Por favor, insira o nome do treino.")),
+                );
+                return;
+              }
+
+              if(selectedExercises.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Por favor, adicione pelo menos um exercício.")),
+                );
+                return;
+              }
+
+              if(restingTimeInSeconds <= 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Por favor, insira um intervalo de descanso válido.")),
+                );
+                return;
+              }
+
+              if(widget.isClientWorkout){
+
+                if(selectedClient == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Por favor, selecione um cliente.")),
+                  );
+                  return;
+                }
+
+                await TrainingService.createWorkoutForClientAsync(selectedClient!.id,workoutName, selectedVisibility, selectedExercises.map( (e) => e.id).toList(), restingTimeInSeconds);
+              }
+                else
+              {
+                await TrainingService.createWorkoutAsync(workoutName, selectedVisibility, selectedExercises.map( (e) => e.id).toList(), restingTimeInSeconds);
+              }
               Navigator.pop(context);
             },
           ),
@@ -65,6 +132,40 @@ class _CreateWorkoutPageState extends State<CreateWorkoutPage> {
                 });
               },
             ),
+            if (widget.isClientWorkout) ...[
+              const SizedBox(height: 24),
+              const Text(
+                "Selecione o Cliente",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
+              DropdownButton<ClientDto>(
+                value: selectedClient,
+                dropdownColor: const Color(0xFF191F2B),
+                items: clients.map((client) {
+                  return DropdownMenuItem<ClientDto>(
+                    value: client,
+                    child: Text(
+                      client.name,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedClient = value;
+                  });
+                },
+                hint: const Text(
+                  "Selecione um cliente",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
             const Text(
               "Intervalo de descanso",

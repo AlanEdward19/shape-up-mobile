@@ -129,6 +129,35 @@ class TrainingService {
     }
   }
 
+  static Future<WorkoutDto> createWorkoutForClientAsync(
+      String clientId,
+      String name,
+      WorkoutVisibility visibility,
+      List<String> exercises,
+      int restingTimeInSeconds,
+      ) async {
+    var token = await AuthenticationService.getToken();
+
+    final body = jsonEncode({
+      'name': name,
+      'visibility': visibility.index,
+      'exercises': exercises,
+      'restingTimeInSeconds': restingTimeInSeconds,
+    });
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/v1/User/$clientId/Workout'),
+      headers: createHeaders(token),
+      body: body,
+    );
+
+    if (response.statusCode == 201) {
+      return WorkoutDto.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to create workout');
+    }
+  }
+
   static Future<WorkoutDto> updateWorkoutAsync(
     String workoutId,
     String name,
