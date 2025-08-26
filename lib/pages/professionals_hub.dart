@@ -330,32 +330,57 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
             horizontal: 16.0,
           ),
           child: ListTile(
-              title: Text(plan.servicePlan.title),
-              subtitle: Text(
-                '${dateFormat.format(plan.startDate)} até ${dateFormat.format(plan.endDate)}\nStatus: ${_getStatusText(plan.status)}\n${plan.servicePlan.type == ServicePlanType.Training ? 'Treino' : 'Dieta'}',
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      if(plan.status != SubscriptionStatus.Active) {
-                        _reactivateClientServicePlan(clientData!.id, plan.servicePlan.id);
-                      } else {
-                        _cancelClientServicePlan(clientData!.id, plan.servicePlan.id);
-                      }
-                    },
-                    child: Text(plan.status != SubscriptionStatus.Active ? 'Reativar' : 'Cancelar'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      _showReviewDialog(plan.servicePlan.professionalId, plan.servicePlan.id);
-                    },
-                    child: const Text('Avaliar'),
-                  ),
-                ],
-              ),
-              enabled: plan.status == SubscriptionStatus.Active
+            title: Text(plan.servicePlan.title),
+            subtitle: Text(
+              '${dateFormat.format(plan.startDate)} até ${dateFormat.format(plan.endDate)}\nStatus: ${_getStatusText(plan.status)}\n${plan.servicePlan.type == ServicePlanType.Training ? 'Treino' : 'Dieta'}',
+            ),
+            trailing: PopupMenuButton<String>(
+              onSelected: (value) async {
+                switch (value) {
+                  case 'reactivate':
+                    if (plan.status != SubscriptionStatus.Active) {
+                      _reactivateClientServicePlan(clientData!.id, plan.servicePlan.id);
+                    } else {
+                      _cancelClientServicePlan(clientData!.id, plan.servicePlan.id);
+                    }
+                    break;
+                  case 'review':
+                    _showReviewDialog(plan.servicePlan.professionalId, plan.servicePlan.id);
+                    break;
+                  case 'viewProfile':
+                    ProfessionalDto professional = await ProfessionalManagementService.getProfessionalByIdAsync(plan.servicePlan.professionalId);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfessionalProfile(
+                          professional: professional,
+                          professionalScore: recommendedProfessionalsScore.firstWhere(
+                                (score) => score.professionalId == professional.id,
+                            orElse: () => ProfessionalScoreDto('', 0, 0, DateTime.now()),
+                          ),
+                          loggedInUser: clientData!,
+                        ),
+                      ),
+                    );
+                    break;
+                }
+              },
+              itemBuilder: (BuildContext context) => [
+                PopupMenuItem(
+                  value: 'reactivate',
+                  child: Text(plan.status != SubscriptionStatus.Active ? 'Reativar' : 'Cancelar'),
+                ),
+                const PopupMenuItem(
+                  value: 'review',
+                  child: Text('Avaliar'),
+                ),
+                const PopupMenuItem(
+                  value: 'viewProfile',
+                  child: Text('Ver perfil do profissional'),
+                ),
+              ],
+            ),
+            enabled: plan.status == SubscriptionStatus.Active,
           ),
         );
       }).toList(),
