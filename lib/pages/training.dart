@@ -126,19 +126,19 @@ class _TrainingState extends State<Training>
             title: const Text('Treino', style: TextStyle(color: Colors.white)),
             iconTheme: const IconThemeData(color: Colors.white),
             backgroundColor: const Color(0xFF191F2B),
-            bottom: clientData != null && (clientData!.isNutritionist || clientData!.isTrainer) ? TabBar(
+            bottom: clientData != null && (clientData!.isTrainer) ? TabBar(
               indicatorColor: Colors.blueAccent,
               labelColor: Colors.white,
               controller: _tabController,
-              tabs: [Tab(text: "Meus Treinos"), if(clientData!.isNutritionist || clientData!.isTrainer) Tab(text: "Meus Clientes")],
+              tabs: [Tab(text: "Meus Treinos"), if(clientData!.isTrainer) Tab(text: "Meus Clientes")],
             ) : null,
           ),
-          body: clientData != null && (clientData!.isNutritionist || clientData!.isTrainer) ? TabBarView(
+          body: clientData != null && (clientData!.isTrainer) ? TabBarView(
             controller: _tabController,
             physics: const NeverScrollableScrollPhysics(),
             children: [
               _buildMyWorkoutsSection(),
-              if (clientData!.isNutritionist || clientData!.isTrainer)
+              if (clientData!.isTrainer)
                 _buildClientsWorkoutsSection(),
             ],
           ) : _buildMyWorkoutsSection(),
