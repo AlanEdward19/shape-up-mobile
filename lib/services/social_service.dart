@@ -35,7 +35,7 @@ class SocialService {
       headers: createHeaders(token),
     );
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return ProfileDto.fromJson(jsonDecode(response.body));
     } else {
       throw Exception("Erro ao carregar perfil");
