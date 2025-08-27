@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shape_up_app/components/bottom_nav_bar.dart';
+import 'package:shape_up_app/dtos/authService/user_data.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/social_service.dart';
 
@@ -241,8 +242,102 @@ class _LoginState extends State<Login> {
         color: Colors.white,
       ),
       child: IconButton(
-        onPressed: () {
-          print("Botão do Google clicado");
+        onPressed: () async {
+          final now = DateTime.now().toUtc();
+          await AuthenticationService.loginWithGoogle();
+
+          var currentUser = FirebaseAuth.instance.currentUser;
+          if (currentUser != null) {
+            final creationTime = currentUser.metadata.creationTime;
+
+            if (creationTime != null &&
+                now.difference(creationTime).inSeconds <= 20) {
+
+              await showDialog(
+                context: context,
+                barrierDismissible: false, // Impede que o popup seja fechado
+                builder: (BuildContext context) {
+                  final TextEditingController postalCodeController =
+                  TextEditingController();
+                  String? selectedCountry;
+
+                  return AlertDialog(
+                    title: Text('Complete seu cadastro'),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextField(
+                          controller: postalCodeController,
+                          decoration: InputDecoration(
+                            labelText: 'Código Postal',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        DropdownButtonFormField<String>(
+                          decoration: InputDecoration(
+                            labelText: 'País',
+                            border: OutlineInputBorder(),
+                          ),
+                          items: ['Brasil', 'Estados Unidos']
+                              .map((country) => DropdownMenuItem(
+                            value: country,
+                            child: Text(country),
+                          ))
+                              .toList(),
+                          onChanged: (value) {
+                            selectedCountry = value;
+                          },
+                        ),
+                      ],
+                    ),
+                    actions: [
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (postalCodeController.text.isNotEmpty &&
+                              selectedCountry != null) {
+                             var firstName = currentUser.displayName!.split(' ').first;
+                             var lastName = currentUser.displayName!.split(' ').last;
+
+                            UserData userData = UserData(
+                              firstName: firstName,
+                              lastName: lastName,
+                              country: selectedCountry!,
+                              city: '',
+                              state: '',
+                              postalCode: postalCodeController.text,
+                              birthDay: '',
+                            );
+
+                            var token = await AuthenticationService.getToken();
+                            await AuthenticationService.enhanceToken(
+                                userData, token);
+
+                            await AuthenticationService.getToken(refreshToken: true);
+
+                            Navigator.of(context).pop();
+                          }
+                        },
+                        child: Text('Confirmar'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            }
+
+            print("Login realizado com sucesso!");
+
+            await SocialService.viewProfileAsync(currentUser.uid);
+
+            Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => BottomNavBar()),
+                    (Route<dynamic> route) => false
+            );
+          } else {
+            print("Erro ao realizar login.");
+          }
         },
         icon: Icon(
           Icons.g_mobiledata_rounded,

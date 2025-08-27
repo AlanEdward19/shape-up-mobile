@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:shape_up_app/dtos/authService/user_data.dart';
 import 'package:shape_up_app/services/notification_service.dart';
@@ -101,10 +102,40 @@ class AuthenticationService
   }
 
   static Future<void> loginWithGoogle() async {
-    final googleProvider = GoogleAuthProvider();
-    final auth = FirebaseAuth.instance;
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+    final FirebaseAuth auth = FirebaseAuth.instance;
 
-    await auth.signInWithPopup(googleProvider);
+    try {
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        throw Exception("Login com Google cancelado pelo usuário.");
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential = await auth.signInWithCredential(credential);
+
+      final String token = (await userCredential.user!.getIdToken())!;
+      final String userId = userCredential.user!.uid;
+
+      await saveToken(token);
+      await saveProfileId(userId);
+
+      String? deviceToken = await FirebaseMessaging.instance.getToken();
+      if (deviceToken != null) {
+        await NotificationService.logIn(deviceToken);
+      }
+
+      NotificationService.initializeConnection(userId);
+    } catch (e) {
+      print("Erro ao fazer login com Google: $e");
+      rethrow;
+    }
   }
 
   static Future<void> loginWithFacebook() async {
@@ -121,7 +152,7 @@ class AuthenticationService
     await auth.signInWithPopup(microsoftProvider);
   }
 
-  static Future<String> getToken() async {
+  static Future<String> getToken({bool refreshToken = false}) async {
     final auth = FirebaseAuth.instance;
     final user = auth.currentUser;
 
@@ -129,6 +160,13 @@ class AuthenticationService
       throw Exception("Usuário não autenticado.");
     }
 
+    if (refreshToken) {
+      final refreshedToken = await user.getIdToken(true);
+      await saveToken(refreshedToken!);
+      return refreshedToken;
+    }
+
+    // Check stored token validity
     final storedToken = await storage.read(key: 'auth_token');
     if (storedToken != null) {
       final payload = _decodeJwtPayload(storedToken);
@@ -139,6 +177,7 @@ class AuthenticationService
       }
     }
 
+    // Fetch a new token if no valid stored token exists
     final newToken = await user.getIdToken();
     await saveToken(newToken!);
     return newToken;
