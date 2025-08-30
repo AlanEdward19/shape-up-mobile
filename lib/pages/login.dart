@@ -354,7 +354,50 @@ class _LoginState extends State<Login> {
       padding: EdgeInsets.only(top: 5),
       child: Center(
         child: TextButton(
-          onPressed: null,
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                final TextEditingController emailController = TextEditingController();
+
+                return AlertDialog(
+                  title: Text('Redefinir senha'),
+                  content: TextField(
+                    controller: emailController,
+                    decoration: InputDecoration(
+                      labelText: 'Digite seu e-mail',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text('Cancelar'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (emailController.text.isNotEmpty) {
+                          try {
+                            await AuthenticationService.sendPasswordResetEmail(emailController.text);
+                            Navigator.of(context).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('E-mail de redefinição enviado!')),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Erro ao enviar e-mail.')),
+                            );
+                          }
+                        }
+                      },
+                      child: Text('Enviar'),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
           child: Text(
             'Esqueceu sua senha?',
             style: const TextStyle(

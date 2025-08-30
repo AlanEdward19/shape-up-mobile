@@ -145,6 +145,18 @@ class AuthenticationService
     await auth.signInWithPopup(facebookProvider);
   }
 
+  static Future<void> sendPasswordResetEmail(String email) async {
+    final auth = FirebaseAuth.instance;
+
+    try {
+      await auth.sendPasswordResetEmail(email: email);
+      print("E-mail de redefinição de senha enviado para $email.");
+    } catch (e) {
+      print("Erro ao enviar e-mail de redefinição de senha: $e");
+      rethrow;
+    }
+  }
+
   static Future<void> loginWithMicrosoft() async {
     final microsoftProvider = OAuthProvider('microsoft.com');
     final auth = FirebaseAuth.instance;
