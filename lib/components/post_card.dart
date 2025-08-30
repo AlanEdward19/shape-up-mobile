@@ -305,6 +305,14 @@ class PostCard extends StatelessWidget {
             contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
           ),
 
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12.0, 10, 12.0, 12.0),
+            child: Text(
+              post.content,
+              style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
+            ),
+          ),
+
           if (post.images.isNotEmpty && post.images[0].isNotEmpty)
             SizedBox(
               height: kPostImageHeight,
@@ -378,14 +386,6 @@ class PostCard extends StatelessWidget {
                 ),
 
               ],
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12.0, 0, 12.0, 12.0),
-            child: Text(
-              post.content,
-              style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
             ),
           ),
         ],
