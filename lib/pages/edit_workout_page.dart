@@ -57,9 +57,9 @@ class _EditWorkoutPageState extends State<EditWorkoutPage> {
       return Scaffold(
         appBar: AppBar(
           title: const Text("Editar Treino"),
-          backgroundColor: const Color(0xFF191F2B),
+          backgroundColor: const Color(0xFF101827),
         ),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const Center(child: CircularProgressIndicator(color: Colors.blue,)),
       );
     }
 
@@ -70,7 +70,7 @@ class _EditWorkoutPageState extends State<EditWorkoutPage> {
           style: TextStyle(color: Colors.white),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: const Color(0xFF191F2B),
+        backgroundColor: const Color(0xFF101827),
         actions: [
           IconButton(
             icon: const Icon(Icons.check),

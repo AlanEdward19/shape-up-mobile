@@ -73,6 +73,9 @@ class _LoginState extends State<Login> {
                 border: UnderlineInputBorder(),
                 filled: true,
                 fillColor: Colors.white,
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue),
+                ),
               ),
             ),
 
@@ -83,6 +86,9 @@ class _LoginState extends State<Login> {
               controller: _passwordController,
               obscureText: _obscureText,
               decoration: InputDecoration(
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue),
+                ),
                 hintText: 'Digite sua senha',
                 border: UnderlineInputBorder(),
                 filled: true,
@@ -229,7 +235,7 @@ class _LoginState extends State<Login> {
         onPressed: () {
           print("Botão do Facebook clicado");
         },
-        icon: Icon(Icons.facebook, size: 30, color: Color(0xFF191F2B)),
+        icon: Icon(Icons.facebook, size: 30, color: Color(0xFF101827)),
         splashRadius: 20,
       ),
     );
@@ -342,7 +348,7 @@ class _LoginState extends State<Login> {
         icon: Icon(
           Icons.g_mobiledata_rounded,
           size: 30,
-          color: Color(0xFF191F2B),
+          color: Color(0xFF101827),
         ),
         splashRadius: 20,
       ),

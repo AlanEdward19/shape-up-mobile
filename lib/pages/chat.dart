@@ -117,7 +117,7 @@ class _ChatState extends State<Chat> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Conversas', style: TextStyle(color: Colors.white)),
-          backgroundColor: const Color(0xFF191F2B),
+          backgroundColor: const Color(0xFF101827),
           iconTheme: const IconThemeData(color: Colors.white),
           bottom: TabBar(
             indicatorColor: Colors.blueAccent,
@@ -140,7 +140,7 @@ class _ChatState extends State<Chat> {
             _buildChatList(true),  // Profissional
           ],
         ),
-        backgroundColor: const Color(0xFF191F2B),
+        backgroundColor: const Color(0xFF101827),
       ),
     );
   }
@@ -172,7 +172,7 @@ class _ChatState extends State<Chat> {
         ),
         Expanded(
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(child: CircularProgressIndicator(color: Colors.blue,))
               : messages.isEmpty
               ? const Center(
             child: Text(

@@ -14,3 +14,8 @@ Map<Gender, String> genderToString = {
   Gender.male : "Masculino",
   Gender.female : "Feminino"
 };
+
+const Map<Gender, String> genderToStringMap = {
+  Gender.male: 'Male',
+  Gender.female: 'Female',
+};

@@ -43,13 +43,13 @@ class _BottomNavBarState extends State<BottomNavBar> {
       Friends(),
       Training(),
       Nutrition(),
-      _profileId != null ? Profile(profileId: _profileId!) : const Center(child: CircularProgressIndicator()),
+      _profileId != null ? Profile(profileId: _profileId!) : const Center(child: CircularProgressIndicator(color: Colors.blue,)),
     ];
 
     return Scaffold(
       body: pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Color(0xFF191F2B),
+        backgroundColor: Color(0xFF101827),
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white,

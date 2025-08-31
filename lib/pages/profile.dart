@@ -53,7 +53,7 @@ class _ProfilePageState extends State<Profile> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF191F2B),
+        backgroundColor: const Color(0xFF101827),
         actions: [
           FutureBuilder<String>(
             future: _loggedInProfileId,
@@ -65,40 +65,56 @@ class _ProfilePageState extends State<Profile> {
                 return IconButton(
                   icon: const Icon(Icons.settings, color: Colors.white),
                   onPressed: () {
-                    Navigator.of(context).push(
-                      PageRouteBuilder(
-                        pageBuilder:
-                            (context, animation, secondaryAnimation) =>
-                                const Settings(),
-                        transitionsBuilder: (
-                          context,
-                          animation,
-                          secondaryAnimation,
-                          child,
-                        ) {
-                          const begin = Offset(1.0, 0.0);
-                          const end = Offset.zero;
-                          const curve = Curves.easeInOut;
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return FutureBuilder<ProfileDto>(
+                          future: _profileFuture,
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const Center(child: CircularProgressIndicator(color: Colors.blue,));
+                            } else if (snapshot.hasError) {
+                              return AlertDialog(
+                                title: const Text("Erro"),
+                                content: Text("Erro ao carregar perfil: ${snapshot.error}"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    child: const Text("OK"),
+                                  ),
+                                ],
+                              );
+                            } else if (snapshot.hasData) {
+                              final profile = snapshot.data!;
+                              Navigator.of(context).pop(); // Fechar o diálogo
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                Navigator.of(context).push(
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation, secondaryAnimation) =>
+                                        Settings(profile: profile),
+                                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                      const begin = Offset(1.0, 0.0);
+                                      const end = Offset.zero;
+                                      const curve = Curves.easeInOut;
 
-                          var tween = Tween(
-                            begin: begin,
-                            end: end,
-                          ).chain(CurveTween(curve: curve));
-                          var offsetAnimation = animation.drive(tween);
+                                      var tween = Tween(begin: begin, end: end)
+                                          .chain(CurveTween(curve: curve));
+                                      var offsetAnimation = animation.drive(tween);
 
-                          return SlideTransition(
-                            position: offsetAnimation,
-                            child: child,
-                          );
-                        },
-                      ),
-                    ).then((_) {
-                      setState(() {
-                        _profileFuture = SocialService.viewProfileAsync(widget.profileId);
-                        _postsFuture = SocialService.getPostsByProfileIdAsync(widget.profileId);
-                        _loadFriendRequests();
-                      });
-                    });
+                                      return SlideTransition(
+                                        position: offsetAnimation,
+                                        child: child,
+                                      );
+                                    },
+                                  ),
+                                );
+                              });
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        );
+                      },
+                    );
                   },
                 );
               } else {
@@ -113,7 +129,7 @@ class _ProfilePageState extends State<Profile> {
         future: _profileFuture,
         builder: (context, profileSnapshot) {
           if (profileSnapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(color: Colors.blue,));
           } else if (profileSnapshot.hasError) {
             return Center(child: Text("Erro: ${profileSnapshot.error}"));
           } else if (profileSnapshot.hasData) {
@@ -281,7 +297,7 @@ class _ProfilePageState extends State<Profile> {
                     builder: (context, postsSnapshot) {
                       if (postsSnapshot.connectionState ==
                           ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const Center(child: CircularProgressIndicator(color: Colors.blue));
                       } else if (postsSnapshot.hasError) {
                         return Center(
                           child: Text("Erro: ${postsSnapshot.error}"),
@@ -505,7 +521,7 @@ class _ProfilePageState extends State<Profile> {
   void _showFollowersOrFollowingPopup(BuildContext context, String profileId, bool isFollowers) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF191F2B),
+      backgroundColor: const Color(0xFF101827),
       isScrollControlled: true,
       builder: (context) {
         return FollowersOrFollowingList(

@@ -67,7 +67,7 @@ class SocialService {
     final response = await http.patch(
       Uri.parse('$baseUrl/v1/Profile/EditProfile'),
       headers: createHeaders(token),
-      body: jsonEncode({'Gender': gender, 'BirthDate': birthDate, 'Bio': bio}),
+      body: jsonEncode({ 'Gender': gender?.index, 'BirthDate': birthDate, 'Bio': bio}),
     );
 
     if (response.statusCode != 200) {
