@@ -92,19 +92,22 @@ class _SettingsState extends State<Settings> {
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              ProfileImagePicker(
-                profileImage: _profileImage,
-                onImagePicked: _pickImage,
+              Center(
+                child: ProfileImagePicker(
+                  profileImage: _profileImage,
+                  onImagePicked: _pickImage,
+                ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               BioInputField(controller: _bioController),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               BirthDatePicker(
                 birthDate: _birthDate,
                 onDatePicked: () => _pickBirthDate(context),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               GenderDropdown(
                 genders: _genders,
                 selectedGender: _selectedGender,
@@ -114,7 +117,7 @@ class _SettingsState extends State<Settings> {
                   });
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 32),
               SaveButton(onSave: _saveChanges),
               const SizedBox(height: 16),
               LogoutButton(
@@ -122,10 +125,8 @@ class _SettingsState extends State<Settings> {
                   await AuthenticationService.signOut();
                   Navigator.pushAndRemoveUntil(
                     context,
-                      await Navigator.of(context).pushReplacement(
                     MaterialPageRoute(builder: (context) => Main()),
-                  ),
-                    (route) => false,
+                        (route) => false,
                   );
                 },
               ),
@@ -241,6 +242,7 @@ class GenderDropdown extends StatelessWidget {
       decoration: const InputDecoration(
         labelText: "Gênero",
         border: OutlineInputBorder(),
+        labelStyle: TextStyle(color: Colors.white)
       ),
     );
   }
