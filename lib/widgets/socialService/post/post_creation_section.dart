@@ -87,7 +87,7 @@ class _PostCreationSectionState extends State<PostCreationSection> {
             height: _isExpanded ? 250.0 : 60.0,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: const Color(0xFF191F2B),
+              color: const Color(0xFF101827),
               borderRadius: BorderRadius.circular(12.0),
               border: Border.all(
                 color: _isExpanded ? Colors.transparent : Colors.grey,
@@ -188,7 +188,7 @@ class _PostCreationSectionState extends State<PostCreationSection> {
                               child: DropdownButtonHideUnderline(
                                 child: DropdownButton<String>(
                                   value: _selectedVisibility,
-                                  dropdownColor: const Color(0xFF191F2B),
+                                  dropdownColor: const Color(0xFF101827),
                                   style: const TextStyle(color: Colors.white),
                                   isExpanded: true,
                                   items:

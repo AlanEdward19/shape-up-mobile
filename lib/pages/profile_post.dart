@@ -153,7 +153,7 @@ class _ProfilePostState extends State<ProfilePost> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF191F2B),
+        backgroundColor: const Color(0xFF101827),
         title: const Text("Posts", style: TextStyle(color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
       ),

@@ -56,7 +56,7 @@ class _CreateWorkoutPageState extends State<CreateWorkoutPage> {
           style: TextStyle(color: Colors.white),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: const Color(0xFF191F2B),
+        backgroundColor: const Color(0xFF101827),
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
@@ -145,7 +145,7 @@ class _CreateWorkoutPageState extends State<CreateWorkoutPage> {
               const SizedBox(height: 8),
               DropdownButton<ClientDto>(
                 value: selectedClient,
-                dropdownColor: const Color(0xFF191F2B),
+                dropdownColor: const Color(0xFF101827),
                 items: clients.map((client) {
                   return DropdownMenuItem<ClientDto>(
                     value: client,
@@ -182,7 +182,7 @@ class _CreateWorkoutPageState extends State<CreateWorkoutPage> {
                 Expanded(
                   child: DropdownButton<int>(
                     value: restMinutes,
-                    dropdownColor: const Color(0xFF191F2B),
+                    dropdownColor: const Color(0xFF101827),
                     items: List.generate(60, (index) => index).map((minute) {
                       return DropdownMenuItem<int>(
                         value: minute,
@@ -204,7 +204,7 @@ class _CreateWorkoutPageState extends State<CreateWorkoutPage> {
                 Expanded(
                   child: DropdownButton<int>(
                     value: restSeconds,
-                    dropdownColor: const Color(0xFF191F2B),
+                    dropdownColor: const Color(0xFF101827),
                     items: List.generate(60, (index) => index).map((second) {
                       return DropdownMenuItem<int>(
                         value: second,

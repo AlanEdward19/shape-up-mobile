@@ -53,7 +53,7 @@ class _ProfilePageState extends State<Profile> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF191F2B),
+        backgroundColor: const Color(0xFF101827),
         actions: [
           FutureBuilder<String>(
             future: _loggedInProfileId,
@@ -72,7 +72,7 @@ class _ProfilePageState extends State<Profile> {
                           future: _profileFuture,
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const Center(child: CircularProgressIndicator());
+                              return const Center(child: CircularProgressIndicator(color: Colors.blue,));
                             } else if (snapshot.hasError) {
                               return AlertDialog(
                                 title: const Text("Erro"),
@@ -129,7 +129,7 @@ class _ProfilePageState extends State<Profile> {
         future: _profileFuture,
         builder: (context, profileSnapshot) {
           if (profileSnapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(color: Colors.blue,));
           } else if (profileSnapshot.hasError) {
             return Center(child: Text("Erro: ${profileSnapshot.error}"));
           } else if (profileSnapshot.hasData) {
@@ -297,7 +297,7 @@ class _ProfilePageState extends State<Profile> {
                     builder: (context, postsSnapshot) {
                       if (postsSnapshot.connectionState ==
                           ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const Center(child: CircularProgressIndicator(color: Colors.blue));
                       } else if (postsSnapshot.hasError) {
                         return Center(
                           child: Text("Erro: ${postsSnapshot.error}"),
@@ -521,7 +521,7 @@ class _ProfilePageState extends State<Profile> {
   void _showFollowersOrFollowingPopup(BuildContext context, String profileId, bool isFollowers) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF191F2B),
+      backgroundColor: const Color(0xFF101827),
       isScrollControlled: true,
       builder: (context) {
         return FollowersOrFollowingList(

@@ -16,8 +16,8 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
-  static const Color _bg = Color(0xFF191F2B); // fundo original
-  static const Color _card = Color(0xFF191F2B);
+  static const Color _bg = Color(0xFF101827); // fundo original
+  static const Color _card = Color(0xFF101827);
   static const Color _text = Colors.white;
   static const Color _muted = Colors.white70;
   static const Color _primary = Colors.blue;
@@ -227,6 +227,7 @@ class _SettingsState extends State<Settings> {
                         onPressed: () => _pickBirthDate(context),
                       ),
                     ),
+                    cursorColor: _text,
                   ),
                   const SizedBox(height: 26),
 

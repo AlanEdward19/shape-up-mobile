@@ -9,9 +9,26 @@ import 'package:shape_up_app/enums/professionalManagementService/service_plan_ty
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/professional_management_service.dart';
 import 'package:shape_up_app/services/social_service.dart';
-import 'package:shape_up_app/widgets/professionalManagementService/section_title.dart';
 
 import 'chat_conversation.dart';
+
+/// Paleta azul (ajustada)
+class _AppColors {
+  static const bg = Color(0xFF0E1420);
+  static const surface = Color(0xFF102035);     // azul escuro
+  static const card = Color(0xFF0F1B2E);        // card azul, nada de preto
+  static const sheet = Color(0xFF10223A);       // fundo de diálogos
+  static const text = Color(0xFFE9EEF7);
+  static const muted = Color(0xFFAEC3E0);
+  static const primary = Color(0xFF3B82F6);     // azul principal
+  static const primaryPress = Color(0xFF2563EB);
+  static const success = Color(0xFF29CC7A);
+  static const successInk = Color(0xFF0F2A1D);
+  static const danger = Color(0xFFFF5A5F);
+  static const field = Color(0xFF0B1220);
+  static const border = Color(0xFF244061);      // borda azul
+  static const amber = Color(0xFFFFD24A);
+}
 
 class ProfessionalProfile extends StatefulWidget {
   final ProfessionalDto professional;
@@ -64,37 +81,43 @@ class _ProfessionalProfileState extends State<ProfessionalProfile> {
       setState(() {
         isLoading = false;
       });
-      print('Error loading professional data: $e');
+      debugPrint('Error loading professional data: $e');
     }
   }
 
   Future<void> _loadProfessionalData() async {
     try {
-      final updatedProfessionalScore = await ProfessionalManagementService.getProfessionalScoreByIdAsync(
+      final updatedProfessionalScore =
+      await ProfessionalManagementService.getProfessionalScoreByIdAsync(
         widget.professional.id,
       );
 
-      final updatedProfessional = await ProfessionalManagementService.getProfessionalByIdAsync(
+      final updatedProfessional =
+      await ProfessionalManagementService.getProfessionalByIdAsync(
         widget.professional.id,
       );
 
       setState(() {
-        widget.professionalScore?.averageScore = updatedProfessionalScore.averageScore;
-        widget.professionalScore?.totalReviews = updatedProfessionalScore.totalReviews;
-        widget.professionalScore?.lastUpdated = updatedProfessionalScore.lastUpdated;
+        widget.professionalScore?.averageScore =
+            updatedProfessionalScore.averageScore;
+        widget.professionalScore?.totalReviews =
+            updatedProfessionalScore.totalReviews;
+        widget.professionalScore?.lastUpdated =
+            updatedProfessionalScore.lastUpdated;
 
         widget.professional.name = updatedProfessional.name;
         widget.professional.email = updatedProfessional.email;
         widget.professional.type = updatedProfessional.type;
         widget.professional.isVerified = updatedProfessional.isVerified;
         widget.professional.servicePlans.clear();
-        widget.professional.servicePlans.addAll(updatedProfessional.servicePlans);
+        widget.professional.servicePlans
+            .addAll(updatedProfessional.servicePlans);
       });
     } catch (e) {
       setState(() {
         isLoading = false;
       });
-      print('Error loading professional data: $e');
+      debugPrint('Error loading professional data: $e');
     }
   }
 
@@ -110,284 +133,201 @@ class _ProfessionalProfileState extends State<ProfessionalProfile> {
         widget.loggedInUser.servicePlans.addAll(client.servicePlans);
       });
     } catch (e) {
-      print('Error loading client data: $e');
+      debugPrint('Error loading client data: $e');
     }
+  }
+
+  bool _userHasPlanWithProfessional() {
+    return widget.loggedInUser.servicePlans.any(
+          (sp) => sp.servicePlan.professionalId == widget.professional.id,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.professional.name,
-          style: const TextStyle(color: Colors.white),
+    final canChat = _userHasPlanWithProfessional();
+
+    return Theme(
+      data: Theme.of(context).copyWith(
+        scaffoldBackgroundColor: _AppColors.bg,
+        colorScheme: Theme.of(context).colorScheme.copyWith(
+          primary: _AppColors.primary,
+          surface: _AppColors.surface,
+          onSurface: _AppColors.text,
         ),
-        backgroundColor: const Color(0xFF191F2B),
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          if (widget.loggedInUser.servicePlans.any(
-                (servicePlan) => servicePlan.servicePlan.professionalId == widget.professional.id,
-          ))
-            IconButton(
-              icon: const Icon(Icons.message, color: Colors.white),
-              onPressed: () {
-                // Navegar para a tela de mensagens
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChatConversation(
-                      profileId: widget.professional.id,
-                      profileName: widget.professional.name,
-                      profileImageUrl: simplifiedProfile?.imageUrl ?? '',
-                      isProfessionalChat: true,
-                    ),
-                  ),
-                );
-              },
-            ),
-        ],
+        snackBarTheme: SnackBarThemeData(
+          backgroundColor: _AppColors.sheet,
+          contentTextStyle: const TextStyle(color: _AppColors.text),
+          behavior: SnackBarBehavior.floating,
+        ),
+        dialogTheme: const DialogTheme(
+          backgroundColor: _AppColors.sheet,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(18)),
+          ),
+        ),
       ),
-      body:
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : RefreshIndicator(
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Professional Header
-                      Container(
-                        color: const Color(0xFF2A2F3C),
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundImage: NetworkImage(
-                                simplifiedProfile?.imageUrl ??
-                                    'https://via.placeholder.com/150',
-                              ), // Placeholder image
-                              radius: 40,
-                            ),
-                            const SizedBox(width: 16),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  widget.professional.name,
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                if (widget.professionalScore != null)
-                                  Text(
-                                    'Avaliação: ${widget.professionalScore!.averageScore.toStringAsFixed(1)} (${widget.professionalScore!.totalReviews} reviews)',
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Available Plans Section
-                      SectionTitle(title: 'Planos Disponíveis'),
-                      ...widget.professional.servicePlans.map((plan) {
-                        final isPlanAlreadyHired = widget
-                            .loggedInUser
-                            .servicePlans
-                            .any(
-                              (servicePlan) =>
-                                  servicePlan.servicePlan.id == plan.id,
-                            );
-
-                        return Card(
-                          margin: const EdgeInsets.symmetric(
-                            vertical: 4.0,
-                            horizontal: 16.0,
-                          ),
-                          child: ListTile(
-                            title: Text(plan.title),
-                            subtitle: Text('${plan.description}\n${plan.type == ServicePlanType.Training ? 'Treino' : 'Dieta'}'),
-                            trailing:
-                                isPlanAlreadyHired
-                                    ? const Text(
-                                      'Já contratado',
-                                      style: TextStyle(color: Colors.grey),
-                                    )
-                                    : Text(
-                                      'R\$ ${plan.price.toStringAsFixed(2)}',
-                                    ),
-                            onTap:
-                                isPlanAlreadyHired
-                                    ? null
-                                    : () {
-                                      _showHireServicePlanDialog(plan);
-                                    },
-                            enabled: !isPlanAlreadyHired,
-                          ),
-                        );
-                      }).toList(),
-
-                      // Reviews Section
-                      SectionTitle(title: 'Avaliações'),
-                      if (reviews.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Text(
-                            'Nenhuma avaliação disponível.',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        )
-                      else
-                        ...reviews.map((review) {
-                          return Card(
-                            margin: const EdgeInsets.symmetric(
-                              vertical: 4.0,
-                              horizontal: 16.0,
-                            ),
-                            color: const Color(0xFF2A2F3C),
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 12.0, left: 12.0, bottom: 8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        review.clientName,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      Text(
-                                        'Nota: ${review.rating}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: Colors.amber,
-                                        ),
-                                      ),
-                                      if (review.clientId ==
-                                          loggedInUserProfileId)
-                                        Row(
-                                          children: [
-                                            IconButton(
-                                              icon: const Icon(
-                                                Icons.edit,
-                                                color: Colors.white70,
-                                              ),
-                                              onPressed: () {
-                                                _showEditReviewDialog(review);
-                                              },
-                                            ),
-                                            IconButton(
-                                              icon: const Icon(
-                                                Icons.delete,
-                                                color: Colors.red,
-                                              ),
-                                              onPressed: () {
-                                                _showDeleteReviewDialog(
-                                                  review.id,
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 5),
-                                  // Comentário (se houver)
-                                  if (review.comment.isNotEmpty)
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            review.comment,
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.white70,
-                                            ),
-                                          ),
-                                        )
-
-                                      ],
-                                    ),
-                                  const SizedBox(height: 8),
-                                  // Última atualização
-                                  Text(
-                                    'Última atualização: ${review.lastUpdatedAt.toLocal().toString().split(' ')[0]}',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.white54,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                    ],
+      child: Scaffold(
+        // sem “vidro”
+        appBar: _TopAppBar(
+          title: widget.professional.name,
+          trailing: canChat
+              ? IconButton(
+            tooltip: 'Mensagens',
+            icon: const Icon(Icons.message, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChatConversation(
+                    profileId: widget.professional.id,
+                    profileName: widget.professional.name,
+                    profileImageUrl: simplifiedProfile?.imageUrl ?? '',
+                    isProfessionalChat: true,
                   ),
                 ),
-                onRefresh: () async {
-                  setState(() {
-                    isLoading = true;
-                  });
-
-                  await _loadClientData();
-                  await _loadProfessionalData();
-                  await _loadProfessionalImageAndReviewList();
-                },
+              );
+            },
+          )
+              : null,
+        ),
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator(color: Colors.blue))
+            : RefreshIndicator(
+          color: _AppColors.primary,
+          backgroundColor: _AppColors.field,
+          onRefresh: () async {
+            setState(() => isLoading = true);
+            await _loadClientData();
+            await _loadProfessionalData();
+            await _loadProfessionalImageAndReviewList();
+          },
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics()),
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: _ProfileHeader(
+                    name: widget.professional.name,
+                    imageUrl: simplifiedProfile?.imageUrl,
+                    rating: widget.professionalScore?.averageScore,
+                    totalReviews: widget.professionalScore?.totalReviews,
+                  ),
+                ),
               ),
+              // Planos
+              SliverToBoxAdapter(
+                child: _SectionTitle('Planos Disponíveis'),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverList.separated(
+                  itemCount: widget.professional.servicePlans.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final plan = widget.professional.servicePlans[index];
+                    final isHired = widget.loggedInUser.servicePlans.any(
+                          (sp) => sp.servicePlan.id == plan.id,
+                    );
+
+                    return _GradientCard(
+                      dim: isHired, // <-- acinzentado quando contratado
+                      child: _PlanRow(
+                        title: plan.title,
+                        description: plan.description,
+                        typeLabel: plan.type == ServicePlanType.Training
+                            ? 'Treino'
+                            : 'Dieta',
+                        isHired: isHired,
+                        priceLabel:
+                        'R\$ ${plan.price.toStringAsFixed(2)}',
+                        onTapAction: isHired
+                            ? null
+                            : () => _showHireServicePlanDialog(plan),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              // Avaliações
+              SliverToBoxAdapter(child: _SectionTitle('Avaliações')),
+              if (reviews.isEmpty)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding:
+                    EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Text(
+                      'Nenhuma avaliação disponível.',
+                      style: TextStyle(color: _AppColors.text),
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverList.separated(
+                    itemCount: reviews.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final review = reviews[index];
+                      final canEditDelete =
+                          review.clientId == loggedInUserProfileId;
+
+                      return _GradientCard(
+                        child: _ReviewCard(
+                          name: review.clientName,
+                          rating: review.rating,
+                          comment: review.comment,
+                          lastUpdated: review.lastUpdatedAt,
+                          canEditDelete: canEditDelete,
+                          onEdit: () => _showEditReviewDialog(review),
+                          onDelete: () =>
+                              _showDeleteReviewDialog(review.id),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            ],
+          ),
+        ),
+      ),
     );
   }
+
+  // ======= DIALOGS =======
 
   void _showDeleteReviewDialog(String reviewId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirmar Exclusão'),
-          content: const Text('Tem certeza que deseja excluir esta avaliação?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  await ProfessionalManagementService.deleteProfessionalReviewAsync(
-                    reviewId,
-                  );
-
-                  await _loadProfessionalImageAndReviewList();
-                  await _loadProfessionalData();
-
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Avaliação excluída com sucesso!'),
-                    ),
-                  );
-                } catch (e) {
-                  print('Erro ao deletar avaliação: $e');
-                }
-              },
-              child: const Text('Excluir'),
-            ),
-          ],
+        return _ThemedAlertDialog(
+          title: 'Confirmar Exclusão',
+          content: 'Tem certeza que deseja excluir esta avaliação?',
+          primaryText: 'Excluir',
+          primaryStyle: _DialogButtonStyle.danger,
+          onPrimary: () async {
+            try {
+              await ProfessionalManagementService
+                  .deleteProfessionalReviewAsync(reviewId);
+              await _loadProfessionalImageAndReviewList();
+              await _loadProfessionalData();
+              if (mounted) Navigator.of(context).pop();
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Avaliação excluída com sucesso!'),
+                  ),
+                );
+              }
+            } catch (e) {
+              debugPrint('Erro ao deletar avaliação: $e');
+            }
+          },
         );
       },
     );
@@ -397,128 +337,676 @@ class _ProfessionalProfileState extends State<ProfessionalProfile> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Contratar Plano'),
-          content: Text(
-            'Deseja contratar o plano "${plan.title}" por R\$ ${plan.price.toStringAsFixed(2)}?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  await ProfessionalManagementService.addServicePlanToClientAsync(
-                    loggedInUserProfileId,
-                    plan.id,
-                  );
-
-                  await _loadClientData();
-
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Plano contratado com sucesso!'),
-                    ),
-                  );
-                } catch (e) {
-                  print('Erro ao contratar plano: $e');
-                }
-              },
-              child: const Text('Contratar'),
-            ),
-          ],
+        return _ThemedAlertDialog(
+          title: 'Contratar Plano',
+          content:
+          'Deseja contratar o plano "${plan.title}" por ${'R\$ ${plan.price.toStringAsFixed(2)}'}?',
+          primaryText: 'Contratar',
+          onPrimary: () async {
+            try {
+              await ProfessionalManagementService
+                  .addServicePlanToClientAsync(
+                loggedInUserProfileId,
+                plan.id,
+              );
+              await _loadClientData();
+              if (mounted) Navigator.of(context).pop();
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Plano contratado com sucesso!'),
+                  ),
+                );
+              }
+            } catch (e) {
+              debugPrint('Erro ao contratar plano: $e');
+            }
+          },
         );
       },
     );
   }
 
   void _showEditReviewDialog(ClientProfessionalReviewDto review) {
-    final TextEditingController commentController = TextEditingController(
-      text: review.comment,
-    );
+    final TextEditingController commentController =
+    TextEditingController(text: review.comment);
     int updatedRating = review.rating;
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Editar Avaliação'),
+        return _SheetDialog(
+          title: 'Editar Avaliação',
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Campo para atualizar a nota
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Nota:'),
-                  DropdownButton<int>(
-                    value: updatedRating,
-                    items: List.generate(5, (index) {
-                      return DropdownMenuItem(
-                        value: index + 1,
-                        child: Text('${index + 1}'),
-                      );
-                    }),
-                    onChanged: (value) {
-                      if (value != null) {
-                        updatedRating = value;
-                      }
-                    },
+              _FieldGroup(
+                label: 'Nota',
+                child: DropdownButtonFormField<int>(
+                  dropdownColor: _AppColors.field,
+                  value: updatedRating,
+                  decoration: _fieldDecoration(),
+                  items: List.generate(
+                    5,
+                        (i) => DropdownMenuItem(
+                      value: i + 1,
+                      child: Text(
+                        '${i + 1}',
+                        style: const TextStyle(color: Colors.white), // Define o texto branco
+                      ),
+                    ),
                   ),
-                ],
+                  onChanged: (v) => updatedRating = v ?? updatedRating,
+                ),
               ),
-              const SizedBox(height: 16),
-              // Campo para atualizar o comentário
-              TextField(
-                controller: commentController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Comentário',
-                  border: OutlineInputBorder(),
+              _FieldGroup(
+                label: 'Comentário',
+                child: TextFormField(
+                  controller: commentController,
+                  maxLines: 3,
+                  decoration: _fieldDecoration(),
+                  style: const TextStyle(color: Colors.white), // Define o texto branco
                 ),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  await ProfessionalManagementService.updateProfessionalReviewAsync(
-                    review.id,
-                    commentController.text,
-                    updatedRating,
-                  );
-
-                  await _loadProfessionalImageAndReviewList();
-                  await _loadProfessionalData();
-
-                  Navigator.of(context).pop();
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Avaliação atualizada com sucesso!'),
-                    ),
-                  );
-                } catch (e) {
-                  print('Erro ao atualizar avaliação: $e');
-                }
-              },
-              child: const Text('Salvar'),
-            ),
-          ],
+          primaryText: 'Salvar',
+          onPrimary: () async {
+            try {
+              await ProfessionalManagementService.updateProfessionalReviewAsync(
+                review.id,
+                commentController.text,
+                updatedRating,
+              );
+              await _loadProfessionalImageAndReviewList();
+              await _loadProfessionalData();
+              if (mounted) Navigator.of(context).pop();
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Avaliação atualizada com sucesso!'),
+                  ),
+                );
+              }
+            } catch (e) {
+              debugPrint('Erro ao atualizar avaliação: $e');
+            }
+          },
         );
       },
+    );
+  }
+
+  InputDecoration _fieldDecoration() {
+    return InputDecoration(
+      isDense: true,
+      filled: true,
+      fillColor: _AppColors.field,
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: _AppColors.border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: _AppColors.primary),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+    );
+  }
+}
+
+// ======= UI COMPONENTS =======
+
+class _TopAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final String title;
+  final Widget? trailing;
+
+  const _TopAppBar({
+    required this.title,
+    this.trailing,
+  });
+
+  @override
+  Size get preferredSize => const Size.fromHeight(56);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      automaticallyImplyLeading: true,
+      backgroundColor: _AppColors.bg,
+      elevation: 0,
+      shape: const Border(
+        bottom: BorderSide(color: _AppColors.border, width: 1),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+          fontSize: 17,
+        ),
+      ),
+      iconTheme: const IconThemeData(color: Colors.white),
+      actions: [
+        if (trailing != null) trailing!,
+        const SizedBox(width: 8),
+      ],
+    );
+  }
+}
+
+class _ProfileHeader extends StatelessWidget {
+  final String name;
+  final String? imageUrl;
+  final double? rating;
+  final int? totalReviews;
+
+  const _ProfileHeader({
+    required this.name,
+    this.imageUrl,
+    this.rating,
+    this.totalReviews,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        CircleAvatar(
+          backgroundColor: _AppColors.border,
+          radius: 32,
+          backgroundImage: NetworkImage(
+            imageUrl?.isNotEmpty == true
+                ? imageUrl!
+                : 'https://via.placeholder.com/64',
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                style: const TextStyle(
+                  color: _AppColors.text,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                ),
+              ),
+              if (rating != null && totalReviews != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.star, size: 16, color: _AppColors.amber),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${rating!.toStringAsFixed(1)} (${totalReviews} ${totalReviews == 1 ? 'review' : 'reviews'})',
+                        style: const TextStyle(
+                          color: _AppColors.text,
+                          fontSize: 13.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String text;
+  const _SectionTitle(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 18, bottom: 10, left: 16, right: 16),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: _AppColors.text,
+          fontWeight: FontWeight.w700,
+          fontSize: 16,
+        ),
+      ),
+    );
+  }
+}
+
+class _GradientCard extends StatelessWidget {
+  final Widget child;
+  final bool dim; // quando true, dá efeito "disabled"
+  const _GradientCard({required this.child, this.dim = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final content = Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF191F2B),
+            Color(0xFF101827),
+          ],
+        ),
+        color: _AppColors.card,
+        border: Border.all(color: _AppColors.border),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black45,
+            blurRadius: 22,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(14),
+      child: child,
+    );
+    return dim ? Opacity(opacity: 0.55, child: content) : content;
+  }
+}
+
+class _PlanRow extends StatelessWidget {
+  final String title;
+  final String description;
+  final String typeLabel;
+  final bool isHired;
+  final String priceLabel;
+  final VoidCallback? onTapAction;
+
+  const _PlanRow({
+    required this.title,
+    required this.description,
+    required this.typeLabel,
+    required this.isHired,
+    required this.priceLabel,
+    this.onTapAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Esquerda
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title,
+                  style: const TextStyle(
+                      color: _AppColors.text,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700)),
+              const SizedBox(height: 2),
+              Text(
+                description,
+                style: const TextStyle(
+                  color: _AppColors.muted,
+                  fontSize: 13.5,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _AppColors.field,
+                  border: Border.all(color: _AppColors.border),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  typeLabel,
+                  style: const TextStyle(
+                    color: _AppColors.muted,
+                    fontSize: 12.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        // Direita
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (isHired)
+            // selo contratado (fica acinzentado via `dim` no card)
+              Container(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF101827),
+                  border: Border.all(color: Colors.white),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: const Text(
+                  'Contratado',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12.5,
+                  ),
+                ),
+              )
+            else
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _AppColors.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                onPressed: onTapAction,
+                child: const Text(
+                  'Contratar',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+                ),
+              ),
+            const SizedBox(height: 6),
+            if (!isHired)
+              Container(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0x1F3B82F6),
+                  border: Border.all(color: Color(0xFF335EA8)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  priceLabel,
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w700),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _ReviewCard extends StatelessWidget {
+  final String name;
+  final int rating;
+  final String comment;
+  final DateTime lastUpdated;
+  final bool canEditDelete;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+
+  const _ReviewCard({
+    required this.name,
+    required this.rating,
+    required this.comment,
+    required this.lastUpdated,
+    required this.canEditDelete,
+    this.onEdit,
+    this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final date = lastUpdated.toLocal().toString().split(' ').first;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                name,
+                style: const TextStyle(
+                  color: _AppColors.text,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15.5,
+                ),
+              ),
+            ),
+            Text(
+              'Nota: $rating',
+              style: const TextStyle(
+                color: _AppColors.text,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            if (canEditDelete) ...[
+              const SizedBox(width: 8),
+              _IconBtn(icon: Icons.edit, onTap: onEdit),
+              const SizedBox(width: 6),
+              _IconBtn(icon: Icons.delete, onTap: onDelete),
+            ],
+          ],
+        ),
+        const SizedBox(height: 6),
+        if (comment.isNotEmpty)
+          Text(
+            comment,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+            ),
+          ),
+        const SizedBox(height: 6),
+        Text(
+          'Última atualização: $date',
+          style: const TextStyle(
+            color: _AppColors.muted,
+            fontSize: 12.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _IconBtn extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onTap;
+  const _IconBtn({required this.icon, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: _AppColors.field,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: const BorderSide(color: _AppColors.border),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child:  SizedBox(
+          width: 34,
+          height: 34,
+          child: Icon(icon, size: 18, color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
+
+// ======= DIALOG COMPONENTS =======
+
+enum _DialogButtonStyle { primary, danger }
+
+class _ThemedAlertDialog extends StatelessWidget {
+  final String title;
+  final String content;
+  final String primaryText;
+  final _DialogButtonStyle primaryStyle;
+  final VoidCallback onPrimary;
+
+  const _ThemedAlertDialog({
+    required this.title,
+    required this.content,
+    required this.primaryText,
+    required this.onPrimary,
+    this.primaryStyle = _DialogButtonStyle.primary,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Color primaryColor = primaryStyle == _DialogButtonStyle.danger
+        ? _AppColors.danger
+        : _AppColors.primary;
+
+    // Força estilos para evitar dialog branco
+    return AlertDialog(
+      backgroundColor: _AppColors.bg,
+      titleTextStyle: const TextStyle(
+        color: _AppColors.text,
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+      ),
+      contentTextStyle: const TextStyle(
+        color: _AppColors.text,
+        fontSize: 14.5,
+      ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(18)),
+        side: BorderSide(color: _AppColors.border),
+      ),
+      title: Text(title),
+      content: Text(content),
+      actionsPadding:
+      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      actions: [
+        _ChipButton(
+          label: 'Cancelar',
+          onTap: () => Navigator.of(context).pop(),
+        ),
+        _ChipButton(
+          label: primaryText,
+          onTap: onPrimary,
+          background: primaryColor,
+        ),
+      ],
+    );
+  }
+}
+
+class _SheetDialog extends StatelessWidget {
+  final String title;
+  final Widget content;
+  final String primaryText;
+  final VoidCallback onPrimary;
+
+  const _SheetDialog({
+    required this.title,
+    required this.content,
+    required this.primaryText,
+    required this.onPrimary,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: _AppColors.bg,
+      titleTextStyle: const TextStyle(
+        color: _AppColors.text,
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+      ),
+      contentTextStyle: const TextStyle(
+        color: _AppColors.text,
+        fontSize: 14.5,
+      ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(18)),
+        side: BorderSide(color: _AppColors.border),
+      ),
+      title: Text(title),
+      content: content,
+      actionsPadding:
+      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      actions: [
+        _ChipButton(
+          label: 'Cancelar',
+          onTap: () => Navigator.of(context).pop(),
+        ),
+        _ChipButton(
+          label: primaryText,
+          onTap: onPrimary,
+          background: _AppColors.primary,
+        ),
+      ],
+    );
+  }
+}
+
+class _ChipButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  final Color? background;
+
+  const _ChipButton({
+    required this.label,
+    required this.onTap,
+    this.background,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = background ?? Colors.transparent;
+    final border =
+    background == null ? _AppColors.border : Colors.transparent;
+
+    return Material(
+      color: bg,
+      shape: StadiumBorder(
+        side: BorderSide(color: border),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FieldGroup extends StatelessWidget {
+  final String label;
+  final Widget child;
+  const _FieldGroup({required this.label, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: const TextStyle(color: _AppColors.muted, fontSize: 13)),
+          const SizedBox(height: 6),
+          child,
+        ],
+      ),
     );
   }
 }

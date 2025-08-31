@@ -86,7 +86,7 @@ class _FriendsState extends State<Friends> {
       appBar: AppBar(
         title: const Text('Amigos', style: TextStyle(color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: const Color(0xFF191F2B),
+        backgroundColor: const Color(0xFF101827),
       ),
       body: ListView(
         controller: _scrollController,
@@ -118,7 +118,7 @@ class _FriendsState extends State<Friends> {
             const Center(
               child: Padding(
                 padding: EdgeInsets.all(8.0),
-                child: CircularProgressIndicator(),
+                child: CircularProgressIndicator(color: Colors.blue,),
               ),
             ),
           const SizedBox(height: 16),
@@ -156,7 +156,7 @@ class _FriendsState extends State<Friends> {
             ),
         ],
       ),
-      backgroundColor: const Color(0xFF191F2B),
+      backgroundColor: const Color(0xFF101827),
     );
   }
 }

@@ -147,26 +147,12 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
 
     return Scaffold(
       backgroundColor: Palette.bg,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(56),
-        child: ClipRect(
-          child: Container(
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: Color(0x14FFFFFF))),
-              color: Color(0xE60F1623), // ~ rgba(15,22,35,.9)
-            ),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-              child: AppBar(
-                elevation: 0,
-                backgroundColor: Colors.transparent,
-                iconTheme: const IconThemeData(color: Colors.white),
-                titleSpacing: 0,
-                title: const Text('Profissionais', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 18)),
-              ),
-            ),
-          ),
-        ),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: const Color(0xE60F1623),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text('Profissionais',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 18)),
       ),
       body: busy
           ? const Center(child: CircularProgressIndicator(color: Palette.primary))
@@ -223,6 +209,7 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
               focusedBorder: Palette.fieldBorder(12),
             ),
             onChanged: (v) => setState(() => _search = v),
+            enabled: false,
           ),
         ],
       ),
@@ -659,7 +646,7 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
                         ),
                       );
                     },
-                    child: const Text('Ver Perfil'),
+                    child: const Text('Ver Perfil', style: TextStyle(fontWeight: FontWeight.w700, color: Palette.text)),
                   ),
                 ],
               ),

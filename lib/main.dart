@@ -90,7 +90,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return MaterialApp(
         navigatorObservers: [routeObserver],
-      theme: ThemeData(scaffoldBackgroundColor: const Color(0xFF191F2B)),
+      theme: ThemeData(scaffoldBackgroundColor: const Color(0xFF101827)),
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, AsyncSnapshot<User?> snapshot) {
@@ -110,7 +110,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
             return BottomNavBar();
           } else if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(color: Colors.blue,));
           }
 
           return Main();

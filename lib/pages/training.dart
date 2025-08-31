@@ -110,7 +110,7 @@ class _TrainingState extends State<Training>
       future: _currentSessionFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator(color: Colors.blue,));
         }
 
         if (snapshot.hasData && snapshot.data != null && !_dialogShown) {
@@ -125,7 +125,7 @@ class _TrainingState extends State<Training>
           appBar: AppBar(
             title: const Text('Treino', style: TextStyle(color: Colors.white)),
             iconTheme: const IconThemeData(color: Colors.white),
-            backgroundColor: const Color(0xFF191F2B),
+            backgroundColor: const Color(0xFF101827),
             bottom: clientData != null && (clientData!.isTrainer) ? TabBar(
               indicatorColor: Colors.blueAccent,
               labelColor: Colors.white,
@@ -251,7 +251,7 @@ class _TrainingState extends State<Training>
                             return const Center(
                               child: Padding(
                                 padding: EdgeInsets.all(8.0),
-                                child: CircularProgressIndicator(),
+                                child: CircularProgressIndicator(color: Colors.blue,),
                               ),
                             );
                           } else if (snapshot.hasError) {
@@ -353,7 +353,7 @@ class _TrainingState extends State<Training>
               future: _workoutsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator(color: Colors.blue,));
                 } else if (snapshot.hasError) {
                   return Center(
                     child: Text("Erro ao carregar treinos: ${snapshot.error}"),

@@ -167,7 +167,7 @@ class _ChatConversationState extends State<ChatConversation> {
             ),
           ],
         ),
-        backgroundColor: const Color(0xFF191F2B),
+        backgroundColor: const Color(0xFF101827),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Column(
@@ -175,7 +175,7 @@ class _ChatConversationState extends State<ChatConversation> {
           Expanded(
             child:
                 _isLoading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const Center(child: CircularProgressIndicator(color: Colors.blue,))
                     : ListView.builder(
                       controller: _scrollController,
                       itemCount: _messages.length,
@@ -292,7 +292,7 @@ class _ChatConversationState extends State<ChatConversation> {
           Divider(),
           Container(
             padding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 16.0),
-            color: const Color(0xFF191F2B),
+            color: const Color(0xFF101827),
             child: Row(
               children: [
                 Expanded(
@@ -321,7 +321,7 @@ class _ChatConversationState extends State<ChatConversation> {
           ),
         ],
       ),
-      backgroundColor: const Color(0xFF191F2B),
+      backgroundColor: const Color(0xFF101827),
     );
   }
 

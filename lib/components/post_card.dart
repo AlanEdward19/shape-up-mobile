@@ -13,7 +13,7 @@ import 'package:shape_up_app/pages/profile.dart';
 import 'package:shape_up_app/services/social_service.dart';
 import 'package:shape_up_app/widgets/socialService/comments/comments_modal.dart';
 
-const Color kBackgroundColor = Color(0xFF191F2B);
+const Color kBackgroundColor = Color(0xFF101827);
 const Color kPlaceholderColor = Colors.white24;
 const EdgeInsets kDefaultPadding = EdgeInsets.symmetric(
   horizontal: 12.0,

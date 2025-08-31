@@ -202,7 +202,7 @@ class _WorkoutSessionState extends State<WorkoutSession> {
             widget.workout.name,
             style: const TextStyle(color: Colors.white),
           ),
-          backgroundColor: const Color(0xFF191F2B),
+          backgroundColor: const Color(0xFF101827),
           iconTheme: const IconThemeData(color: Colors.white),
           actions: [
             IconButton(

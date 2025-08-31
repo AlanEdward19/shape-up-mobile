@@ -70,7 +70,7 @@ class _FollowersOrFollowingListState extends State<FollowersOrFollowingList> {
       child: Column(
         children: [
           AppBar(
-            backgroundColor: const Color(0xFF191F2B),
+            backgroundColor: const Color(0xFF101827),
             title: Text(widget.isFollowers ? "Seguidores" : "Seguindo", style: TextStyle(color: Colors.white),),
             automaticallyImplyLeading: false,
             actions: [
@@ -107,7 +107,7 @@ class _FollowersOrFollowingListState extends State<FollowersOrFollowingList> {
                     return const Center(
                       child: Padding(
                         padding: EdgeInsets.all(8.0),
-                        child: CircularProgressIndicator(),
+                        child: CircularProgressIndicator(color: Colors.blue,),
                       ),
                     );
                   } else {
