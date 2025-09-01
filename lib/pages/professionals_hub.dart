@@ -952,7 +952,11 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
     final descController = TextEditingController(text: initial?.desc ?? '');
     final durController = TextEditingController(text: initial?.duration ?? '');
     final priceController = TextEditingController(text: initial?.price ?? '');
-    ServicePlanType selectedType = initial?.type ?? ServicePlanType.Training;
+
+    ServicePlanType selectedType = initial?.type ??
+        (clientData?.isTrainer ?? false ? ServicePlanType.Training : ServicePlanType.Diet);
+
+    bool isDropdownEnabled = (clientData?.isTrainer ?? false) && (clientData?.isNutritionist ?? false);
 
     showModalBottomSheet(
       context: context,
@@ -963,125 +967,144 @@ class _ProfessionalsHubState extends State<ProfessionalsHub> {
         side: BorderSide(color: Palette.border),
       ),
       builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: _SheetScaffold(
-            title: mode == _ServiceSheetMode.edit ? 'Editar Serviço' : 'Criar Novo Serviço',
-            child: Column(
-              children: [
-                _fieldGroup(
-                  label: 'Título',
-                  child: TextField(
-                    controller: titleController,
-                    style: const TextStyle(color: Palette.text),
-                    decoration: InputDecoration(
-                      hintText: 'Ex.: Dieta Premium',
-                      hintStyle: const TextStyle(color: Palette.muted),
-                      filled: true, fillColor: Palette.field,
-                      border: Palette.fieldBorder(10),
-                      enabledBorder: Palette.fieldBorder(10),
-                      focusedBorder: Palette.fieldBorder(10),
-                    ),
-                  ),
-                ),
-                _fieldGroup(
-                  label: 'Descrição',
-                  child: TextField(
-                    controller: descController,
-                    maxLines: 3,
-                    style: const TextStyle(color: Palette.text),
-                    decoration: InputDecoration(
-                      hintText: 'Conte brevemente o que inclui',
-                      hintStyle: const TextStyle(color: Palette.muted),
-                      filled: true, fillColor: Palette.field,
-                      border: Palette.fieldBorder(10),
-                      enabledBorder: Palette.fieldBorder(10),
-                      focusedBorder: Palette.fieldBorder(10),
-                    ),
-                  ),
-                ),
-                Row(
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+              child: _SheetScaffold(
+                title: mode == _ServiceSheetMode.edit ? 'Editar Serviço' : 'Criar Novo Serviço',
+                actions: [
+                  _ghostButton('Cancelar', onTap: () => Navigator.of(context).pop()),
+                  _filledButton('Salvar', onTap: () async {
+                    final data = _ServiceData(
+                      title: titleController.text.trim(),
+                      desc: descController.text.trim(),
+                      duration: durController.text.trim(),
+                      price: priceController.text.trim(),
+                      type: selectedType,
+                    );
+                    await onSubmit(data);
+                  }),
+                ],
+                child: Column(
                   children: [
-                    Expanded(
-                      child: _fieldGroup(
-                        label: 'Duração (em dias)',
-                        child: TextField(
-                          controller: durController,
-                          keyboardType: TextInputType.number,
-                          style: const TextStyle(color: Palette.text),
-                          decoration: InputDecoration(
-                            hintText: '30',
-                            hintStyle: const TextStyle(color: Palette.muted),
-                            filled: true, fillColor: Palette.field,
-                            border: Palette.fieldBorder(10),
-                            enabledBorder: Palette.fieldBorder(10),
-                            focusedBorder: Palette.fieldBorder(10),
-                          ),
+                    _fieldGroup(
+                      label: 'Título',
+                      child: TextField(
+                        controller: titleController,
+                        style: const TextStyle(color: Palette.text),
+                        decoration: InputDecoration(
+                          hintText: 'Ex.: Dieta Premium',
+                          hintStyle: const TextStyle(color: Palette.muted),
+                          filled: true,
+                          fillColor: Palette.field,
+                          border: Palette.fieldBorder(10),
+                          enabledBorder: Palette.fieldBorder(10),
+                          focusedBorder: Palette.fieldBorder(10),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _fieldGroup(
-                        label: 'Preço',
-                        child: TextField(
-                          controller: priceController,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          style: const TextStyle(color: Palette.text),
-                          decoration: InputDecoration(
-                            hintText: '39,90',
-                            hintStyle: const TextStyle(color: Palette.muted),
-                            filled: true, fillColor: Palette.field,
-                            border: Palette.fieldBorder(10),
-                            enabledBorder: Palette.fieldBorder(10),
-                            focusedBorder: Palette.fieldBorder(10),
+                    _fieldGroup(
+                      label: 'Descrição',
+                      child: TextField(
+                        controller: descController,
+                        maxLines: 3,
+                        style: const TextStyle(color: Palette.text),
+                        decoration: InputDecoration(
+                          hintText: 'Conte brevemente o que inclui',
+                          hintStyle: const TextStyle(color: Palette.muted),
+                          filled: true,
+                          fillColor: Palette.field,
+                          border: Palette.fieldBorder(10),
+                          enabledBorder: Palette.fieldBorder(10),
+                          focusedBorder: Palette.fieldBorder(10),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _fieldGroup(
+                            label: 'Duração (em dias)',
+                            child: TextField(
+                              controller: durController,
+                              keyboardType: TextInputType.number,
+                              style: const TextStyle(color: Palette.text),
+                              decoration: InputDecoration(
+                                hintText: '30',
+                                hintStyle: const TextStyle(color: Palette.muted),
+                                filled: true,
+                                fillColor: Palette.field,
+                                border: Palette.fieldBorder(10),
+                                enabledBorder: Palette.fieldBorder(10),
+                                focusedBorder: Palette.fieldBorder(10),
+                              ),
+                            ),
                           ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _fieldGroup(
+                            label: 'Preço',
+                            child: TextField(
+                              controller: priceController,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              style: const TextStyle(color: Palette.text),
+                              decoration: InputDecoration(
+                                hintText: '39,90',
+                                hintStyle: const TextStyle(color: Palette.muted),
+                                filled: true,
+                                fillColor: Palette.field,
+                                border: Palette.fieldBorder(10),
+                                enabledBorder: Palette.fieldBorder(10),
+                                focusedBorder: Palette.fieldBorder(10),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    _fieldGroup(
+                      label: 'Tipo',
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Palette.field,
+                          border: Border.all(color: Palette.border),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: DropdownButton<ServicePlanType>(
+                          value: selectedType,
+                          isExpanded: true,
+                          underline: const SizedBox.shrink(),
+                          dropdownColor: Palette.card,
+                          style: const TextStyle(color: Palette.text),
+                          items: ServicePlanType.values.map((type) {
+                            final label = type == ServicePlanType.Training ? 'Treino' : 'Dieta';
+                            return DropdownMenuItem(
+                              value: type,
+                              enabled: isDropdownEnabled,
+                              child: Text(
+                                label,
+                                style: TextStyle(
+                                  color: !isDropdownEnabled ? Palette.muted : Palette.text,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (v) {
+                            if (v != null) {
+                              setState(() => selectedType = v);
+                            }
+                          },
                         ),
                       ),
                     ),
                   ],
                 ),
-                _fieldGroup(
-                  label: 'Tipo',
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: Palette.field,
-                      border: Border.all(color: Palette.border),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: DropdownButton<ServicePlanType>(
-                      value: selectedType,
-                      isExpanded: true,
-                      underline: const SizedBox.shrink(),
-                      dropdownColor: Palette.card,
-                      style: const TextStyle(color: Palette.text),
-                      items: ServicePlanType.values.map((type) {
-                        final label = type == ServicePlanType.Training ? 'Treino' : 'Dieta';
-                        return DropdownMenuItem(value: type, child: Text(label));
-                      }).toList(),
-                      onChanged: (v) {
-                        if (v != null) setState(() => selectedType = v);
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              _ghostButton('Cancelar', onTap: () => Navigator.of(context).pop()),
-              _filledButton('Salvar', onTap: () async {
-                final data = _ServiceData(
-                  title: titleController.text.trim(),
-                  desc: descController.text.trim(),
-                  duration: durController.text.trim(),
-                  price: priceController.text.trim(),
-                  type: selectedType,
-                );
-                await onSubmit(data);
-              }),
-            ],
-          ),
+              ),
+            );
+          },
         );
       },
     );

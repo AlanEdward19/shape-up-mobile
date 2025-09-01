@@ -274,6 +274,16 @@ class _TrainingState extends State<Training>
 
                           var workouts = snapshot.data!;
                           workouts = workouts.where((workout) => workout.creatorId == clientData!.id).toList();
+
+                          if(workouts.isEmpty){
+                            return const Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Text(
+                                "Nenhum treino encontrado.",
+                                style: TextStyle(color: Colors.white70),
+                              ),
+                            );
+                          }
                           return Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 5), // Padding entre os treinos e a seção
                             child: SizedBox(
