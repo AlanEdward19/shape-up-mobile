@@ -53,7 +53,6 @@ class Main extends StatelessWidget {
             SizedBox(height: screenHeight * 0.02), // Reduced spacing
             TextButton(
               onPressed: () {
-                print("Botão Criar conta clicado");
                 changePageStateful(context, CreateAccount());
               },
               child: Text(
