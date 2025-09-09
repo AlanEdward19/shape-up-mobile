@@ -432,15 +432,6 @@ class _WorkoutSessionState extends State<WorkoutSession> {
                                                 _exerciseSeries[exercise.id]!
                                                     .removeAt(seriesIndex);
                                               });
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    'Série ${seriesIndex + 1} removida!',
-                                                  ),
-                                                ),
-                                              );
                                             },
                                             child: Container(
                                               alignment: Alignment.center,
