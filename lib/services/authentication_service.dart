@@ -126,10 +126,10 @@ class AuthenticationService
       await saveToken(token);
       await saveProfileId(userId);
 
-      String? deviceToken = await FirebaseMessaging.instance.getToken();
+      /*String? deviceToken = await FirebaseMessaging.instance.getToken();
       if (deviceToken != null) {
         await NotificationService.logIn(deviceToken);
-      }
+      }*/
 
       NotificationService.initializeConnection(userId);
     } catch (e) {
