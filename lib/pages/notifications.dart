@@ -1,6 +1,14 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shape_up_app/components/post_card.dart';
 import 'package:shape_up_app/dtos/notificationService/notification_dto.dart';
+import 'package:shape_up_app/dtos/socialService/post_reaction_dto.dart';
+import 'package:shape_up_app/enums/notificationService/notification_topic.dart';
+import 'package:shape_up_app/enums/socialService/reaction_type.dart';
+import 'package:shape_up_app/pages/profile.dart';
+import 'package:shape_up_app/pages/profile_post.dart';
 import 'package:shape_up_app/services/notification_service.dart';
+import 'package:shape_up_app/services/social_service.dart';
 
 class Notifications extends StatefulWidget {
   const Notifications({Key? key}) : super(key: key);
@@ -28,7 +36,7 @@ class _NotificationState extends State<Notifications> {
   void _listenToNotificationStream() {
     NotificationService.notificationStream.listen((notification) {
       setState(() {
-        _notifications.insert(0, notification);
+        _notifications = List.from(_notifications)..insert(0, notification);
       });
     });
   }
@@ -57,7 +65,7 @@ class _NotificationState extends State<Notifications> {
       )
           : ListView.builder(
         itemCount: _notifications.length,
-        itemBuilder: (context, index) {
+        itemBuilder: (itemContext, index) {
           final notification = _notifications[index];
 
           return Dismissible(
@@ -69,11 +77,7 @@ class _NotificationState extends State<Notifications> {
               child: const Icon(Icons.mark_email_read, color: Colors.white),
             ),
             onDismissed: (direction) {
-              final removedNotification = _notifications[index];
-
-              if (direction == DismissDirection.startToEnd) {
-                _markAsRead(removedNotification);
-              }
+              _markAsRead(notification);
             },
             child: ListTile(
               title: Text(
@@ -88,10 +92,39 @@ class _NotificationState extends State<Notifications> {
                   color: Colors.grey
                 ),
               ),
-              onTap: () {
+              onTap: () async {
                 _markAsRead(notification);
-                // Substitua pelo redirecionamento para outra página
-                print('Abrindo notificação: ${notification.metadata}');
+
+                if (notification.topic == NotificationTopic.FriendRequest ||
+                    notification.topic == NotificationTopic.NewFollower) {
+                  final senderId = notification.metadata['userId'];
+                  if (senderId != null) {
+                    Navigator.push(
+                      itemContext,
+                      MaterialPageRoute(
+                        builder: (itemContext) => Profile(profileId: senderId),
+                      ),
+                    );
+                  }
+                } else if (notification.topic == NotificationTopic.Reaction ||
+                    notification.topic == NotificationTopic.Comment) {
+                  final postId = notification.metadata['postId'];
+                  if (postId != null) {
+                    final post = await SocialService.getPostAsync(postId);
+                    if (post != null) {
+                      final profilePosts = await SocialService.getPostsByProfileIdAsync(post.publisherId);
+                      final postIndex = profilePosts.indexWhere((p) => p.id == postId);
+                      if(mounted) {
+                        Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (itemContext) => ProfilePost(initialIndex: postIndex,posts: profilePosts),
+                        ),
+                      );
+                      }
+                    }
+                  }
+                }
               },
             ),
           );
