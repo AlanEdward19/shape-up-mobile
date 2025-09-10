@@ -316,7 +316,7 @@ class PostCard extends StatelessWidget {
           if (post.images.isNotEmpty && post.images[0].isNotEmpty)
             SizedBox(
               height: kPostImageHeight,
-              child: ImageCarouselWithIndicator(imageUrls: post.images),
+              child: ImageCarouselWithIndicator(mediaUrls: post.images),
             )
           else
             const SizedBox(height: 10), // Espaço se não houver imagem

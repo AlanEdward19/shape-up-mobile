@@ -146,154 +146,153 @@ class _ProfessionalProfileState extends State<ProfessionalProfile> {
   @override
   Widget build(BuildContext context) {
     final canChat = _userHasPlanWithProfessional();
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
-    return Theme(
-      data: Theme.of(context).copyWith(
-        scaffoldBackgroundColor: _AppColors.bg,
-        colorScheme: Theme.of(context).colorScheme.copyWith(
-          primary: _AppColors.primary,
-          surface: _AppColors.surface,
-          onSurface: _AppColors.text,
-        ),
-        snackBarTheme: SnackBarThemeData(
-          backgroundColor: _AppColors.sheet,
-          contentTextStyle: const TextStyle(color: _AppColors.text),
-          behavior: SnackBarBehavior.floating,
-        ),
-        dialogTheme: const DialogTheme(
-          backgroundColor: _AppColors.sheet,
-          surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(18)),
-          ),
-        ),
-      ),
-      child: Scaffold(
-        // sem “vidro”
-        appBar: _TopAppBar(
-          title: widget.professional.name,
-          trailing: canChat
-              ? IconButton(
-            tooltip: 'Mensagens',
-            icon: const Icon(Icons.message, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChatConversation(
-                    profileId: widget.professional.id,
-                    profileName: widget.professional.name,
-                    profileImageUrl: simplifiedProfile?.imageUrl ?? '',
-                    isProfessionalChat: true,
-                  ),
+    return Scaffold(
+      appBar: _TopAppBar(
+        title: widget.professional.name,
+        trailing: canChat
+            ? IconButton(
+          tooltip: 'Mensagens',
+          icon: const Icon(Icons.message, color: Colors.white),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChatConversation(
+                  profileId: widget.professional.id,
+                  profileName: widget.professional.name,
+                  profileImageUrl: simplifiedProfile?.imageUrl ?? '',
+                  isProfessionalChat: true,
                 ),
-              );
-            },
-          )
-              : null,
-        ),
-        body: isLoading
-            ? const Center(child: CircularProgressIndicator(color: Colors.blue))
-            : RefreshIndicator(
-          color: _AppColors.primary,
-          backgroundColor: _AppColors.field,
-          onRefresh: () async {
-            setState(() => isLoading = true);
-            await _loadClientData();
-            await _loadProfessionalData();
-            await _loadProfessionalImageAndReviewList();
+              ),
+            );
           },
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(
-                parent: AlwaysScrollableScrollPhysics()),
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: _ProfileHeader(
-                    name: widget.professional.name,
-                    imageUrl: simplifiedProfile?.imageUrl,
-                    rating: widget.professionalScore?.averageScore,
-                    totalReviews: widget.professionalScore?.totalReviews,
-                  ),
-                ),
-              ),
-              // Planos
-              SliverToBoxAdapter(
-                child: _SectionTitle('Planos Disponíveis'),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverList.separated(
-                  itemCount: widget.professional.servicePlans.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) {
-                    final plan = widget.professional.servicePlans[index];
-                    final isHired = widget.loggedInUser.servicePlans.any(
-                          (sp) => sp.servicePlan.id == plan.id,
-                    );
-
-                    return _GradientCard(
-                      dim: isHired, // <-- acinzentado quando contratado
-                      child: _PlanRow(
-                        title: plan.title,
-                        description: plan.description,
-                        typeLabel: plan.type == ServicePlanType.Training
-                            ? 'Treino'
-                            : 'Dieta',
-                        isHired: isHired,
-                        priceLabel:
-                        'R\$ ${plan.price.toStringAsFixed(2)}',
-                        onTapAction: isHired
-                            ? null
-                            : () => _showHireServicePlanDialog(plan),
+        )
+            : null,
+      ),
+      body: isLoading
+          ? const Center(
+        child: CircularProgressIndicator(color: Colors.blue),
+      )
+          : RefreshIndicator(
+        color: _AppColors.primary,
+        backgroundColor: _AppColors.field,
+        onRefresh: () async {
+          setState(() => isLoading = true);
+          await _loadClientData();
+          await _loadProfessionalData();
+          await _loadProfessionalImageAndReviewList();
+        },
+        child: Column(
+          children: [
+            Expanded(
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics()),
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        screenWidth * 0.04,
+                        screenHeight * 0.02,
+                        screenWidth * 0.04,
+                        0,
                       ),
-                    );
-                  },
-                ),
-              ),
-              // Avaliações
-              SliverToBoxAdapter(child: _SectionTitle('Avaliações')),
-              if (reviews.isEmpty)
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Text(
-                      'Nenhuma avaliação disponível.',
-                      style: TextStyle(color: _AppColors.text),
+                      child: _ProfileHeader(
+                        name: widget.professional.name,
+                        imageUrl: simplifiedProfile?.imageUrl,
+                        rating: widget.professionalScore?.averageScore,
+                        totalReviews: widget.professionalScore?.totalReviews,
+                      ),
                     ),
                   ),
-                )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver: SliverList.separated(
-                    itemCount: reviews.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final review = reviews[index];
-                      final canEditDelete =
-                          review.clientId == loggedInUserProfileId;
-
-                      return _GradientCard(
-                        child: _ReviewCard(
-                          name: review.clientName,
-                          rating: review.rating,
-                          comment: review.comment,
-                          lastUpdated: review.lastUpdatedAt,
-                          canEditDelete: canEditDelete,
-                          onEdit: () => _showEditReviewDialog(review),
-                          onDelete: () =>
-                              _showDeleteReviewDialog(review.id),
-                        ),
-                      );
-                    },
+                  SliverToBoxAdapter(
+                    child: _SectionTitle('Planos Disponíveis'),
                   ),
-                ),
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
-            ],
-          ),
+                  SliverPadding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: screenWidth * 0.04,
+                    ),
+                    sliver: SliverList.separated(
+                      itemCount: widget.professional.servicePlans.length,
+                      separatorBuilder: (_, __) =>
+                          SizedBox(height: screenHeight * 0.01),
+                      itemBuilder: (context, index) {
+                        final plan = widget.professional.servicePlans[index];
+                        final isHired = widget.loggedInUser.servicePlans.any(
+                              (sp) => sp.servicePlan.id == plan.id,
+                        );
+
+                        return _GradientCard(
+                          dim: isHired,
+                          child: _PlanRow(
+                            title: plan.title,
+                            description: plan.description,
+                            typeLabel: plan.type == ServicePlanType.Training
+                                ? 'Treino'
+                                : 'Dieta',
+                            isHired: isHired,
+                            priceLabel:
+                            'R\$ ${plan.price.toStringAsFixed(2)}',
+                            onTapAction: isHired
+                                ? null
+                                : () => _showHireServicePlanDialog(plan),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: _SectionTitle('Avaliações'),
+                  ),
+                  if (reviews.isEmpty)
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: Text(
+                          'Nenhuma avaliação disponível.',
+                          style: TextStyle(color: _AppColors.text),
+                        ),
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.04,
+                      ),
+                      sliver: SliverList.separated(
+                        itemCount: reviews.length,
+                        separatorBuilder: (_, __) =>
+                            SizedBox(height: screenHeight * 0.01),
+                        itemBuilder: (context, index) {
+                          final review = reviews[index];
+                          final canEditDelete =
+                              review.clientId == loggedInUserProfileId;
+
+                          return _GradientCard(
+                            child: _ReviewCard(
+                              name: review.clientName,
+                              rating: review.rating,
+                              comment: review.comment,
+                              lastUpdated: review.lastUpdatedAt,
+                              canEditDelete: canEditDelete,
+                              onEdit: () =>
+                                  _showEditReviewDialog(review),
+                              onDelete: () =>
+                                  _showDeleteReviewDialog(review.id),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

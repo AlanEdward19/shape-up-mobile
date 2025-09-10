@@ -13,6 +13,7 @@ import 'package:shape_up_app/pages/settings.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import 'package:shape_up_app/services/social_service.dart';
 import 'package:shape_up_app/widgets/socialService/follow/followers_or_following_list.dart';
+import 'package:shape_up_app/widgets/socialService/post/post_thumbnail.dart';
 
 class Profile extends StatefulWidget {
   final String profileId;
@@ -329,10 +330,7 @@ class _ProfilePageState extends State<Profile> {
                                   );
                                 },
                                 child: posts[index].images.isNotEmpty
-                                    ? Image.network(
-                                  posts[index].images[0],
-                                  fit: BoxFit.cover,
-                                )
+                                    ? PostThumbnail(mediaUrl: posts[index].images[0])
                                     : const Icon(
                                   Icons.image_not_supported,
                                   color: Colors.grey,

@@ -4,8 +4,9 @@ import 'package:shape_up_app/enums/socialService/reaction_type.dart';
 
 class ReactionPopup extends StatelessWidget {
   final Function(ReactionType) onEmojiSelected;
+  final emojiSize;
 
-  const ReactionPopup({required this.onEmojiSelected, super.key});
+  const ReactionPopup({required this.onEmojiSelected, super.key, this.emojiSize});
 
   static final Map<String, ReactionType> _emojiToReactionType = {
     for (var entry in reactionEmojiMap.entries) entry.value : entry.key
@@ -46,7 +47,7 @@ class ReactionPopup extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               child: Text(
                 emoji,
-                style: const TextStyle(fontSize: 20),
+                style: TextStyle(fontSize: emojiSize),
               ),
             ),
           );

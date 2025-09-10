@@ -10,5 +10,6 @@ AppBar backButton(BuildContext context) {
     ),
     backgroundColor: Colors.transparent,
     elevation: 0,
+    iconTheme: const IconThemeData(color: Colors.white)
   );
 }

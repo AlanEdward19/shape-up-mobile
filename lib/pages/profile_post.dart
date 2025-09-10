@@ -90,12 +90,14 @@ class _ProfilePostState extends State<ProfilePost> {
     final Offset buttonPosition = buttonBox.localToGlobal(Offset.zero);
     final Size buttonSize = buttonBox.size;
     final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final emojiSize = screenWidth * 0.043;
 
-    const double popupHeight = 70.0;
-    const double popupWidth = 280.0;
+    double popupHeight = screenHeight * 0.1;
+    double popupWidth = screenWidth * 0.2;
 
     double top = buttonPosition.dy - popupHeight - 8;
-    double left = buttonPosition.dx + buttonSize.width / 2 - popupWidth / 2;
+    double left = (buttonPosition.dx + buttonSize.width / 2 - popupWidth / 2) -10;
 
     if (top < kToolbarHeight) {
       top = buttonPosition.dy + buttonSize.height - 100;
@@ -115,6 +117,7 @@ class _ProfilePostState extends State<ProfilePost> {
               child: Material(
                 type: MaterialType.transparency,
                 child: ReactionPopup(
+                  emojiSize: emojiSize,
                   onEmojiSelected: (reactionType) {
                     Navigator.of(dialogContext).pop();
                     _handleReactionSelected(postId, reactionType);

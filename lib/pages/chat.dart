@@ -145,86 +145,94 @@ class _ChatState extends State<Chat> {
     );
   }
 
+  @override
   Widget _buildChatList(bool isProfessionalChat) {
     final messages = isProfessionalChat
         ? _filteredProfessionalMessagesWithProfiles
         : _filteredPersonalMessagesWithProfiles;
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextField(
-            controller: _searchController,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              hintText: 'Procurar contato...',
-              hintStyle: const TextStyle(color: Colors.grey),
-              filled: true,
-              fillColor: const Color(0xFF2A2F3C),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.0),
-                borderSide: BorderSide.none,
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: 'Procurar contato...',
+                hintStyle: const TextStyle(color: Colors.grey),
+                filled: true,
+                fillColor: const Color(0xFF2A2F3C),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide.none,
+                ),
+                prefixIcon: const Icon(Icons.search, color: Colors.grey),
               ),
-              prefixIcon: const Icon(Icons.search, color: Colors.grey),
             ),
           ),
-        ),
-        Expanded(
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator(color: Colors.blue,))
-              : messages.isEmpty
-              ? const Center(
-            child: Text(
-              "Nenhuma mensagem recente.",
-              style: TextStyle(fontSize: 18, color: Colors.white),
-            ),
-          )
-              : ListView.builder(
-            itemCount: messages.length,
-            itemBuilder: (context, index) {
-              final message = messages[index]['message'] as MessageDto;
-              final profile = messages[index]['profile'] as SimplifiedProfileDto;
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.7, // Altura proporcional
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: Colors.blue,))
+                : messages.isEmpty
+                ? const Center(
+              child: Text(
+                "Nenhuma mensagem recente.",
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
+            )
+                : ListView.builder(
+              itemCount: messages.length,
+              itemBuilder: (context, index) {
+                final message = messages[index]['message'] as MessageDto;
+                final profile = messages[index]['profile'] as SimplifiedProfileDto;
 
-              return ListTile(
-                leading: personalizedCircleAvatar(profile.imageUrl, '${profile.firstName} ${profile.lastName}', 25),
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${profile.firstName} ${profile.lastName}',
-                      style: const TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                    Text(
-                      '${message.timestamp?.hour.toString().padLeft(2, '0')}:${message.timestamp?.minute.toString().padLeft(2, '0')} - ${message.timestamp?.day.toString().padLeft(2, '0')}/${message.timestamp?.month.toString().padLeft(2, '0')}/${message.timestamp?.year}',
-                      style: const TextStyle(color: Colors.grey, fontSize: 14),
-                    ),
-                  ],
-                ),
-                subtitle: Text(
-                  message.content ?? '',
-                  style: const TextStyle(color: Colors.grey, fontSize: 16),
-                ),
-                onTap: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChatConversation(
-                        profileId: profile.id,
-                        profileName: '${profile.firstName} ${profile.lastName}',
-                        profileImageUrl: profile.imageUrl,
-                        isProfessionalChat: isProfessionalChat,
+                return ListTile(
+                  leading: personalizedCircleAvatar(profile.imageUrl, '${profile.firstName} ${profile.lastName}', 25),
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          '${profile.firstName} ${profile.lastName}',
+                          style: const TextStyle(color: Colors.white, fontSize: 18),
+                          overflow: TextOverflow.ellipsis, // Evita overflow horizontal
+                        ),
                       ),
-                    ),
-                  );
+                      Text(
+                        '${message.timestamp?.hour.toString().padLeft(2, '0')}:${message.timestamp?.minute.toString().padLeft(2, '0')} - ${message.timestamp?.day.toString().padLeft(2, '0')}/${message.timestamp?.month.toString().padLeft(2, '0')}/${message.timestamp?.year}',
+                        style: const TextStyle(color: Colors.grey, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                  subtitle: Text(
+                    message.content ?? '',
+                    style: const TextStyle(color: Colors.grey, fontSize: 16),
+                    overflow: TextOverflow.ellipsis, // Evita overflow horizontal
+                  ),
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatConversation(
+                          profileId: profile.id,
+                          profileName: '${profile.firstName} ${profile.lastName}',
+                          profileImageUrl: profile.imageUrl,
+                          isProfessionalChat: isProfessionalChat,
+                        ),
+                      ),
+                    );
 
-                  _loadRecentMessages(isProfessionalChat);
-                },
-              );
-            },
+                    _loadRecentMessages(isProfessionalChat);
+                  },
+                );
+              },
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

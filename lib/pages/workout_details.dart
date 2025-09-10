@@ -85,14 +85,18 @@ class _WorkoutDetailsState extends State<WorkoutDetails>
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
           widget.workout.name,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
+            fontSize: screenWidth * 0.05, // Tamanho dinâmico da fonte
           ),
         ),
         backgroundColor: const Color(0xFF101827),
@@ -101,149 +105,159 @@ class _WorkoutDetailsState extends State<WorkoutDetails>
       ),
       body: Column(
         children: [
-          const SizedBox(height: 150),
+          SizedBox(height: screenHeight * 0.15), // Espaçamento dinâmico
           // Row 1: SVG
           Center(
-            child: SvgPicture.string(highlightMuscleGroupsSvg!, height: 300),
-          ),
-          const SizedBox(height: 16),
-
-          // Row 2: Iniciar treino
-          if(!widget.isClientTraining)
-          Center(
-            child: FloatingActionButton.extended(
-              onPressed: () async {
-                var workoutSession =
-                    await TrainingService.createWorkoutSessionAsync(
-                      widget.workout.id,
-                      [],
-                    );
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (context) => WorkoutSession(
-                          sessionId: workoutSession.sessionId,
-                          workout: widget.workout,
-                          startedAt: workoutSession.startedAt,
-                        ),
-                  ),
-                );
-              },
-              label: const Text(
-                "Iniciar Treino",
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-              icon: const Icon(Icons.play_arrow, color: Colors.white),
-              backgroundColor: Colors.blueAccent,
-              elevation: 4,
+            child: SvgPicture.string(
+              highlightMuscleGroupsSvg!,
+              height: screenHeight * 0.3, // Altura proporcional
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: screenHeight * 0.02),
 
-          // Row 3: Editar e Deletar treino
-          if(widget.workout.creatorId == widget.loggedUserId)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: () {
+          // Row 2: Iniciar treino
+          if (!widget.isClientTraining)
+            Center(
+              child: FloatingActionButton.extended(
+                onPressed: () async {
+                  var workoutSession =
+                  await TrainingService.createWorkoutSessionAsync(
+                    widget.workout.id,
+                    [],
+                  );
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => EditWorkoutPage(
-                        workoutId: widget.workout.id,
+                      builder: (context) => WorkoutSession(
+                        sessionId: workoutSession.sessionId,
+                        workout: widget.workout,
+                        startedAt: workoutSession.startedAt,
                       ),
                     ),
-                  ).then((_) => setState(() {
-                    updateSvg();
-                  }));
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                ),
-                child: const Text(
-                  'Editar Treino',
-                  style: TextStyle(color: Colors.white, fontSize: 14),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder:
-                        (context) => AlertDialog(
-                          title: const Text("Confirmar exclusão"),
-                          content: const Text(
-                            "Você tem certeza que deseja excluir este treino?",
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text("Cancelar"),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text(
-                                "Deletar",
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ),
-                          ],
-                        ),
                   );
-
-                  if (confirm == true) {
-                    try {
-                      await TrainingService.deleteWorkoutByIdAsync(
-                        widget.workout.id,
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Workout deleted successfully!"),
-                        ),
-                      );
-                      Navigator.pop(context);
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Error deleting workout: $e")),
-                      );
-                    }
-                  }
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
+                label: Text(
+                  "Iniciar Treino",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: screenWidth * 0.04, // Tamanho dinâmico da fonte
                   ),
                 ),
-                child: const Text(
-                  'Deletar Treino',
-                  style: TextStyle(color: Colors.white, fontSize: 14),
-                ),
+                icon: const Icon(Icons.play_arrow, color: Colors.white),
+                backgroundColor: Colors.blueAccent,
+                elevation: 4,
               ),
-            ],
-          ),
-          const SizedBox(height: 24),
+            ),
+          SizedBox(height: screenHeight * 0.03),
+
+          // Row 3: Editar e Deletar treino
+          if (widget.workout.creatorId == widget.loggedUserId)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditWorkoutPage(
+                          workoutId: widget.workout.id,
+                        ),
+                      ),
+                    ).then((_) => setState(() {
+                      updateSvg();
+                    }));
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: screenWidth * 0.06,
+                      vertical: screenHeight * 0.015,
+                    ),
+                  ),
+                  child: Text(
+                    'Editar Treino',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: screenWidth * 0.035,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text("Confirmar exclusão"),
+                        content: const Text(
+                          "Você tem certeza que deseja excluir este treino?",
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text("Cancelar"),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text(
+                              "Deletar",
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirm == true) {
+                      try {
+                        await TrainingService.deleteWorkoutByIdAsync(
+                          widget.workout.id,
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Workout deleted successfully!"),
+                          ),
+                        );
+                        Navigator.pop(context);
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Error deleting workout: $e")),
+                        );
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: screenWidth * 0.06,
+                      vertical: screenHeight * 0.015,
+                    ),
+                  ),
+                  child: Text(
+                    'Deletar Treino',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: screenWidth * 0.035,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          SizedBox(height: screenHeight * 0.03),
 
           // Tabs: Exercícios e Execuções anteriores
           TabBar(
             indicatorColor: Colors.blueAccent,
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white70,
-            labelStyle: const TextStyle(
-              fontSize: 14,
+            labelStyle: TextStyle(
+              fontSize: screenWidth * 0.035,
               fontWeight: FontWeight.bold,
             ),
             controller: _tabController,
@@ -259,7 +273,7 @@ class _WorkoutDetailsState extends State<WorkoutDetails>
                 // Conteúdo da aba "Exercícios"
                 Center(
                   child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(screenWidth * 0.04),
                     itemCount: widget.workout.exercises.length,
                     itemBuilder: (context, index) {
                       final exercise = widget.workout.exercises[index];
@@ -268,29 +282,28 @@ class _WorkoutDetailsState extends State<WorkoutDetails>
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        margin: const EdgeInsets.only(bottom: 16),
+                        margin: EdgeInsets.only(bottom: screenHeight * 0.02),
                         elevation: 4,
                         child: ListTile(
-                          leading:
-                              exercise.imageUrl != null
-                                  ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Image.network(
-                                      exercise.imageUrl!,
-                                      width: 50,
-                                      height: 50,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                  : const Icon(
-                                    Icons.image_not_supported,
-                                    color: Colors.grey,
-                                  ),
+                          leading: exercise.imageUrl != null
+                              ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              exercise.imageUrl!,
+                              width: screenWidth * 0.12,
+                              height: screenWidth * 0.12,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                              : const Icon(
+                            Icons.image_not_supported,
+                            color: Colors.grey,
+                          ),
                           title: Text(
                             exercise.name,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
-                              fontSize: 16,
+                              fontSize: screenWidth * 0.04,
                             ),
                           ),
                         ),
@@ -306,7 +319,9 @@ class _WorkoutDetailsState extends State<WorkoutDetails>
                     ),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator(color: Colors.blue,));
+                        return const Center(
+                          child: CircularProgressIndicator(color: Colors.blue),
+                        );
                       } else if (snapshot.hasError) {
                         return Center(
                           child: Text(
@@ -325,34 +340,34 @@ class _WorkoutDetailsState extends State<WorkoutDetails>
 
                       final sessions = snapshot.data!;
                       return ListView.builder(
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.all(screenWidth * 0.04),
                         itemCount: sessions.length,
                         itemBuilder: (context, index) {
                           final session = sessions[index];
-                          var difference =
-                              session.endedAt != null
-                                  ? session.endedAt!.difference(
-                                    session.startedAt,
-                                  )
-                                  : Duration.zero;
+                          var difference = session.endedAt != null
+                              ? session.endedAt!.difference(session.startedAt)
+                              : Duration.zero;
                           return Card(
                             color: const Color(0xFF2A2A3D),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            margin: const EdgeInsets.only(bottom: 16),
+                            margin: EdgeInsets.only(bottom: screenHeight * 0.02),
                             elevation: 4,
                             child: ListTile(
                               title: Text(
                                 "${session.startedAt.day.toString().padLeft(2, '0')}/${session.startedAt.month.toString().padLeft(2, '0')}/${session.startedAt.year}",
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 16,
+                                  fontSize: screenWidth * 0.04,
                                 ),
                               ),
                               subtitle: Text(
                                 "Duração: ${difference.inMinutes.remainder(60)}m ${difference.inSeconds.remainder(60)}s\nStatus: ${session.status.toStringPtBr()}",
-                                style: const TextStyle(color: Colors.white70),
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: screenWidth * 0.035,
+                                ),
                               ),
                             ),
                           );
