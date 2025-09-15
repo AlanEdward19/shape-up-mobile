@@ -266,7 +266,7 @@ class _ChatConversationState extends State<ChatConversation> {
                                 DateFormat('HH:mm')
                                     .format(message.timestamp!),
                                 style: const TextStyle(
-                                  color: Colors.grey,
+                                  color: Colors.white,
                                   fontSize: 10,
                                 ),
                               ),
