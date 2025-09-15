@@ -18,6 +18,8 @@ class _EditWorkoutPageState extends State<EditWorkoutPage> {
   WorkoutVisibility selectedVisibility = WorkoutVisibility.private;
   List<ExerciseDto> selectedExercises = [];
   bool isLoading = true;
+  int restMinutes = 0;
+  int restSeconds = 0;
 
   @override
   void initState() {
@@ -33,6 +35,8 @@ class _EditWorkoutPageState extends State<EditWorkoutPage> {
         workoutNameController.text = workout.name;
         selectedVisibility = workout.visibility;
         selectedExercises = workout.exercises;
+        restMinutes = workout.restingTimeInSeconds ~/ 60;
+        restSeconds = workout.restingTimeInSeconds % 60;
         isLoading = false;
       });
     } catch (e) {
@@ -75,12 +79,36 @@ class _EditWorkoutPageState extends State<EditWorkoutPage> {
           IconButton(
             icon: const Icon(Icons.check),
             onPressed: () async {
+              var restingTimeInSeconds = Duration(minutes: restMinutes, seconds: restSeconds).inSeconds;
+
+              if(workoutNameController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Por favor, insira o nome do treino.")),
+                );
+                return;
+              }
+
+              if(selectedExercises.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Por favor, adicione pelo menos um exercício.")),
+                );
+                return;
+              }
+
+              if(restingTimeInSeconds <= 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Por favor, insira um intervalo de descanso válido.")),
+                );
+                return;
+              }
+
               try {
                 await TrainingService.updateWorkoutAsync(
                   widget.workoutId,
                   workoutNameController.text,
                   selectedVisibility,
                   selectedExercises.map((e) => e.id).toList(),
+                  restingTimeInSeconds
                 );
                 Navigator.pop(context);
               } catch (e) {
@@ -113,6 +141,63 @@ class _EditWorkoutPageState extends State<EditWorkoutPage> {
                 border: OutlineInputBorder(),
                 hintText: "Digite o nome do treino",
               ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              "Intervalo de descanso",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                // Dropdown for minutes
+                Expanded(
+                  child: DropdownButton<int>(
+                    value: restMinutes,
+                    dropdownColor: const Color(0xFF101827),
+                    items: List.generate(60, (index) => index).map((minute) {
+                      return DropdownMenuItem<int>(
+                        value: minute,
+                        child: Text(
+                          "$minute min",
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        restMinutes = value!;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Dropdown for seconds
+                Expanded(
+                  child: DropdownButton<int>(
+                    value: restSeconds,
+                    dropdownColor: const Color(0xFF101827),
+                    items: List.generate(60, (index) => index).map((second) {
+                      return DropdownMenuItem<int>(
+                        value: second,
+                        child: Text(
+                          "$second sec",
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        restSeconds = value!;
+                      });
+                    },
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 24),
             Row(

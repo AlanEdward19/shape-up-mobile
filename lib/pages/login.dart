@@ -256,7 +256,16 @@ class _LoginState extends State<Login> {
         onPressed: () async {
           try {
             await AuthenticationService.loginWithGoogle();
-            print("Login com Google realizado com sucesso!");
+
+            var currentUser = FirebaseAuth.instance.currentUser;
+            if (currentUser != null) {
+              await SocialService.viewProfileAsync(currentUser.uid);
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => BottomNavBar()),
+                    (Route<dynamic> route) => false,
+              );
+            }
           } catch (e) {
             print("Erro ao realizar login com Google: $e");
           }

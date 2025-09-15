@@ -52,8 +52,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _initializeWebSocket();
-    } else if (state == AppLifecycleState.paused) {
-      NotificationService.stopConnection();
     }
   }
 
