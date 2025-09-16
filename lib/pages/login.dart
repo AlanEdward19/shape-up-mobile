@@ -448,18 +448,31 @@ class _LoginState extends State<Login> {
 
               var currentUser = FirebaseAuth.instance.currentUser;
               if (currentUser != null) {
-                print("Login realizado com sucesso!");
                 await SocialService.viewProfileAsync(currentUser.uid);
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => BottomNavBar()),
                       (Route<dynamic> route) => false,
                 );
-              } else {
-                print("Erro ao realizar login.");
               }
             } catch (e) {
-              print("Erro ao realizar login: $e");
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('Erro de Login'),
+                    content: const Text('Usuário ou senha incorretos. Tente novamente.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  );
+                },
+              );
             }
           }
         },
