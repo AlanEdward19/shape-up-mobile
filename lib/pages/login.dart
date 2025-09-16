@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shape_up_app/components/bottom_nav_bar.dart';
+import 'package:shape_up_app/dtos/authService/user_data.dart';
 import 'package:shape_up_app/functions/change_page.dart';
 import 'package:shape_up_app/pages/create_account.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
@@ -259,6 +260,58 @@ class _LoginState extends State<Login> {
 
             var currentUser = FirebaseAuth.instance.currentUser;
             if (currentUser != null) {
+              final creationTime = currentUser.metadata.creationTime;
+              final now = DateTime.now();
+
+              if (creationTime != null && now.difference(creationTime).inSeconds <= 30) {
+                String token = (await currentUser.getIdToken())!;
+                showDialog(
+                  context: context,
+                  barrierDismissible: false, // Impede fechar o popup
+                  builder: (BuildContext context) {
+                    final TextEditingController postalCodeController = TextEditingController();
+                    final TextEditingController countryController = TextEditingController();
+
+                    return AlertDialog(
+                      title: Text('Complete seu cadastro'),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextField(
+                            controller: postalCodeController,
+                            decoration: InputDecoration(labelText: 'Código postal'),
+                          ),
+                          TextField(
+                            controller: countryController,
+                            decoration: InputDecoration(labelText: 'País'),
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        ElevatedButton(
+                          onPressed: () async{
+                            if (postalCodeController.text.isNotEmpty && countryController.text.isNotEmpty) {
+                              Navigator.of(context).pop();
+
+                              UserData userData = UserData(
+                                firstName: currentUser.displayName?.split(' ').first ?? '',
+                                lastName: currentUser.displayName?.split(' ').last ?? '',
+                                country: countryController.text,
+                                postalCode: postalCodeController.text,
+                                birthDay: DateTime.now().toString(),
+                              );
+
+                              await AuthenticationService.enhanceToken(userData, token);
+                            }
+                          },
+                          child: Text('Salvar'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              }
+
               await SocialService.viewProfileAsync(currentUser.uid);
               Navigator.pushAndRemoveUntil(
                 context,
