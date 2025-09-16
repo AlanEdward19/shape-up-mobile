@@ -17,9 +17,9 @@ class UserFoodService {
   }
 
   //Rota para listar comidas
-  static Future<List<FoodDto>> listUserFoods({int page = 1, int rows = 10}) async {
+  static Future<List<FoodDto>> listUserFoods({required String userId, int page = 1, int rows = 10}) async {
     var token = await AuthenticationService.getToken();
-    final uri = Uri.parse('$baseUrl/v1/PublicFood').replace(queryParameters: {
+    final uri = Uri.parse('$baseUrl/v1/PublicFood/list/$userId').replace(queryParameters: {
       'page': page.toString(),
       'rows': rows.toString(),
 
@@ -51,6 +51,7 @@ class UserFoodService {
 
   //Rota para criar uma comida
   static Future<FoodDto> createUserFood({
+    required String userId,
     required String name,
     String? brand,
     String? barCode,
@@ -64,7 +65,7 @@ class UserFoodService {
       "nutritionalInfo": nutritionalInfo.toJson(),
     });
     final response = await http.post(
-      Uri.parse('$baseUrl/v1/UserFood'),
+      Uri.parse('$baseUrl/v1/UserFood/$userId'),
       headers: createHeaders(token),
       body: jsonEncode(body),
     );

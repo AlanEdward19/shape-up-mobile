@@ -17,12 +17,13 @@ class UserNutrition{
 
   //Rota responsável por criar uma nutrição do usuário.
   static Future<UserNutritionDto> createUserNutrition({
+    required String userId,
     required String nutritionManagerId,
     required List<String> dailyMenuIds
   })async{
     final token = await AuthenticationService.getToken();
     final response = await http.post(
-      Uri.parse('$baseUrl/v1/UserNutrition'),
+      Uri.parse('$baseUrl/v1/UserNutrition/$userId'),
       headers: createHeaders(token),
       body: jsonEncode({
         'nutritionManagerId': nutritionManagerId,
@@ -82,13 +83,14 @@ class UserNutrition{
   }
 
   //Rota responsável por listar as nutrições do usuário.
-  static Future<List<UserNutritionDto>> listUserNutrition({
+  static Future<List<UserNutritionDto>> ListManagedUserNutritions({
+    required String managerId,
     int page = 1,
     int rows = 10
 }) async {
     final token = await AuthenticationService.getToken();
     final response = await http.get(
-      Uri.parse('$baseUrl/v1/UserNutrition').replace(queryParameters: {
+      Uri.parse('$baseUrl/v1/UserNutrition/$managerId').replace(queryParameters: {
         'page': page.toString(),
         'rows': rows.toString(),
       }),

@@ -17,10 +17,31 @@ class DailyMenuService{
   }
 
   //Rota para criar um novo cardápio diário.
-  static Future<DailyMenuDto> createDailyMenu() async {
+  static Future<DailyMenuDto> createDailyMenuForOwnUser({
+    DayOfWeek? dayOfWeek,
+    required List<String> mealIds,
+}) async {
     final token = await AuthenticationService.getToken();
     final response = await http.post(
       Uri.parse('$baseUrl/v1/DailyMenu'),
+      headers: createHeaders(token),
+    );
+    if (response.statusCode == 201) {
+      return DailyMenuDto.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to create daily menu');
+    }
+  }
+
+  //Rota para criar um novo cardápio diário para outro usuário.
+  static Future<DailyMenuDto> createDailyMenuForDifferentUser({
+    required String userId,
+    DayOfWeek? dayOfWeek,
+    required List<String> mealIds,
+  }) async {
+    final token = await AuthenticationService.getToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/v1/DailyMenu/$userId'),
       headers: createHeaders(token),
     );
     if (response.statusCode == 201) {
@@ -73,13 +94,13 @@ class DailyMenuService{
   }
 
   //Rota para listar os cardápios diários com base em critérios de pesquisa.
-  static Future<List<DailyMenuDto>> listDailyMenus({
+  static Future<List<DailyMenuDto>> ListDailyMenus(String userId, {
     DayOfWeek? dayOfWeek,
     int page = 1,
     int rows = 10,
   }) async {
     final token = await AuthenticationService.getToken();
-    final uri = Uri.parse('$baseUrl/v1/DailyMenu').replace(queryParameters: {
+    final uri = Uri.parse('$baseUrl/v1/DailyMenu/list/$userId').replace(queryParameters: {
       'dayOfWeek': dayOfWeekToStringMap[dayOfWeek],
       'page': page.toString(),
       'rows': rows.toString(),
@@ -94,6 +115,4 @@ class DailyMenuService{
       throw Exception('Failed to list daily menus');
     }
   }
-
-  //
 }

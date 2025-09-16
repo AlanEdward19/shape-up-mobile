@@ -17,7 +17,7 @@ class MealService{
 
   //Rota responsável por criar uma refeição.
 
-  static Future<MealDto> createMeal({
+  static Future<MealDto> createMealForSameUser({
     required MealType type,
     required String name,
     required List<String> dishIds,
@@ -32,6 +32,34 @@ class MealService{
     });
     final response = await http.post(
       Uri.parse('$baseUrl/v1/Meal'),
+      headers: createHeaders(token),
+      body: body,
+    );
+    if (response.statusCode == 201) {
+      return MealDto.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to create meal');
+    }
+  }
+
+  //Rota responsável por criar uma refeição.
+
+  static Future<MealDto> createMealForDifferentUser({
+    required String userId,
+    required MealType type,
+    required String name,
+    required List<String> dishIds,
+    required List<String> foodIds,
+  }) async {
+    final token = await AuthenticationService.getToken();
+    final body = jsonEncode({
+      'type': type,
+      'name': name,
+      'dishIds': dishIds,
+      'foodIds': foodIds,
+    });
+    final response = await http.post(
+      Uri.parse('$baseUrl/v1/Meal/$userId'),
       headers: createHeaders(token),
       body: body,
     );
@@ -94,10 +122,10 @@ class MealService{
 
   //Rota responsável por listar as refeições do usuário.
 
-  static Future<List<MealDto>> listMeals({int page = 1, int rows = 10}) async {
+  static Future<List<MealDto>> listMeals({required String userId, int page = 1, int rows = 10}) async {
     final token = await AuthenticationService.getToken();
     final response = await http.get(
-      Uri.parse('$baseUrl/v1/Meal').replace(queryParameters: {
+      Uri.parse('$baseUrl/v1//list/$userId').replace(queryParameters: {
         'page': page.toString(),
         'rows': rows.toString(),
       }),

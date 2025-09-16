@@ -31,9 +31,9 @@ class DishService{
   }
 
   //Rota para listar pratos
-  static Future<List<DishDto>> listDishes({int page = 1, int rows = 10}) async {
+  static Future<List<DishDto>> listDishes({required String userId, int page = 1, int rows = 10}) async {
     var token = await AuthenticationService.getToken();
-    final uri = Uri.parse('$baseUrl/v1/PublicFood').replace(queryParameters: {
+    final uri = Uri.parse('$baseUrl/v1/Dish/$userId').replace(queryParameters: {
       'page': page.toString(),
       'rows': rows.toString(),
     });
@@ -50,7 +50,7 @@ class DishService{
   }
 
   // Rota para criar um prato
-  static Future<DishDto> createDish({
+  static Future<DishDto> createDishForSameUser({
     required String name,
     required List<String> foodIds,
   }) async {
@@ -73,7 +73,31 @@ class DishService{
       throw Exception('Failed to create dish: ${response.statusCode} - ${response.body}');
     }
   }
+  // Rota para criar um prato
+  static Future<DishDto> createDishForDifferentUser({
+    required String userId,
+    required String name,
+    required List<String> foodIds,
+  }) async {
+    var token = await AuthenticationService.getToken();
 
+    final body = jsonEncode({
+      'name': name,
+      'foodIds': foodIds,
+    });
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/v1/Dish/$userId'),
+      headers: createHeaders(token),
+      body: body,
+    );
+
+    if (response.statusCode == 201) {
+      return DishDto.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to create dish: ${response.statusCode} - ${response.body}');
+    }
+  }
 
   //Rota para atualizar um prato
   static Future<void> updateDish(String dishId, {

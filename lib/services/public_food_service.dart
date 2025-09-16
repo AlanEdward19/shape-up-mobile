@@ -16,7 +16,7 @@ class PublicFoodService {
     };
   }
   //Lista comidas publicas
-  static Future<List<FoodDto>> getPublicFoods({int page = 1, int rows = 10}) async {
+  static Future<List<FoodDto>> listPublicFoods({int page = 1, int rows = 10}) async {
     var token = await AuthenticationService.getToken();
 
     final uri = Uri.parse('$baseUrl/v1/PublicFood').replace(queryParameters: {
@@ -35,6 +35,49 @@ class PublicFoodService {
       throw Exception('Failed to load foods');
     }
 
+  }
+
+  //Lista comidas publicas
+  static Future<List<FoodDto>> listCreatedByUserPublicFoods({int page = 1, int rows = 10}) async {
+    var token = await AuthenticationService.getToken();
+
+    final uri = Uri.parse('$baseUrl/v1/PublicFood/createdByUser').replace(queryParameters: {
+      'page': page.toString(),
+      'rows': rows.toString(),
+
+    });
+
+    final response = await http.get(
+      uri,
+      headers: createHeaders(token),
+    );
+    if (response.statusCode == 200) {
+      return FoodDto.fromJsonList(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to load foods');
+    }
+
+  }
+
+  //Lista comidas publicas
+  static Future<List<FoodDto>> listUsedByUserPublicFoods({required String userId, int page = 1, int rows = 10}) async {
+    var token = await AuthenticationService.getToken();
+
+    final uri = Uri.parse('$baseUrl/v1/PublicFood/$userId').replace(queryParameters: {
+      'page': page.toString(),
+      'rows': rows.toString(),
+
+    });
+
+    final response = await http.get(
+      uri,
+      headers: createHeaders(token),
+    );
+    if (response.statusCode == 200) {
+      return FoodDto.fromJsonList(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to load foods');
+    }
   }
 
   //Rota para obter detalhes de uma comida pública
