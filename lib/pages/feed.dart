@@ -22,7 +22,7 @@ import '../components/reaction_popup.dart';
 import '../components/story_section.dart';
 import '../widgets/socialService/comments/comments_modal.dart';
 
-const Color kBackgroundColor = Color(0xFF191F2B);
+const Color kBackgroundColor = Color(0xFF101827);
 const Color kPlaceholderColor = Colors.white24;
 const EdgeInsets kDefaultPadding = EdgeInsets.symmetric(
   horizontal: 12.0,
@@ -233,12 +233,14 @@ class _FeedState extends State<Feed> with RouteAware {
     final Offset buttonPosition = buttonBox.localToGlobal(Offset.zero);
     final Size buttonSize = buttonBox.size;
     final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final emojiSize = screenWidth * 0.043;
 
-    const double popupHeight = 70.0;
-    const double popupWidth = 280.0;
+    double popupHeight = screenHeight * 0.1;
+    double popupWidth = screenWidth * 0.2;
 
     double top = buttonPosition.dy - popupHeight - 8;
-    double left = buttonPosition.dx + buttonSize.width / 2 - popupWidth / 2;
+    double left = (buttonPosition.dx + buttonSize.width / 2 - popupWidth / 2) -10;
 
     if (top < kToolbarHeight) {
       top = buttonPosition.dy + buttonSize.height - 100;
@@ -258,6 +260,7 @@ class _FeedState extends State<Feed> with RouteAware {
                 child: Material(
                   type: MaterialType.transparency,
                   child: ReactionPopup(
+                    emojiSize: emojiSize,
                     onEmojiSelected: (reactionType) {
                       Navigator.of(dialogContext).pop();
                       _handleReactionSelected(postId, reactionType);
@@ -396,7 +399,7 @@ class _FeedState extends State<Feed> with RouteAware {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: Colors.white));
+      return const Center(child: CircularProgressIndicator(color: Colors.blue));
     } else if (_error != null) {
       return Center(child: Text(_error!, style: const TextStyle(color: Colors.white)));
     } else {

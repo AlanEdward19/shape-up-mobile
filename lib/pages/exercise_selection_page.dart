@@ -60,7 +60,7 @@ class _ExerciseSelectionPageState extends State<ExerciseSelectionPage> {
       appBar: AppBar(
         title: const Text('Selecionar Exercícios', style: TextStyle(color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: const Color(0xFF191F2B),
+        backgroundColor: const Color(0xFF101827),
         actions: [
       IconButton(
       icon: const Icon(Icons.filter_list),

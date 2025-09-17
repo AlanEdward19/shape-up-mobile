@@ -63,7 +63,7 @@ class ProfessionalManagementService {
     }
   }
 
-  static Future<ClientDto> activateServicePlanFromClientAsync (String clientId, String servicePlanId) async{
+  static Future<ClientDto> activateServicePlanToClientAsync (String clientId, String servicePlanId) async{
     var token = await AuthenticationService.getToken();
 
     final body = jsonEncode({
@@ -80,7 +80,7 @@ class ProfessionalManagementService {
     if (response.statusCode == 200) {
       return ClientDto.fromJson(jsonDecode(response.body));
     } else {
-      throw Exception('Erro ao cancelar plano de serviço do cliente');
+      throw Exception('Erro ao ativar plano de serviço do cliente');
     }
   }
 

@@ -13,7 +13,7 @@ import 'package:shape_up_app/pages/profile.dart';
 import 'package:shape_up_app/services/social_service.dart';
 import 'package:shape_up_app/widgets/socialService/comments/comments_modal.dart';
 
-const Color kBackgroundColor = Color(0xFF191F2B);
+const Color kBackgroundColor = Color(0xFF101827);
 const Color kPlaceholderColor = Colors.white24;
 const EdgeInsets kDefaultPadding = EdgeInsets.symmetric(
   horizontal: 12.0,
@@ -305,10 +305,18 @@ class PostCard extends StatelessWidget {
             contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
           ),
 
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12.0, 10, 12.0, 12.0),
+            child: Text(
+              post.content,
+              style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
+            ),
+          ),
+
           if (post.images.isNotEmpty && post.images[0].isNotEmpty)
             SizedBox(
               height: kPostImageHeight,
-              child: ImageCarouselWithIndicator(imageUrls: post.images),
+              child: ImageCarouselWithIndicator(mediaUrls: post.images),
             )
           else
             const SizedBox(height: 10), // Espaço se não houver imagem
@@ -378,14 +386,6 @@ class PostCard extends StatelessWidget {
                 ),
 
               ],
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12.0, 0, 12.0, 12.0),
-            child: Text(
-              post.content,
-              style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
             ),
           ),
         ],

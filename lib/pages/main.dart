@@ -32,50 +32,41 @@ class Main extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 34),
-        child:  Center(
-
-          child: Column(
-
-            mainAxisSize: MainAxisSize.min,
-
-            children: [
-
-              shapeUpLogo(270),
-
-              SizedBox(height: 45),
-
-              _Carousel(carouselItems: carouselItems),
-
-              SizedBox(height: 130),
-
-              _loginButton(context),
-
-              SizedBox(height: 30),
-
-               Padding(
-                padding: EdgeInsets.only(top: 10), // Espaçamento acima do TextButton
-                child: TextButton(
-                  onPressed: () {
-                    print("Botão Criar conta clicado");
-                    changePageStateful(context, CreateAccount());
-                  },
-                  child: Text('Criar conta',
-                  style: TextStyle(
-                      fontSize: 16,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold
-                  ),),
+        padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.08, vertical: screenHeight * 0.1),
+        child: Column(
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                shapeUpLogo(screenWidth * 0.6),
+                SizedBox(height: screenHeight * 0.03), // Reduced spacing
+                _Carousel(carouselItems: carouselItems),
+              ],
+            ),
+            SizedBox(height: screenHeight * 0.10), // Reduced spacing
+            _loginButton(context),
+            SizedBox(height: screenHeight * 0.02), // Reduced spacing
+            TextButton(
+              onPressed: () {
+                changePageStateful(context, CreateAccount());
+              },
+              child: Text(
+                'Criar conta',
+                style: TextStyle(
+                  fontSize: screenWidth * 0.04,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-
-            ],
-          ),
+            ),
+          ],
         ),
-      )
+      ),
     );
   }
 
@@ -149,44 +140,46 @@ class _CarouselState extends State<_Carousel> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Column(
       children: [
         SizedBox(
-          height: 160,
+          height: screenHeight * 0.2, // Altura proporcional
           child: PageView.builder(
             controller: _pageController,
             itemCount: widget.carouselItems.length,
             itemBuilder: (context, index) {
-              return _buildCarouselItem(widget.carouselItems[index]);
+              return _buildCarouselItem(widget.carouselItems[index], screenWidth);
             },
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: screenHeight * 0.02),
         _buildPageIndicator(),
       ],
     );
   }
 
-  Widget _buildCarouselItem(CarouselItem item) {
+  Widget _buildCarouselItem(CarouselItem item, double screenWidth) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Center(
-            child: Text(
+          child: Text(
             item.title,
-            style: const TextStyle(
-              fontSize: 25,
+            style: TextStyle(
+              fontSize: screenWidth * 0.06, // Tamanho proporcional
               color: Colors.white,
               fontWeight: FontWeight.bold,
+            ),
           ),
-        )),
-
-        const SizedBox(height: 15),
-
+        ),
+        SizedBox(height: screenWidth * 0.03),
         Text(
           item.description,
-          style: const TextStyle(
-            fontSize: 13,
+          style: TextStyle(
+            fontSize: screenWidth * 0.035,
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),

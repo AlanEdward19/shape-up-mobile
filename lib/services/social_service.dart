@@ -35,7 +35,7 @@ class SocialService {
       headers: createHeaders(token),
     );
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return ProfileDto.fromJson(jsonDecode(response.body));
     } else {
       throw Exception("Erro ao carregar perfil");
@@ -67,7 +67,7 @@ class SocialService {
     final response = await http.patch(
       Uri.parse('$baseUrl/v1/Profile/EditProfile'),
       headers: createHeaders(token),
-      body: jsonEncode({'Gender': gender, 'BirthDate': birthDate, 'Bio': bio}),
+      body: jsonEncode({ 'Gender': gender?.index, 'BirthDate': birthDate, 'Bio': bio}),
     );
 
     if (response.statusCode != 200) {

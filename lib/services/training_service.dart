@@ -163,6 +163,7 @@ class TrainingService {
     String name,
     WorkoutVisibility visibility,
     List<String> exercises,
+      int restingTimeInSeconds,
   ) async {
     var token = await AuthenticationService.getToken();
 
@@ -170,6 +171,7 @@ class TrainingService {
       'name': name,
       'visibility': visibility.index,
       'exercises': exercises,
+      'restingTimeInSeconds': restingTimeInSeconds
     });
 
     final response = await http.put(

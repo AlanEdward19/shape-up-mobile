@@ -7,9 +7,9 @@ enum NotificationTopic {
 }
 
 Map<int, NotificationTopic> notificationTopicMap = {
-  0: NotificationTopic.Message,
-  1: NotificationTopic.FriendRequest,
-  2: NotificationTopic.Reaction,
-  3: NotificationTopic.NewFollower,
-  4: NotificationTopic.Comment
+  1: NotificationTopic.Message,
+  2: NotificationTopic.FriendRequest,
+  3: NotificationTopic.Reaction,
+  4: NotificationTopic.NewFollower,
+  5: NotificationTopic.Comment
 };

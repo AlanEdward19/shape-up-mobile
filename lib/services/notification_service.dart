@@ -22,7 +22,7 @@ class NotificationService {
     };
   }
 
-  static late HubConnection _hubConnection;
+  static HubConnection? _hubConnection;
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
   FlutterLocalNotificationsPlugin();
 
@@ -45,6 +45,13 @@ class NotificationService {
   }
 
   static Future<void> initializeConnection(String profileId) async {
+    if (_hubConnection != null &&
+        (_hubConnection!.state == HubConnectionState.connected ||
+            _hubConnection!.state == HubConnectionState.connecting)) {
+      print('A conexão já está aberta ou em processo de conexão.');
+      return;
+    }
+
     _hubConnection = HubConnectionBuilder()
         .withUrl(
       '$baseUrl/notifications?userId=$profileId',
@@ -54,13 +61,22 @@ class NotificationService {
         },
       ),
     )
+        .withAutomaticReconnect() // Habilita reconexão automática
         .build();
 
-    _hubConnection.onclose((error) {
+    _hubConnection!.onreconnecting((error) {
+      print('Tentando reconectar ao SignalR: $error');
+    });
+
+    _hubConnection!.onreconnected((connectionId) {
+      print('Reconexão bem-sucedida ao SignalR. ConnectionId: $connectionId');
+    });
+
+    _hubConnection!.onclose((error) {
       print('Conexão encerrada: $error');
     });
 
-    _hubConnection.on('ReceiveNotification', (arguments) {
+    _hubConnection!.on('ReceiveNotification', (arguments) {
       if (arguments != null && arguments.isNotEmpty) {
         try {
           final notification = NotificationDto.fromJson(
@@ -77,8 +93,12 @@ class NotificationService {
       }
     });
 
-    await _hubConnection.start();
-    print('Conexão com o SignalR estabelecida.');
+    try {
+      await _hubConnection!.start();
+      print('Conexão com o SignalR estabelecida.');
+    } catch (e) {
+      print('Erro ao iniciar a conexão com o SignalR: $e');
+    }
   }
 
   static Future<void> showNotification(NotificationDto notification) async {
@@ -108,8 +128,8 @@ class NotificationService {
   }
 
   static Future<void> stopConnection() async {
-    if (_hubConnection.state == HubConnectionState.connected) {
-      await _hubConnection.stop();
+    if (_hubConnection!.state == HubConnectionState.connected) {
+      await _hubConnection!.stop();
     }
     print('Conexão com o SignalR encerrada.');
   }

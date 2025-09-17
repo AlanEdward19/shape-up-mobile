@@ -202,7 +202,7 @@ class _WorkoutSessionState extends State<WorkoutSession> {
             widget.workout.name,
             style: const TextStyle(color: Colors.white),
           ),
-          backgroundColor: const Color(0xFF191F2B),
+          backgroundColor: const Color(0xFF101827),
           iconTheme: const IconThemeData(color: Colors.white),
           actions: [
             IconButton(
@@ -432,15 +432,6 @@ class _WorkoutSessionState extends State<WorkoutSession> {
                                                 _exerciseSeries[exercise.id]!
                                                     .removeAt(seriesIndex);
                                               });
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    'Série ${seriesIndex + 1} removida!',
-                                                  ),
-                                                ),
-                                              );
                                             },
                                             child: Container(
                                               alignment: Alignment.center,
