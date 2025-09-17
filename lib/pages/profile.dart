@@ -278,7 +278,7 @@ class _ProfilePageState extends State<Profile> {
                                   if (!profile.isFriend && friendRequest.profileId != '' && friendRequest.status == FriendRequestStatus.Pending)
                                     _buildCancelRequestButton(friendRequest),
                                   if (!profile.isFriend && friendRequest.profileId == '' && friendRequest.status != FriendRequestStatus.PendingResponse)
-                                    _buildSendRequestButton(friendRequest),
+                                    _buildSendRequestButton(new FriendRequestDto(profile.id, FriendRequestStatus.Pending, null)),
                                 ],
                               ),
                               const SizedBox(height: 15),
