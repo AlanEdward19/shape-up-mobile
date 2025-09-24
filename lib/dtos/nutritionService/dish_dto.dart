@@ -1,25 +1,29 @@
 import 'food_dto.dart';
+import 'dish_ingredient_dto.dart';
 
 class DishDto {
   final String id;
   final String createdBy;
+  final String userId;
   final String name;
-  final List<FoodDto> foods;
+  final List<DishIngredientDto> ingredients;
 
   DishDto({
     required this.id,
     required this.createdBy,
+    required this.userId,
     required this.name,
-    required this.foods,
+    required this.ingredients,
   });
 
   factory DishDto.fromJson(Map<String, dynamic> json) {
     return DishDto(
       id: json['id'] ?? '',
       createdBy: json['createdBy'] ?? '',
+      userId: json['userId'] ?? '',
       name: json['name'],
-      foods: (json['foods'] as List<dynamic>)
-          .map((item) => FoodDto.fromJson(item))
+      ingredients: (json['ingredients'] as List<dynamic>)
+          .map((item) => DishIngredientDto.fromJson(item))
           .toList(),
     );
   }
@@ -28,8 +32,9 @@ class DishDto {
     return {
       'id': id,
       'createdBy': createdBy,
+      'userId': userId,
       'name': name,
-      'foods': foods.map((f) => f.toJson()).toList(),
+      'ingredients': ingredients.map((f) => f.toJson()).toList(),
     };
   }
 
@@ -37,8 +42,9 @@ class DishDto {
     return DishDto(
       id: id,
       createdBy: createdBy,
+      userId: userId,
       name: name,
-      foods: foods.map((f) => f.clone()).toList(),
+      ingredients: ingredients.map((f) => f.clone()).toList(),
     );
   }
 

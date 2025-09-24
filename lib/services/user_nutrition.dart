@@ -22,13 +22,14 @@ class UserNutrition{
     required List<String> dailyMenuIds
   })async{
     final token = await AuthenticationService.getToken();
+    final body = jsonEncode({
+      'nutritionManagerId': nutritionManagerId,
+      'dailyMenuIds': dailyMenuIds
+    });
     final response = await http.post(
       Uri.parse('$baseUrl/v1/UserNutrition/$userId'),
       headers: createHeaders(token),
-      body: jsonEncode({
-        'nutritionManagerId': nutritionManagerId,
-        'dailyMenuIds': dailyMenuIds
-      }),
+      body: body,
     );
     if (response.statusCode == 201) {
       return UserNutritionDto.fromJson(jsonDecode(response.body));
@@ -72,7 +73,7 @@ class UserNutrition{
   static Future<UserNutritionDto> getUserNutritionDetails(String userNutritionId) async {
     final token = await AuthenticationService.getToken();
     final response = await http.get(
-      Uri.parse('$baseUrl/v1/UserNutrition/$userNutritionId'),
+      Uri.parse('$baseUrl/v1/UserNutrition/details/$userNutritionId'),
       headers: createHeaders(token),
     );
     if (response.statusCode == 200) {
@@ -83,16 +84,16 @@ class UserNutrition{
   }
 
   //Rota responsável por listar as nutrições do usuário.
-  static Future<List<UserNutritionDto>> ListManagedUserNutritions({
+  static Future<List<UserNutritionDto>> listManagedUserNutritions({
     required String managerId,
     int page = 1,
-    int rows = 10
+    int size = 10
 }) async {
     final token = await AuthenticationService.getToken();
     final response = await http.get(
-      Uri.parse('$baseUrl/v1/UserNutrition/$managerId').replace(queryParameters: {
+      Uri.parse('$baseUrl/v1/UserNutrition/list/$managerId').replace(queryParameters: {
         'page': page.toString(),
-        'rows': rows.toString(),
+        'rows': size.toString(),
       }),
       headers: createHeaders(token),
     );

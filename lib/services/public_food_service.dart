@@ -63,7 +63,7 @@ class PublicFoodService {
   static Future<List<FoodDto>> listUsedByUserPublicFoods({required String userId, int page = 1, int rows = 10}) async {
     var token = await AuthenticationService.getToken();
 
-    final uri = Uri.parse('$baseUrl/v1/PublicFood/$userId').replace(queryParameters: {
+    final uri = Uri.parse('$baseUrl/v1/PublicFood/usedByUser/$userId').replace(queryParameters: {
       'page': page.toString(),
       'rows': rows.toString(),
 
@@ -84,7 +84,7 @@ class PublicFoodService {
   static Future<FoodDto> getPublicFoodDetails(String foodId) async {
     var token = await AuthenticationService.getToken();
     final response = await http.get(
-      Uri.parse('$baseUrl/v1/PublicFood/$foodId'),
+      Uri.parse('$baseUrl/v1/PublicFood/details/$foodId'),
       headers: createHeaders(token),
     );
     if (response.statusCode == 200) {
@@ -97,7 +97,7 @@ class PublicFoodService {
   //Rota para listar comidas públicas não revisadas
   static Future<List<FoodDto>> listUnrevisedPublicFoods({int page = 1, int rows = 10}) async {
     var token = await AuthenticationService.getToken();
-    final uri = Uri.parse('$baseUrl/v1/PublicFood').replace(queryParameters: {
+    final uri = Uri.parse('$baseUrl/v1/PublicFood/listUnrevisedFoods').replace(queryParameters: {
       'page': page.toString(),
       'rows': rows.toString(),
 
@@ -117,7 +117,7 @@ class PublicFoodService {
   //Rota para listar comidas públicas revisadas
   static Future<List<FoodDto>> listRevisedPublicFoods({int page = 1, int rows = 10}) async {
     var token = await AuthenticationService.getToken();
-    final uri = Uri.parse('$baseUrl/v1/PublicFood').replace(queryParameters: {
+    final uri = Uri.parse('$baseUrl/v1/PublicFood/listRevisedFoods').replace(queryParameters: {
       'page': page.toString(),
       'rows': rows.toString(),
 
@@ -135,6 +135,7 @@ class PublicFoodService {
 
   //Rota para criar uma comida pública
   static Future<FoodDto> createPublicFood({
+    required String userId,
     required String name,
     String? brand,
     String? barCode,
@@ -204,7 +205,7 @@ class PublicFoodService {
   static Future<void> approvePublicFood(String foodId) async {
     var token = await AuthenticationService.getToken();
     final response = await http.put(
-      Uri.parse('$baseUrl/v1/PublicFood/$foodId/approve'),
+      Uri.parse('$baseUrl/v1/PublicFood/approve/$foodId'),
       headers: createHeaders(token),
     );
     if (response.statusCode != 204) {

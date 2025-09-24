@@ -2,8 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
-import 'package:shape_up_app/dtos/nutritionService/food_dto.dart';
-
+import '../dtos/nutritionService/ingredient_input_dto.dart';
 import '../dtos/nutritionService/dish_dto.dart';
 
 class DishService{
@@ -20,7 +19,7 @@ class DishService{
   static Future<DishDto> getDishDetails(String dishId) async {
     var token = await AuthenticationService.getToken();
     final response = await http.get(
-      Uri.parse('$baseUrl/v1/Dish/$dishId'),
+      Uri.parse('$baseUrl/v1/Dish/details/$dishId'),
       headers: createHeaders(token),
     );
     if (response.statusCode == 200) {
@@ -33,7 +32,7 @@ class DishService{
   //Rota para listar pratos
   static Future<List<DishDto>> listDishes({required String userId, int page = 1, int rows = 10}) async {
     var token = await AuthenticationService.getToken();
-    final uri = Uri.parse('$baseUrl/v1/Dish/$userId').replace(queryParameters: {
+    final uri = Uri.parse('$baseUrl/v1/Dish/list/$userId').replace(queryParameters: {
       'page': page.toString(),
       'rows': rows.toString(),
     });
@@ -52,13 +51,13 @@ class DishService{
   // Rota para criar um prato
   static Future<DishDto> createDishForSameUser({
     required String name,
-    required List<String> foodIds,
+    required List<IngredientInputDto> ingredients,
   }) async {
     var token = await AuthenticationService.getToken();
 
     final body = jsonEncode({
       'name': name,
-      'foodIds': foodIds,
+      'ingredients': ingredients.map((i) => i.toJson()).toList(),
     });
 
     final response = await http.post(
@@ -77,13 +76,13 @@ class DishService{
   static Future<DishDto> createDishForDifferentUser({
     required String userId,
     required String name,
-    required List<String> foodIds,
+    required List<IngredientInputDto> ingredients
   }) async {
     var token = await AuthenticationService.getToken();
 
     final body = jsonEncode({
       'name': name,
-      'foodIds': foodIds,
+      'ingredients': ingredients.map((i) => i.toJson()).toList(),
     });
 
     final response = await http.post(
@@ -102,13 +101,13 @@ class DishService{
   //Rota para atualizar um prato
   static Future<void> updateDish(String dishId, {
     required String name,
-    required List<String> foodIds,
+    required List<IngredientInputDto> ingredients
   }) async {
     var token = await AuthenticationService.getToken();
 
     final body = jsonEncode({
       'name': name,
-      'foodIds': foodIds,
+      'ingredients': ingredients.map((i) => i.toJson()).toList(),
     });
 
     final response = await http.put(

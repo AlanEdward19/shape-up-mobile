@@ -19,7 +19,7 @@ class UserFoodService {
   //Rota para listar comidas
   static Future<List<FoodDto>> listUserFoods({required String userId, int page = 1, int rows = 10}) async {
     var token = await AuthenticationService.getToken();
-    final uri = Uri.parse('$baseUrl/v1/PublicFood/list/$userId').replace(queryParameters: {
+    final uri = Uri.parse('$baseUrl/v1/UserFood/list/$userId').replace(queryParameters: {
       'page': page.toString(),
       'rows': rows.toString(),
 
@@ -39,7 +39,7 @@ class UserFoodService {
   static Future<FoodDto> getUserFoodDetails(String foodId) async {
     var token = await AuthenticationService.getToken();
     final response = await http.get(
-      Uri.parse('$baseUrl/v1/UserFood/$foodId'),
+      Uri.parse('$baseUrl/v1/UserFood/details/$foodId'),
       headers: createHeaders(token),
     );
     if (response.statusCode == 200) {
@@ -67,7 +67,7 @@ class UserFoodService {
     final response = await http.post(
       Uri.parse('$baseUrl/v1/UserFood/$userId'),
       headers: createHeaders(token),
-      body: jsonEncode(body),
+      body: body,
     );
     if (response.statusCode == 201) {
       return FoodDto.fromJson(jsonDecode(response.body));
@@ -116,15 +116,13 @@ class UserFoodService {
   }
 
   //Rota para aprovar uma comida, e marcar como revisada
-  static Future<FoodDto> approveUserFood(String foodId) async {
+  static Future<void> approveUserFood(String foodId) async {
     var token = await AuthenticationService.getToken();
     final response = await http.put(
       Uri.parse('$baseUrl/v1/UserFood/approve/$foodId'),
       headers: createHeaders(token),
     );
-    if (response.statusCode == 204) {
-      return FoodDto.fromJson(jsonDecode(response.body));
-    } else {
+    if (response.statusCode != 204) {
       throw Exception('Failed to approve food');
     }
   }
@@ -141,11 +139,14 @@ class UserFoodService {
     }
   }
 
-  //Rota para buscar uma comida privada pelo código de barras
+  // Rota para buscar uma comida privada pelo código de barras
   static Future<FoodDto> getUserFoodByBarcode(String barcode) async {
     var token = await AuthenticationService.getToken();
+    final uri = Uri.parse('$baseUrl/v1/UserFood/byBarCode').replace(
+      queryParameters: {'barCode': barcode},
+    );
     final response = await http.get(
-      Uri.parse('$baseUrl/v1/UserFood/byBarCode/$barcode'),
+      uri,
       headers: createHeaders(token),
     );
     if (response.statusCode == 200) {

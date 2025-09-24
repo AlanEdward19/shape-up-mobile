@@ -22,9 +22,14 @@ class DailyMenuService{
     required List<String> mealIds,
 }) async {
     final token = await AuthenticationService.getToken();
+    final body = jsonEncode({
+      'dayOfWeek': dayOfWeekToStringMap[dayOfWeek],
+      'mealIds': mealIds,
+    });
     final response = await http.post(
       Uri.parse('$baseUrl/v1/DailyMenu'),
       headers: createHeaders(token),
+      body: body,
     );
     if (response.statusCode == 201) {
       return DailyMenuDto.fromJson(jsonDecode(response.body));
@@ -40,9 +45,14 @@ class DailyMenuService{
     required List<String> mealIds,
   }) async {
     final token = await AuthenticationService.getToken();
+    final body = jsonEncode({
+      'dayOfWeek': dayOfWeekToStringMap[dayOfWeek],
+      'mealIds': mealIds,
+    });
     final response = await http.post(
       Uri.parse('$baseUrl/v1/DailyMenu/$userId'),
       headers: createHeaders(token),
+      body: body,
     );
     if (response.statusCode == 201) {
       return DailyMenuDto.fromJson(jsonDecode(response.body));
@@ -77,13 +87,16 @@ class DailyMenuService{
         'mealIds': mealIds,
       }),
     );
+    if (response.statusCode != 204) {
+      throw Exception('Failed to edit daily menu');
+    }
   }
 
   //Rota para obter os detalhes de um cardápio diário específico.
   static Future<DailyMenuDto> getDailyMenuDetails(String dailyMenuId) async {
     final token = await AuthenticationService.getToken();
     final response = await http.get(
-      Uri.parse('$baseUrl/v1/DailyMenu/$dailyMenuId'),
+      Uri.parse('$baseUrl/v1/DailyMenu/details/$dailyMenuId'),
       headers: createHeaders(token),
     );
     if (response.statusCode == 200) {
@@ -94,16 +107,16 @@ class DailyMenuService{
   }
 
   //Rota para listar os cardápios diários com base em critérios de pesquisa.
-  static Future<List<DailyMenuDto>> ListDailyMenus(String userId, {
+  static Future<List<DailyMenuDto>> listDailyMenus(String userId, {
     DayOfWeek? dayOfWeek,
     int page = 1,
-    int rows = 10,
+    int size = 10,
   }) async {
     final token = await AuthenticationService.getToken();
     final uri = Uri.parse('$baseUrl/v1/DailyMenu/list/$userId').replace(queryParameters: {
       'dayOfWeek': dayOfWeekToStringMap[dayOfWeek],
       'page': page.toString(),
-      'rows': rows.toString(),
+      'rows': size.toString(),
     });
     final response = await http.get(
       uri,

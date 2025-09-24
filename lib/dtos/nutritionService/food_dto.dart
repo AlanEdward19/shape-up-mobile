@@ -3,6 +3,7 @@ import 'nutritional_info_dto.dart';
 class FoodDto {
   final String id;
   final String createdBy;
+  final String userId;
   final String name;
   final String? brand;
   final String? barCode;
@@ -12,6 +13,7 @@ class FoodDto {
   FoodDto({
     required this.id,
     required this.createdBy,
+    required this.userId,
     required this.name,
     this.brand,
     this.barCode,
@@ -23,6 +25,7 @@ class FoodDto {
     return FoodDto(
       id: json['id'] ?? '',
       createdBy: json['createdBy'] ?? '',
+      userId: json['userId'] ?? '',
       name: json['name'],
       brand: json['brand'],
       barCode: json['barCode'],
@@ -35,6 +38,7 @@ class FoodDto {
     return {
       'id': id,
       'createdBy': createdBy,
+      'userId': userId,
       'name': name,
       if (brand != null) 'brand': brand,
       if (barCode != null) 'barCode': barCode,
@@ -47,6 +51,7 @@ class FoodDto {
     return FoodDto(
       id: id,
       createdBy: createdBy,
+      userId: userId,
       name: name,
       brand: brand,
       barCode: barCode,

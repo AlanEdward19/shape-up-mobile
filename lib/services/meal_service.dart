@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 import '../dtos/nutritionService/meal_dto.dart';
 import '../enums/nutritionService/meal_type.dart';
+import '../dtos/nutritionService/ingredient_input_dto.dart';
 
 class MealService{
   static final String baseUrl = dotenv.env['NUTRITION_SERVICE_BASE_URL']!;
@@ -21,14 +22,14 @@ class MealService{
     required MealType type,
     required String name,
     required List<String> dishIds,
-    required List<String> foodIds,
+    required List<IngredientInputDto> ingredients,
 }) async {
     final token = await AuthenticationService.getToken();
     final body = jsonEncode({
       'type': type,
       'name': name,
       'dishIds': dishIds,
-      'foodIds': foodIds,
+      'ingredients': ingredients.map((i) => i.toJson()).toList(),
     });
     final response = await http.post(
       Uri.parse('$baseUrl/v1/Meal'),
@@ -49,19 +50,19 @@ class MealService{
     required MealType type,
     required String name,
     required List<String> dishIds,
-    required List<String> foodIds,
+    required List<IngredientInputDto> ingredients,
   }) async {
     final token = await AuthenticationService.getToken();
     final body = jsonEncode({
       'type': type,
       'name': name,
       'dishIds': dishIds,
-      'foodIds': foodIds,
+      'ingredients': ingredients.map((i) => i.toJson()).toList(),
     });
     final response = await http.post(
-      Uri.parse('$baseUrl/v1/Meal/$userId'),
-      headers: createHeaders(token),
-      body: body,
+        Uri.parse('$baseUrl/v1/Meal/$userId'),
+        headers: createHeaders(token),
+        body: body,
     );
     if (response.statusCode == 201) {
       return MealDto.fromJson(jsonDecode(response.body));
@@ -87,14 +88,14 @@ class MealService{
     required String name,
     required MealType type,
     required List<String> dishIds,
-    required List<String> foodIds,
+    required List<IngredientInputDto> ingredients,
   }) async {
     final token = await AuthenticationService.getToken();
     final body = jsonEncode({
       'name': name,
       'type': type,
       'dishIds': dishIds,
-      'foodIds': foodIds,
+      'ingredients': ingredients.map((i) => i.toJson()).toList(),
     });
     final response = await http.put(
       Uri.parse('$baseUrl/v1/Meal/$mealId'),
@@ -110,7 +111,7 @@ class MealService{
   static Future<MealDto> getMealDetails(String mealId) async {
     final token = await AuthenticationService.getToken();
     final response = await http.get(
-      Uri.parse('$baseUrl/v1/Meal/$mealId'),
+      Uri.parse('$baseUrl/v1/Meal/details/$mealId'),
       headers: createHeaders(token),
     );
     if (response.statusCode == 200) {
@@ -122,12 +123,12 @@ class MealService{
 
   //Rota responsável por listar as refeições do usuário.
 
-  static Future<List<MealDto>> listMeals({required String userId, int page = 1, int rows = 10}) async {
+  static Future<List<MealDto>> listMeals({required String userId, int page = 1, int size = 10}) async {
     final token = await AuthenticationService.getToken();
     final response = await http.get(
-      Uri.parse('$baseUrl/v1//list/$userId').replace(queryParameters: {
+      Uri.parse('$baseUrl/v1/list/$userId').replace(queryParameters: {
         'page': page.toString(),
-        'rows': rows.toString(),
+        'rows': size.toString(),
       }),
       headers: createHeaders(token),
     );
