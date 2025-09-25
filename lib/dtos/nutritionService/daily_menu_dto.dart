@@ -1,17 +1,18 @@
 import 'package:shape_up_app/dtos/nutritionService/meal_dto.dart';
+import 'package:shape_up_app/enums/nutritionService/DayOfWeek.dart';
 
 class DailyMenuDto {
   final String id;
   final String createdBy;
   final String userId;
-  final String? dayOfWeek; // Pode ser null (opcional)
+  final DayOfWeek? dayOfWeek;
   final List<MealDto> meals;
 
   DailyMenuDto({
     required this.id,
     required this.createdBy,
     required this.userId,
-    required this.dayOfWeek,
+    this.dayOfWeek,
     required this.meals,
   });
 
@@ -20,7 +21,7 @@ class DailyMenuDto {
       id: json['id'] ?? '',
       createdBy: json['createdBy'] ?? '',
       userId: json['userId'] ?? '',
-      dayOfWeek: json['dayOfWeek'], // pode ser null
+      dayOfWeek: json['dayOfWeek'] != null ? DayOfWeek.values[json['dayOfWeek']] : null,
       meals: (json['meals'] as List<dynamic>)
           .map((mealJson) => MealDto.fromJson(mealJson))
           .toList(),
@@ -32,8 +33,7 @@ class DailyMenuDto {
       'id': id,
       'createdBy': createdBy,
       'userId': userId,
-      if (dayOfWeek != null)
-      'dayOfWeek': dayOfWeek,
+      if (dayOfWeek != null) 'dayOfWeek': dayOfWeek!.index,
       'meals': meals.map((meal) => meal.toJson()).toList(),
     };
   }
