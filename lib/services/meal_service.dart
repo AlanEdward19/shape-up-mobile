@@ -26,7 +26,7 @@ class MealService{
 }) async {
     final token = await AuthenticationService.getToken();
     final body = jsonEncode({
-      'type': type,
+      'type': mealTypeReverseMap[type],
       'name': name,
       'dishIds': dishIds,
       'ingredients': ingredients.map((i) => i.toJson()).toList(),
@@ -54,7 +54,7 @@ class MealService{
   }) async {
     final token = await AuthenticationService.getToken();
     final body = jsonEncode({
-      'type': type,
+      'type': mealTypeReverseMap[type],
       'name': name,
       'dishIds': dishIds,
       'ingredients': ingredients.map((i) => i.toJson()).toList(),
@@ -93,7 +93,7 @@ class MealService{
     final token = await AuthenticationService.getToken();
     final body = jsonEncode({
       'name': name,
-      'type': type,
+      'type': mealTypeReverseMap[type],
       'dishIds': dishIds,
       'ingredients': ingredients.map((i) => i.toJson()).toList(),
     });
@@ -126,7 +126,7 @@ class MealService{
   static Future<List<MealDto>> listMeals({required String userId, int page = 1, int size = 10}) async {
     final token = await AuthenticationService.getToken();
     final response = await http.get(
-      Uri.parse('$baseUrl/v1/list/$userId').replace(queryParameters: {
+      Uri.parse('$baseUrl/v1/Meal/list/$userId').replace(queryParameters: {
         'page': page.toString(),
         'rows': size.toString(),
       }),

@@ -6,7 +6,7 @@ import 'package:shape_up_app/services/authentication_service.dart';
 
 import '../dtos/nutritionService/daily_menu_dto.dart';
 
-class DailyMenuService{
+class DailyMenuService {
   static final String baseUrl = dotenv.env['NUTRITION_SERVICE_BASE_URL']!;
 
   static Map<String, String> createHeaders(String token) {
@@ -16,16 +16,18 @@ class DailyMenuService{
     };
   }
 
-  //Rota para criar um novo cardápio diário.
   static Future<DailyMenuDto> createDailyMenuForOwnUser({
     DayOfWeek? dayOfWeek,
     required List<String> mealIds,
-}) async {
+  }) async {
     final token = await AuthenticationService.getToken();
-    final body = jsonEncode({
-      'dayOfWeek': dayOfWeekToStringMap[dayOfWeek],
+    final Map<String, dynamic> requestBody = {
       'mealIds': mealIds,
-    });
+    };
+    if (dayOfWeek != null) {
+      requestBody['dayOfWeek'] = dayOfWeek.index;
+    }
+    final body = jsonEncode(requestBody);
     final response = await http.post(
       Uri.parse('$baseUrl/v1/DailyMenu'),
       headers: createHeaders(token),
@@ -38,17 +40,19 @@ class DailyMenuService{
     }
   }
 
-  //Rota para criar um novo cardápio diário para outro usuário.
   static Future<DailyMenuDto> createDailyMenuForDifferentUser({
     required String userId,
     DayOfWeek? dayOfWeek,
     required List<String> mealIds,
   }) async {
     final token = await AuthenticationService.getToken();
-    final body = jsonEncode({
-      'dayOfWeek': dayOfWeekToStringMap[dayOfWeek],
+    final Map<String, dynamic> requestBody = {
       'mealIds': mealIds,
-    });
+    };
+    if (dayOfWeek != null) {
+      requestBody['dayOfWeek'] = dayOfWeek.index;
+    }
+    final body = jsonEncode(requestBody);
     final response = await http.post(
       Uri.parse('$baseUrl/v1/DailyMenu/$userId'),
       headers: createHeaders(token),
@@ -61,7 +65,6 @@ class DailyMenuService{
     }
   }
 
-  //Rota para deletar um cardápio diário.
   static Future<void> deleteDailyMenu(String dailyMenuId) async {
     final token = await AuthenticationService.getToken();
     final response = await http.delete(
@@ -73,26 +76,28 @@ class DailyMenuService{
     }
   }
 
-  //Rota para editar um cardápio diário.
   static Future<void> editDailyMenu(String dailyMenuId, {
     DayOfWeek? dayOfWeek,
     required List<String> mealIds,
   }) async {
     final token = await AuthenticationService.getToken();
+    final Map<String, dynamic> requestBody = {
+      'mealIds': mealIds,
+    };
+    if (dayOfWeek != null) {
+      requestBody['dayOfWeek'] = dayOfWeek.index;
+    }
+    final body = jsonEncode(requestBody);
     final response = await http.put(
       Uri.parse('$baseUrl/v1/DailyMenu/$dailyMenuId'),
       headers: createHeaders(token),
-      body: jsonEncode({
-        'dayOfWeek': dayOfWeekToStringMap[dayOfWeek],
-        'mealIds': mealIds,
-      }),
+      body: body,
     );
     if (response.statusCode != 204) {
       throw Exception('Failed to edit daily menu');
     }
   }
 
-  //Rota para obter os detalhes de um cardápio diário específico.
   static Future<DailyMenuDto> getDailyMenuDetails(String dailyMenuId) async {
     final token = await AuthenticationService.getToken();
     final response = await http.get(
@@ -106,18 +111,20 @@ class DailyMenuService{
     }
   }
 
-  //Rota para listar os cardápios diários com base em critérios de pesquisa.
   static Future<List<DailyMenuDto>> listDailyMenus(String userId, {
     DayOfWeek? dayOfWeek,
     int page = 1,
     int size = 10,
   }) async {
     final token = await AuthenticationService.getToken();
-    final uri = Uri.parse('$baseUrl/v1/DailyMenu/list/$userId').replace(queryParameters: {
-      'dayOfWeek': dayOfWeekToStringMap[dayOfWeek],
+    final queryParameters = {
       'page': page.toString(),
       'rows': size.toString(),
-    });
+    };
+    if (dayOfWeek != null) {
+      queryParameters['dayOfWeek'] = dayOfWeek.index.toString();
+    }
+    final uri = Uri.parse('$baseUrl/v1/DailyMenu/list/$userId').replace(queryParameters: queryParameters);
     final response = await http.get(
       uri,
       headers: createHeaders(token),

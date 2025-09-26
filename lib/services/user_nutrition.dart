@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shape_up_app/dtos/nutritionService/user_nutrition_dto.dart';
-import 'package:shape_up_app/enums/nutritionService/DayOfWeek.dart';
 import 'package:shape_up_app/services/authentication_service.dart';
 
 class UserNutrition{
@@ -102,6 +101,25 @@ class UserNutrition{
       return List<UserNutritionDto>.from(l.map((model)=> UserNutritionDto.fromJson(model)));
     } else {
       throw Exception('Failed to list user nutritions');
+    }
+  }
+
+  static Future<UserNutritionDto?> getUserNutritionByUserId(String userId) async {
+    final token = await AuthenticationService.getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/v1/UserNutrition/user/$userId'),
+      headers: createHeaders(token),
+    );
+
+    if (response.statusCode == 200) {
+      // Se encontrou, retorna o DTO
+      return UserNutritionDto.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 404) {
+      return null;
+    } else {
+      print('Failed to get user nutrition. Status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      throw Exception('Failed to get user nutrition');
     }
   }
 }
