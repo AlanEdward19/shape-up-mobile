@@ -45,6 +45,8 @@ class _NutritionState extends State<Nutrition>
   bool _isDeletingMeal = false;
   bool _isDeletingDailyMenu = false;
 
+
+
   @override
   void initState() {
     super.initState();
@@ -54,6 +56,25 @@ class _NutritionState extends State<Nutrition>
     _myFoodsFuture = _fetchMyFoods();
     _myDishesFuture = _fetchMyDishes();
     _myMealsFuture = _fetchMyMeals();
+  }
+
+  Future<void> _refreshAllData() async {
+    // Usamos Future.wait para buscar tudo em paralelo e otimizar o tempo.
+    await Future.wait([
+      _fetchDailyMenus(),
+      _fetchMyFoods(),
+      _fetchMyDishes(),
+      _fetchMyMeals(),
+    ]);
+
+    // Após todas as buscas terminarem, recriamos os Futures para que os
+    // FutureBuilders na tela sejam reconstruídos com os novos dados.
+    setState(() {
+      _myDailyMenusFuture = _fetchDailyMenus();
+      _myFoodsFuture = _fetchMyFoods();
+      _myDishesFuture = _fetchMyDishes();
+      _myMealsFuture = _fetchMyMeals();
+    });
   }
   Future<void> _consolidateDailyMenus() async {
     final bool? confirmed = await showDialog<bool>(
@@ -880,7 +901,10 @@ class _NutritionState extends State<Nutrition>
     );
   }
   Widget _buildMyNutritionSection() {
-    return ListView(
+    return RefreshIndicator(color: Colors.white,
+        backgroundColor: const Color(0xFF101827).withOpacity(0.8),
+        onRefresh: _refreshAllData,
+        child: ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
         // --- Seção Minhas Comidas ---
@@ -978,7 +1002,8 @@ class _NutritionState extends State<Nutrition>
         ),
         const SizedBox(height: 16),
       ],
-    );
+    ));
+
   }
 
   Widget _buildTutorialSection() {
