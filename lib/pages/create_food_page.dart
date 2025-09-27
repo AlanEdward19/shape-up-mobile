@@ -1,7 +1,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shape_up_app/dtos/nutritionService/food_dto.dart';
 import 'package:shape_up_app/dtos/nutritionService/nutritional_info_dto.dart';
 import 'package:shape_up_app/dtos/nutritionService/macronutrients_dto.dart';
 import 'package:shape_up_app/dtos/nutritionService/carbohydrates_dto.dart';
@@ -9,7 +8,8 @@ import 'package:shape_up_app/dtos/nutritionService/fats_dto.dart';
 import 'package:shape_up_app/dtos/nutritionService/micronutrient_details_dto.dart';
 import 'package:shape_up_app/dtos/nutritionService/sugar_details_dto.dart';
 import 'package:shape_up_app/services/user_food_service.dart';
-import 'package:shape_up_app/services/authentication_service.dart'; // Import adicionado
+import 'package:shape_up_app/services/authentication_service.dart';
+import 'package:shape_up_app/pages/barcode_scanner_page.dart';
 
 // Classe auxiliar para controladores de campos de micronutrientes
 class _MicronutrientFormFieldControllers {
@@ -32,6 +32,7 @@ class _MicronutrientFormFieldControllers {
     unitController.dispose();
   }
 }
+
 
 class CreateFoodPage extends StatefulWidget {
   const CreateFoodPage({super.key});
@@ -93,6 +94,23 @@ class _CreateFoodPageState extends State<CreateFoodPage> {
       controllerGroup.dispose();
     }
     _micronutrientFormFields = [];
+  }
+  Future<void> _scanBarcode() async {
+    if (_isSaving) return;
+
+    // Navega para a página do scanner e aguarda um resultado (o código)
+    final String? barcode = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(builder: (context) => const BarcodeScannerPage()),
+    );
+
+    // Se um código for retornado e a tela ainda estiver "montada",
+    // atualiza o campo de texto.
+    if (barcode != null && barcode.isNotEmpty && mounted) {
+      setState(() {
+        _barCodeController.text = barcode;
+      });
+    }
   }
 
   void _addMicronutrientField() {
@@ -288,7 +306,7 @@ class _CreateFoodPageState extends State<CreateFoodPage> {
     return null;
   }
 
-  Widget _buildDetailRow(String label, {required TextEditingController controller, bool isNumeric = false, bool isLastField = false, String? Function(String?)? customValidator}) {
+  Widget _buildDetailRow(String label, {required TextEditingController controller, bool isNumeric = false, bool isLastField = false, String? Function(String?)? customValidator, Widget? suffixIcon,}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: Row(
@@ -317,6 +335,7 @@ class _CreateFoodPageState extends State<CreateFoodPage> {
                 focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _isSaving ? Colors.grey[700]! : Colors.greenAccent)),
                 errorStyle: const TextStyle(fontSize: 12, color: Colors.redAccent, fontWeight: FontWeight.w500),
                 errorMaxLines: 2,
+                suffixIcon: suffixIcon,
               ),
               textAlign: TextAlign.end,
               textInputAction: isLastField ? TextInputAction.done : TextInputAction.next,
@@ -498,7 +517,14 @@ class _CreateFoodPageState extends State<CreateFoodPage> {
                   return null;
                 }),
                 _buildDetailRow('Marca (Opcional)', controller: _brandController),
-                _buildDetailRow('Cód. Barras (Opcional)', controller: _barCodeController),
+                _buildDetailRow(
+                  'Cód. Barras (Opcional)',
+                  controller: _barCodeController,
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.qr_code_scanner_rounded, color: _isSaving ? Colors.grey : Colors.greenAccent),
+                    onPressed: _isSaving ? null : _scanBarcode,
+                  ),
+                ),
                 _buildDetailRow('Porção (g)', controller: _servingSizeController, isNumeric: true, customValidator: (value) => _validateNumericField(value, fieldName: 'Porção', isRequired: true, allowZero: false, allowNegative: false)),
                 _buildDetailRow('Calorias (kcal)', controller: _caloriesController, isNumeric: true, customValidator: (value) => _validateNumericField(value, fieldName: 'Calorias', allowNegative: false)),
               ]),
