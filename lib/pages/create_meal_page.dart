@@ -25,7 +25,7 @@ class _CreateMealPageState extends State<CreateMealPage> {
 
   List<DishDto> _availableDishes = [];
   List<FoodDto> _availableFoods = [];
-  
+
   final List<DishDto> _selectedDishes = [];
   final List<IngredientInputDto> _selectedIngredients = [];
   final Map<String, TextEditingController> _quantityControllers = {};
@@ -63,7 +63,7 @@ class _CreateMealPageState extends State<CreateMealPage> {
       for (var food in [...userFoods, ...publicFoods]) {
         if (food.id.isNotEmpty) combinedFoods[food.id] = food;
       }
-      
+
       final allFoods = combinedFoods.values.toList();
       for (final food in allFoods) {
         _quantityControllers[food.id] = TextEditingController();
@@ -105,7 +105,7 @@ class _CreateMealPageState extends State<CreateMealPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Refeição criada com sucesso!'), backgroundColor: Colors.green),
+          const SnackBar(content: Text('Refeição criada com sucesso!'), backgroundColor: Colors.blue),
         );
         Navigator.of(context).pop(true);
       }
@@ -148,21 +148,30 @@ class _CreateMealPageState extends State<CreateMealPage> {
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.greenAccent))
-          : _buildForm(),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ElevatedButton(
-          onPressed: _isSaving ? null : _createMeal,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.greenAccent,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-          child: _isSaving
-              ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black))
-              : const Text('Salvar Refeição', style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: Colors.blueAccent))
+            : Column(
+          children: [
+            Expanded(
+              child: _buildForm(),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: _isSaving ? null : _createMeal,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  minimumSize: const Size(double.infinity, 50), // Garante que o botão ocupe toda a largura
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: _isSaving
+                    ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black))
+                    : const Text('Salvar Refeição', style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -232,7 +241,7 @@ class _CreateMealPageState extends State<CreateMealPage> {
       ),
       child: ExpansionTile(
         title: Text('Pratos (${_selectedDishes.length} selecionados)', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        iconColor: Colors.greenAccent,
+        iconColor: Colors.blueAccent,
         collapsedIconColor: Colors.white70,
         children: _availableDishes.isEmpty
             ? [const ListTile(title: Text("Nenhum prato encontrado.", style: TextStyle(color: Colors.white70)))]
@@ -250,7 +259,7 @@ class _CreateMealPageState extends State<CreateMealPage> {
                       }
                     });
                   },
-                  activeColor: Colors.greenAccent,
+                  activeColor: Colors.blueAccent,
                   checkColor: Colors.black,
                 );
               }).toList(),
@@ -266,7 +275,7 @@ class _CreateMealPageState extends State<CreateMealPage> {
       ),
       child: ExpansionTile(
         title: Text('Ingredientes Adicionais (${_selectedIngredients.length} selecionados)', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        iconColor: Colors.greenAccent,
+        iconColor: Colors.blueAccent,
         collapsedIconColor: Colors.white70,
         children: _availableFoods.isEmpty
             ? [const ListTile(title: Text("Nenhuma comida encontrada.", style: TextStyle(color: Colors.white70)))]
@@ -317,7 +326,7 @@ class _CreateMealPageState extends State<CreateMealPage> {
                       }
                     });
                   },
-                  activeColor: Colors.greenAccent,
+                  activeColor: Colors.blueAccent,
                   checkColor: Colors.black,
                 );
               }).toList(),

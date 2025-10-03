@@ -206,8 +206,8 @@ class _DailyMenuDetailsPageState extends State<DailyMenuDetailsPage> {
 
   Widget _buildAddMealButton() {
     return TextButton.icon(
-      icon: const Icon(Icons.add, color: Colors.greenAccent),
-      label: const Text('Adicionar Refeição', style: TextStyle(color: Colors.greenAccent)),
+      icon: const Icon(Icons.add, color: Colors.blueAccent),
+      label: const Text('Adicionar Refeição', style: TextStyle(color: Colors.blueAccent)),
       onPressed: () => _showAddMealDialog(),
     );
   }

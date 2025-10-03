@@ -145,7 +145,7 @@ class _CreateDishPageState extends State<CreateDishPage> {
                   onPressed: () => Navigator.of(dialogContext).pop(), // Usa dialogContext
                 ),
                 TextButton(
-                  child: const Text('Adicionar', style: TextStyle(color: Colors.greenAccent)),
+                  child: const Text('Adicionar', style: TextStyle(color: Colors.blueAccent)),
                   onPressed: () {
                     if (selectedFood != null) {
                       final quantity = double.tryParse(quantityController.text) ?? 100.0;
@@ -211,7 +211,7 @@ class _CreateDishPageState extends State<CreateDishPage> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Prato "$dishName" criado com sucesso!'), backgroundColor: Colors.green),
+          SnackBar(content: Text('Prato "$dishName" criado com sucesso!'), backgroundColor: Colors.blue),
         );
         Navigator.pop(context, true); // Return true to indicate success
       }
@@ -300,7 +300,7 @@ class _CreateDishPageState extends State<CreateDishPage> {
                   fillColor: const Color(0xFF2A2A3D),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
                   enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey[700]!)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.greenAccent)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.blueAccent)),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -315,7 +315,7 @@ class _CreateDishPageState extends State<CreateDishPage> {
                 icon: const Icon(Icons.add_shopping_cart),
                 label: const Text('Adicionar Comida ao Prato'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.greenAccent,
+                  backgroundColor: Colors.blueAccent,
                   foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

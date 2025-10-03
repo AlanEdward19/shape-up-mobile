@@ -97,7 +97,7 @@ class _MealDetailsPageState extends State<MealDetailsPage> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Refeição atualizada com sucesso!'), backgroundColor: Colors.green),
+          const SnackBar(content: Text('Refeição atualizada com sucesso!'), backgroundColor: Colors.blue),
         );
         Navigator.pop(context, true);
       }
@@ -134,7 +134,7 @@ class _MealDetailsPageState extends State<MealDetailsPage> {
       ),
       backgroundColor: const Color(0xFF1C1C2E),
       body: _isLoadingData
-          ? const Center(child: CircularProgressIndicator(color: Colors.greenAccent))
+          ? const Center(child: CircularProgressIndicator(color: Colors.blueAccent))
           : _buildMealForm(),
     );
   }
@@ -171,7 +171,7 @@ class _MealDetailsPageState extends State<MealDetailsPage> {
             decoration: const InputDecoration(
               labelText: 'Tipo de Refeição',
               labelStyle: TextStyle(color: Colors.white70),
-              border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.greenAccent)),
+              border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.blueAccent)),
             ),
           ),
           const SizedBox(height: 24),
@@ -206,7 +206,7 @@ class _MealDetailsPageState extends State<MealDetailsPage> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-        IconButton(icon: const Icon(Icons.add, color: Colors.greenAccent), onPressed: onAdd),
+        IconButton(icon: const Icon(Icons.add, color: Colors.blueAccent), onPressed: onAdd),
       ],
     );
   }
@@ -291,7 +291,7 @@ class _MealDetailsPageState extends State<MealDetailsPage> {
                   Navigator.of(context).pop();
                 }
               },
-              child: const Text('Adicionar', style: TextStyle(color: Colors.greenAccent)),
+              child: const Text('Adicionar', style: TextStyle(color: Colors.blueAccent)),
             ),
           ],
         );

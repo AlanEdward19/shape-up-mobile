@@ -348,7 +348,7 @@ class _FoodDetailsPageState extends State<FoodDetailsPage> {
           content: const Text('Você tem alterações não salvas. Tem certeza de que deseja descartá-las?', style: TextStyle(color: Colors.white70)),
           actions: <Widget>[
             TextButton(
-              child: const Text('Não', style: TextStyle(color: Colors.greenAccent)),
+              child: const Text('Não', style: TextStyle(color: Colors.blueAccent)),
               onPressed: () { Navigator.of(context).pop(false); },
             ),
             TextButton(
@@ -445,7 +445,7 @@ class _FoodDetailsPageState extends State<FoodDetailsPage> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
                 enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey[700]!)),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _isSaving ? Colors.grey[700]! : Colors.greenAccent)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _isSaving ? Colors.grey[700]! : Colors.blueAccent)),
                 errorStyle: const TextStyle(fontSize: 12, color: Colors.redAccent, fontWeight: FontWeight.w500),
                 errorMaxLines: 2,
               ),
@@ -499,7 +499,7 @@ class _FoodDetailsPageState extends State<FoodDetailsPage> {
                               isDense: true,
                               filled: true, fillColor: Colors.black.withOpacity(0.1),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide.none),
-                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: _isSaving ? Colors.grey[700]! : Colors.greenAccent)),
+                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: _isSaving ? Colors.grey[700]! : Colors.blueAccent)),
                               errorStyle: const TextStyle(fontSize: 12, color: Colors.redAccent, fontWeight: FontWeight.w500),
                             ),
                             validator: (value) {
@@ -536,7 +536,7 @@ class _FoodDetailsPageState extends State<FoodDetailsPage> {
                               isDense: true, 
                               filled: true, fillColor: Colors.black.withOpacity(0.1),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide.none),
-                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: _isSaving ? Colors.grey[700]! : Colors.greenAccent)),
+                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: _isSaving ? Colors.grey[700]! : Colors.blueAccent)),
                               errorStyle: const TextStyle(fontSize: 12, color: Colors.redAccent, fontWeight: FontWeight.w500),
                             ),
                             validator: (value) {
@@ -558,7 +558,7 @@ class _FoodDetailsPageState extends State<FoodDetailsPage> {
                               isDense: true, 
                               filled: true, fillColor: Colors.black.withOpacity(0.1),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide.none),
-                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: _isSaving ? Colors.grey[700]! : Colors.greenAccent))
+                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: _isSaving ? Colors.grey[700]! : Colors.blueAccent))
                             ),
                           ),
                         ),
@@ -574,8 +574,8 @@ class _FoodDetailsPageState extends State<FoodDetailsPage> {
           Padding(
             padding: const EdgeInsets.only(top: 8.0),
             child: TextButton.icon(
-              icon: const Icon(Icons.add_circle_outline, color: Colors.greenAccent),
-              label: const Text('Adicionar Micronutriente', style: TextStyle(color: Colors.greenAccent)),
+              icon: const Icon(Icons.add_circle_outline, color: Colors.blueAccent),
+              label: const Text('Adicionar Micronutriente', style: TextStyle(color: Colors.blueAccent)),
               onPressed: _addMicronutrientField,
             ),
           ),
@@ -593,7 +593,7 @@ class _FoodDetailsPageState extends State<FoodDetailsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(color: Colors.greenAccent, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(title, style: const TextStyle(color: Colors.blueAccent, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             if (_isEditMode && editSection != null) 
               editSection 
@@ -791,7 +791,7 @@ class _FoodDetailsPageState extends State<FoodDetailsPage> {
                         label: Text(_isSaving ? 'Salvando...' : 'Salvar Alterações'),
                         onPressed: _isSaving ? null : _onSave, 
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _isSaving ? Colors.grey[600] : Colors.green, 
+                          backgroundColor: _isSaving ? Colors.grey[600] : Colors.blue,
                           foregroundColor: Colors.white,
                         ),
                       ),
