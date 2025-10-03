@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "505241326952",
+    "project_id": "shapeup-67201",
+    "storage_bucket": "shapeup-67201.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:505241326952:android:e65fce447639bec26eb2dd",
+        "android_client_info": {
+          "package_name": "com.example.shape_up_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDcjabzX0F6Frd6M3FmgoLwcC3ztccIQR8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
