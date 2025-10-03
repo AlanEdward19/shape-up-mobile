@@ -6,7 +6,6 @@
 *.swp
 .buildlog/
 .history
-/.idea/
 
 
 # Flutter repo-specific
@@ -128,5 +127,3 @@ pubspec.lock
 .idea/workspace.xml
 .idea/shape-up-mobile.iml
 
-android/app/google-services.json
-/.idea/.name
