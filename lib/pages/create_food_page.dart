@@ -332,7 +332,7 @@ class _CreateFoodPageState extends State<CreateFoodPage> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
                 enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey[700]!)),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _isSaving ? Colors.grey[700]! : Colors.greenAccent)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: _isSaving ? Colors.grey[700]! : Colors.blueAccent)),
                 errorStyle: const TextStyle(fontSize: 12, color: Colors.redAccent, fontWeight: FontWeight.w500),
                 errorMaxLines: 2,
                 suffixIcon: suffixIcon,
@@ -379,7 +379,7 @@ class _CreateFoodPageState extends State<CreateFoodPage> {
                               isDense: true,
                               filled: true, fillColor: Colors.black.withOpacity(0.1),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide.none),
-                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: _isSaving ? Colors.grey[700]! : Colors.greenAccent)),
+                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: _isSaving ? Colors.grey[700]! : Colors.blueAccent)),
                               errorStyle: const TextStyle(fontSize: 12, color: Colors.redAccent, fontWeight: FontWeight.w500),
                             ),
                             validator: (value) {
@@ -415,7 +415,7 @@ class _CreateFoodPageState extends State<CreateFoodPage> {
                               isDense: true,
                               filled: true, fillColor: Colors.black.withOpacity(0.1),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide.none),
-                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: _isSaving ? Colors.grey[700]! : Colors.greenAccent)),
+                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: _isSaving ? Colors.grey[700]! : Colors.blueAccent)),
                               errorStyle: const TextStyle(fontSize: 12, color: Colors.redAccent, fontWeight: FontWeight.w500),
                             ),
                             validator: (value) {
@@ -437,7 +437,7 @@ class _CreateFoodPageState extends State<CreateFoodPage> {
                               isDense: true,
                               filled: true, fillColor: Colors.black.withOpacity(0.1),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide.none),
-                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: _isSaving ? Colors.grey[700]! : Colors.greenAccent))
+                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: _isSaving ? Colors.grey[700]! : Colors.blueAccent))
                             ),
                           ),
                         ),
@@ -453,8 +453,8 @@ class _CreateFoodPageState extends State<CreateFoodPage> {
           Padding(
             padding: const EdgeInsets.only(top: 8.0),
             child: TextButton.icon(
-              icon: const Icon(Icons.add_circle_outline, color: Colors.greenAccent),
-              label: const Text('Adicionar Micronutriente', style: TextStyle(color: Colors.greenAccent)),
+              icon: const Icon(Icons.add_circle_outline, color: Colors.blueAccent),
+              label: const Text('Adicionar Micronutriente', style: TextStyle(color: Colors.blueAccent)),
               onPressed: _addMicronutrientField,
             ),
           ),
@@ -472,7 +472,7 @@ class _CreateFoodPageState extends State<CreateFoodPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(color: Colors.greenAccent, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(title, style: const TextStyle(color: Colors.blueAccent, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             ...fields,
             if (dynamicSection != null) ...[
@@ -504,7 +504,7 @@ class _CreateFoodPageState extends State<CreateFoodPage> {
               )
         ],
       ),
-      body: Form(
+      body: SafeArea(child: Form(
         key: _formKey,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -521,104 +521,104 @@ class _CreateFoodPageState extends State<CreateFoodPage> {
                   'Cód. Barras (Opcional)',
                   controller: _barCodeController,
                   suffixIcon: IconButton(
-                    icon: Icon(Icons.qr_code_scanner_rounded, color: _isSaving ? Colors.grey : Colors.greenAccent),
+                    icon: Icon(Icons.qr_code_scanner_rounded, color: _isSaving ? Colors.grey : Colors.blueAccent),
                     onPressed: _isSaving ? null : _scanBarcode,
                   ),
                 ),
                 _buildDetailRow('Porção (g)', controller: _servingSizeController, isNumeric: true, customValidator: (value) => _validateNumericField(value, fieldName: 'Porção', isRequired: true, allowZero: false, allowNegative: false)),
                 _buildDetailRow('Calorias (kcal)', controller: _caloriesController, isNumeric: true, customValidator: (value) => _validateNumericField(value, fieldName: 'Calorias', allowNegative: false)),
               ]),
-              
+
               _buildNutrientCard('Macronutrientes (por porção)', [
-                  _buildDetailRow('Proteínas (g)', controller: _proteinsController, isNumeric: true, customValidator: (value) => _validateNumericField(value, fieldName: 'Proteínas', allowNegative: false)),
-                  _buildDetailRow('Carb. Totais (g)', controller: _carbsTotalController, isNumeric: true, customValidator: (value) {
-                    final validation = _validateNumericField(value, fieldName: 'Carb. Totais', allowNegative: false, 
-                                      isRequired: _carbsDietaryFiberController.text.isNotEmpty || _carbsSugarTotalController.text.isNotEmpty);
-                    if (validation != null) return validation;
-                    return null;
-                  }),
-                  _buildDetailRow('  Fibra (g)', controller: _carbsDietaryFiberController, isNumeric: true, customValidator: (value) {
-                    final validation = _validateNumericField(value, fieldName: 'Fibra', allowNegative: false);
-                    if (validation != null) return validation;
-                    final totalCarbs = double.tryParse(_carbsTotalController.text);
-                    final fiber = double.tryParse(value ?? "");
-                    if (totalCarbs != null && fiber != null && fiber > totalCarbs) {
-                      return 'Fibra > Carb. Totais';
-                    }
-                    return null;
-                  }),
-                  _buildDetailRow('  Açúc. Totais (g)', controller: _carbsSugarTotalController, isNumeric: true, customValidator: (value) {
-                    final validation = _validateNumericField(value, fieldName: 'Açúc. Totais', allowNegative: false,
-                                      isRequired: _carbsSugarAddedController.text.isNotEmpty || _carbsSugarAlcoholsController.text.isNotEmpty);
-                    if (validation != null) return validation;
-                    final totalCarbs = double.tryParse(_carbsTotalController.text);
-                    final sugarTotal = double.tryParse(value ?? "");
-                    if (totalCarbs != null && sugarTotal != null && sugarTotal > totalCarbs) {
-                      return 'Açúc. Totais > Carb. Totais';
-                    }
-                    return null;
-                  }),
-                  _buildDetailRow('    Adicion. (g)', controller: _carbsSugarAddedController, isNumeric: true, customValidator: (value) {
-                    final validation = _validateNumericField(value, fieldName: 'Açúc. Adic.', allowNegative: false);
-                    if (validation != null) return validation;
-                    final totalSugar = double.tryParse(_carbsSugarTotalController.text);
-                    final addedSugar = double.tryParse(value ?? "");
-                    if (totalSugar != null && addedSugar != null && addedSugar > totalSugar) {
-                      return 'Adicion. > Açúc. Totais';
-                    }
-                    return null;
-                  }),
-                  _buildDetailRow('    Polióis (g)', controller: _carbsSugarAlcoholsController, isNumeric: true, customValidator: (value) => _validateNumericField(value, fieldName: 'Polióis', allowNegative: false)),
-                  _buildDetailRow('Gord. Totais (g)', controller: _fatsTotalController, isNumeric: true, customValidator: (value) {
-                    return _validateNumericField(value, fieldName: 'Gord. Totais', allowNegative: false,
-                                     isRequired: _fatsSaturatedController.text.isNotEmpty || _fatsTransController.text.isNotEmpty || _fatsPolyunsaturatedController.text.isNotEmpty || _fatsMonounsaturatedController.text.isNotEmpty);
-                  }),
-                  _buildDetailRow('  Saturadas (g)', controller: _fatsSaturatedController, isNumeric: true, customValidator: (value) {
-                    final validation = _validateNumericField(value, fieldName: 'Saturadas', allowNegative: false);
-                    if (validation != null) return validation;
-                    final totalFats = double.tryParse(_fatsTotalController.text);
-                    final saturated = double.tryParse(value ?? "");
-                    if (totalFats != null && saturated != null && saturated > totalFats) {
-                      return 'Saturadas > Gord. Totais';
-                    }
-                    return null;
-                  }),
-                  _buildDetailRow('  Trans (g)', controller: _fatsTransController, isNumeric: true, customValidator: (value) {
-                     final validation = _validateNumericField(value, fieldName: 'Trans', allowNegative: false);
-                    if (validation != null) return validation;
-                    final totalFats = double.tryParse(_fatsTotalController.text);
-                    final trans = double.tryParse(value ?? "");
-                    if (totalFats != null && trans != null && trans > totalFats) {
-                      return 'Trans > Gord. Totais';
-                    }
-                    return null;
-                  }),
-                  _buildDetailRow('  Poli-insat. (g)', controller: _fatsPolyunsaturatedController, isNumeric: true, customValidator: (value) {
-                    final validation = _validateNumericField(value, fieldName: 'Poli-insat.', allowNegative: false);
-                    if (validation != null) return validation;
-                    final totalFats = double.tryParse(_fatsTotalController.text);
-                    final poly = double.tryParse(value ?? "");
-                    if (totalFats != null && poly != null && poly > totalFats) {
-                      return 'Poli-insat. > Gord. Totais';
-                    }
-                    return null;
-                  }),
-                  _buildDetailRow('  Monoinsat. (g)', controller: _fatsMonounsaturatedController, isNumeric: true, customValidator: (value) {
-                    final validation = _validateNumericField(value, fieldName: 'Monoinsat.', allowNegative: false);
-                    if (validation != null) return validation;
-                    final totalFats = double.tryParse(_fatsTotalController.text);
-                    final mono = double.tryParse(value ?? "");
-                    if (totalFats != null && mono != null && mono > totalFats) {
-                      return 'Monoinsat. > Gord. Totais';
-                    }
-                    return null;
-                  }),
-                  _buildDetailRow('  Colesterol (mg)', controller: _fatsCholesterolController, isNumeric: true, isLastField: true, customValidator: (value) => _validateNumericField(value, fieldName: 'Colesterol', allowNegative: false)),
+                _buildDetailRow('Proteínas (g)', controller: _proteinsController, isNumeric: true, customValidator: (value) => _validateNumericField(value, fieldName: 'Proteínas', allowNegative: false)),
+                _buildDetailRow('Carb. Totais (g)', controller: _carbsTotalController, isNumeric: true, customValidator: (value) {
+                  final validation = _validateNumericField(value, fieldName: 'Carb. Totais', allowNegative: false,
+                      isRequired: _carbsDietaryFiberController.text.isNotEmpty || _carbsSugarTotalController.text.isNotEmpty);
+                  if (validation != null) return validation;
+                  return null;
+                }),
+                _buildDetailRow('  Fibra (g)', controller: _carbsDietaryFiberController, isNumeric: true, customValidator: (value) {
+                  final validation = _validateNumericField(value, fieldName: 'Fibra', allowNegative: false);
+                  if (validation != null) return validation;
+                  final totalCarbs = double.tryParse(_carbsTotalController.text);
+                  final fiber = double.tryParse(value ?? "");
+                  if (totalCarbs != null && fiber != null && fiber > totalCarbs) {
+                    return 'Fibra > Carb. Totais';
+                  }
+                  return null;
+                }),
+                _buildDetailRow('  Açúc. Totais (g)', controller: _carbsSugarTotalController, isNumeric: true, customValidator: (value) {
+                  final validation = _validateNumericField(value, fieldName: 'Açúc. Totais', allowNegative: false,
+                      isRequired: _carbsSugarAddedController.text.isNotEmpty || _carbsSugarAlcoholsController.text.isNotEmpty);
+                  if (validation != null) return validation;
+                  final totalCarbs = double.tryParse(_carbsTotalController.text);
+                  final sugarTotal = double.tryParse(value ?? "");
+                  if (totalCarbs != null && sugarTotal != null && sugarTotal > totalCarbs) {
+                    return 'Açúc. Totais > Carb. Totais';
+                  }
+                  return null;
+                }),
+                _buildDetailRow('    Adicion. (g)', controller: _carbsSugarAddedController, isNumeric: true, customValidator: (value) {
+                  final validation = _validateNumericField(value, fieldName: 'Açúc. Adic.', allowNegative: false);
+                  if (validation != null) return validation;
+                  final totalSugar = double.tryParse(_carbsSugarTotalController.text);
+                  final addedSugar = double.tryParse(value ?? "");
+                  if (totalSugar != null && addedSugar != null && addedSugar > totalSugar) {
+                    return 'Adicion. > Açúc. Totais';
+                  }
+                  return null;
+                }),
+                _buildDetailRow('    Polióis (g)', controller: _carbsSugarAlcoholsController, isNumeric: true, customValidator: (value) => _validateNumericField(value, fieldName: 'Polióis', allowNegative: false)),
+                _buildDetailRow('Gord. Totais (g)', controller: _fatsTotalController, isNumeric: true, customValidator: (value) {
+                  return _validateNumericField(value, fieldName: 'Gord. Totais', allowNegative: false,
+                      isRequired: _fatsSaturatedController.text.isNotEmpty || _fatsTransController.text.isNotEmpty || _fatsPolyunsaturatedController.text.isNotEmpty || _fatsMonounsaturatedController.text.isNotEmpty);
+                }),
+                _buildDetailRow('  Saturadas (g)', controller: _fatsSaturatedController, isNumeric: true, customValidator: (value) {
+                  final validation = _validateNumericField(value, fieldName: 'Saturadas', allowNegative: false);
+                  if (validation != null) return validation;
+                  final totalFats = double.tryParse(_fatsTotalController.text);
+                  final saturated = double.tryParse(value ?? "");
+                  if (totalFats != null && saturated != null && saturated > totalFats) {
+                    return 'Saturadas > Gord. Totais';
+                  }
+                  return null;
+                }),
+                _buildDetailRow('  Trans (g)', controller: _fatsTransController, isNumeric: true, customValidator: (value) {
+                  final validation = _validateNumericField(value, fieldName: 'Trans', allowNegative: false);
+                  if (validation != null) return validation;
+                  final totalFats = double.tryParse(_fatsTotalController.text);
+                  final trans = double.tryParse(value ?? "");
+                  if (totalFats != null && trans != null && trans > totalFats) {
+                    return 'Trans > Gord. Totais';
+                  }
+                  return null;
+                }),
+                _buildDetailRow('  Poli-insat. (g)', controller: _fatsPolyunsaturatedController, isNumeric: true, customValidator: (value) {
+                  final validation = _validateNumericField(value, fieldName: 'Poli-insat.', allowNegative: false);
+                  if (validation != null) return validation;
+                  final totalFats = double.tryParse(_fatsTotalController.text);
+                  final poly = double.tryParse(value ?? "");
+                  if (totalFats != null && poly != null && poly > totalFats) {
+                    return 'Poli-insat. > Gord. Totais';
+                  }
+                  return null;
+                }),
+                _buildDetailRow('  Monoinsat. (g)', controller: _fatsMonounsaturatedController, isNumeric: true, customValidator: (value) {
+                  final validation = _validateNumericField(value, fieldName: 'Monoinsat.', allowNegative: false);
+                  if (validation != null) return validation;
+                  final totalFats = double.tryParse(_fatsTotalController.text);
+                  final mono = double.tryParse(value ?? "");
+                  if (totalFats != null && mono != null && mono > totalFats) {
+                    return 'Monoinsat. > Gord. Totais';
+                  }
+                  return null;
+                }),
+                _buildDetailRow('  Colesterol (mg)', controller: _fatsCholesterolController, isNumeric: true, isLastField: true, customValidator: (value) => _validateNumericField(value, fieldName: 'Colesterol', allowNegative: false)),
               ]),
 
               _buildNutrientCard(
                 'Micronutrientes (por porção)',
-                [], 
+                [],
                 dynamicSection: _buildMicronutrientsEditSection(),
               ),
 
@@ -643,7 +643,7 @@ class _CreateFoodPageState extends State<CreateFoodPage> {
                       label: Text(_isSaving ? 'Criando...' : 'Criar Comida'),
                       onPressed: _isSaving ? null : _onCreate,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _isSaving ? Colors.grey[600] : Colors.green,
+                        backgroundColor: _isSaving ? Colors.grey[600] : Colors.blue,
                         foregroundColor: Colors.white,
                       ),
                     ),
@@ -653,7 +653,7 @@ class _CreateFoodPageState extends State<CreateFoodPage> {
             ],
           ),
         ),
-      ),
+      ),)
     );
   }
 }

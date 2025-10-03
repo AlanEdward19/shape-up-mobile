@@ -93,7 +93,7 @@ class _NutritionState extends State<Nutrition>
               onPressed: () => Navigator.of(context).pop(false),
             ),
             TextButton(
-              child: const Text('Consolidar', style: TextStyle(color: Colors.greenAccent)),
+              child: const Text('Consolidar', style: TextStyle(color: Colors.blueAccent)),
               onPressed: () => Navigator.of(context).pop(true),
             ),
           ],
@@ -149,7 +149,7 @@ class _NutritionState extends State<Nutrition>
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Plano nutricional consolidado com sucesso!'),
-            backgroundColor: Colors.green,
+            backgroundColor: Colors.blue,
           ),
         );
       }
@@ -373,7 +373,7 @@ class _NutritionState extends State<Nutrition>
           content: Text('Tem certeza de que deseja apagar "${food.name}"? Esta ação não pode ser desfeita.', style: const TextStyle(color: Colors.white70)),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancelar', style: TextStyle(color: Colors.greenAccent)),
+              child: const Text('Cancelar', style: TextStyle(color: Colors.blueAccent)),
               onPressed: () => Navigator.of(context).pop(false),
             ),
             TextButton(
@@ -426,7 +426,7 @@ class _NutritionState extends State<Nutrition>
           content: Text('Tem certeza de que deseja apagar "${dish.name}"? Esta ação não pode ser desfeita.', style: const TextStyle(color: Colors.white70)),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancelar', style: TextStyle(color: Colors.greenAccent)),
+              child: const Text('Cancelar', style: TextStyle(color: Colors.blueAccent)),
               onPressed: () => Navigator.of(context).pop(false),
             ),
             TextButton(
@@ -479,7 +479,7 @@ class _NutritionState extends State<Nutrition>
           content: Text('Tem certeza de que deseja apagar "${meal.name}"? Esta ação não pode ser desfeita.', style: const TextStyle(color: Colors.white70)),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancelar', style: TextStyle(color: Colors.greenAccent)),
+              child: const Text('Cancelar', style: TextStyle(color: Colors.blueAccent)),
               onPressed: () => Navigator.of(context).pop(false),
             ),
             TextButton(
@@ -532,7 +532,7 @@ class _NutritionState extends State<Nutrition>
           content: Text('Tem certeza de que deseja apagar o cardápio para "${menu.dayOfWeek?.toPortuguese() ?? 'o dia selecionado'}"?', style: const TextStyle(color: Colors.white70)),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancelar', style: TextStyle(color: Colors.greenAccent)),
+              child: const Text('Cancelar', style: TextStyle(color: Colors.blueAccent)),
               onPressed: () => Navigator.of(context).pop(false),
             ),
             TextButton(
@@ -598,7 +598,7 @@ class _NutritionState extends State<Nutrition>
       future: _myDailyMenusFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0), child: CircularProgressIndicator(color: Colors.greenAccent)));
+          return const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0), child: CircularProgressIndicator(color: Colors.blueAccent)));
         }
         if (snapshot.hasError) return _buildPlaceholderContent("Erro ao carregar cardápios: ${snapshot.error}");
         if (!snapshot.hasData || snapshot.data!.isEmpty) return _buildPlaceholderContent("Nenhum cardápio diário. Toque + para adicionar.");
@@ -639,7 +639,7 @@ class _NutritionState extends State<Nutrition>
           return const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0), child: CircularProgressIndicator(color: Colors.orangeAccent)));
         }
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0), child: CircularProgressIndicator(color: Colors.greenAccent)));
+          return const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0), child: CircularProgressIndicator(color: Colors.blueAccent)));
         }
         if (snapshot.hasError) return _buildPlaceholderContent("Erro ao carregar comidas: ${snapshot.error}");
         if (!snapshot.hasData || snapshot.data!.isEmpty) return _buildPlaceholderContent("Nenhuma comida salva. Toque em + para adicionar.");
@@ -691,7 +691,7 @@ class _NutritionState extends State<Nutrition>
           return const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0), child: CircularProgressIndicator(color: Colors.orangeAccent)));
         }
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0), child: CircularProgressIndicator(color: Colors.greenAccent)));
+          return const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0), child: CircularProgressIndicator(color: Colors.blueAccent)));
         }
         if (snapshot.hasError) {
           return _buildPlaceholderContent("Erro ao carregar pratos: ${snapshot.error}");
@@ -804,7 +804,7 @@ class _NutritionState extends State<Nutrition>
           return const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0), child: CircularProgressIndicator(color: Colors.orangeAccent)));
         }
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0), child: CircularProgressIndicator(color: Colors.greenAccent)));
+          return const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 20.0), child: CircularProgressIndicator(color: Colors.blueAccent)));
         }
         if (snapshot.hasError) {
           return _buildPlaceholderContent("Erro ao carregar refeições: ${snapshot.error}");
@@ -828,7 +828,7 @@ class _NutritionState extends State<Nutrition>
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               margin: const EdgeInsets.only(bottom: 12, top: 4),
               child: ExpansionTile(
-                iconColor: Colors.greenAccent,
+                iconColor: Colors.blueAccent,
                 collapsedIconColor: Colors.white70,
                 title: Text(meal.name, style: TextStyle(color: isCurrentlyDeletingThis ? Colors.grey : Colors.white, fontWeight: FontWeight.w600)),
                 subtitle: Text("Tipo: ${_mealTypeToPortugueseString(meal.type)}", style: TextStyle(color: isCurrentlyDeletingThis ? Colors.grey[600] : Colors.white70)),
@@ -882,7 +882,7 @@ class _NutritionState extends State<Nutrition>
                             ElevatedButton(
                               onPressed: isCurrentlyDeletingThis ? null : () => _navigateToMealDetailsPage(meal),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.greenAccent,
+                                backgroundColor: Colors.blueAccent,
                                 disabledBackgroundColor: Colors.grey[600],
                               ),
                               child: const Text('Editar', style: TextStyle(color: Colors.black)),
@@ -914,7 +914,7 @@ class _NutritionState extends State<Nutrition>
           margin: const EdgeInsets.only(bottom: 16), // Espaçamento entre os cards
           clipBehavior: Clip.antiAlias,
           child: ExpansionTile(
-            iconColor: Colors.greenAccent,
+            iconColor: Colors.blueAccent,
             collapsedIconColor: Colors.white70,
             title: _buildSectionHeader("Comidas", _navigateToAddFoodPage),
             subtitle: const Text("Toque para expandir e ver a lista", style: TextStyle(color: Colors.white70, fontSize: 12)),
@@ -934,7 +934,7 @@ class _NutritionState extends State<Nutrition>
           margin: const EdgeInsets.only(bottom: 16), // Espaçamento
           clipBehavior: Clip.antiAlias,
           child: ExpansionTile(
-            iconColor: Colors.greenAccent,
+            iconColor: Colors.blueAccent,
             collapsedIconColor: Colors.white70,
             title: _buildSectionHeader("Pratos", _navigateToCreateDishPage),
             subtitle: const Text("Toque para expandir e ver a lista", style: TextStyle(color: Colors.white70, fontSize: 12)),
@@ -954,7 +954,7 @@ class _NutritionState extends State<Nutrition>
           margin: const EdgeInsets.only(bottom: 16), // Espaçamento
           clipBehavior: Clip.antiAlias,
           child: ExpansionTile(
-            iconColor: Colors.greenAccent,
+            iconColor: Colors.blueAccent,
             collapsedIconColor: Colors.white70,
             title: _buildSectionHeader("Refeições", _navigateToCreateMealPage),
             subtitle: const Text("Toque para expandir e ver a lista", style: TextStyle(color: Colors.white70, fontSize: 12)),
@@ -974,7 +974,7 @@ class _NutritionState extends State<Nutrition>
           margin: const EdgeInsets.only(bottom: 16), // Espaçamento
           clipBehavior: Clip.antiAlias,
           child: ExpansionTile(
-            iconColor: Colors.greenAccent,
+            iconColor: Colors.blueAccent,
             collapsedIconColor: Colors.white70,
             title: _buildSectionHeader("Cardápios Diários", _navigateToCreateDailyMenuPage),
             subtitle: const Text("Toque para expandir e ver a lista", style: TextStyle(color: Colors.white70, fontSize: 12)),
@@ -994,7 +994,7 @@ class _NutritionState extends State<Nutrition>
             style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.greenAccent,
+            backgroundColor: Colors.blueAccent,
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
@@ -1016,25 +1016,25 @@ class _NutritionState extends State<Nutrition>
         ),
         SizedBox(height: 16),
         ListTile(
-          leading: Icon(Icons.looks_one, color: Colors.greenAccent, size: 36),
+          leading: Icon(Icons.looks_one, color: Colors.blueAccent, size: 36),
           title: Text('Cadastre suas Comidas', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
           subtitle: Text('Vá em "Minhas Comidas" e adicione os alimentos que você e seus clientes mais consomem. Detalhe as informações nutricionais para melhores resultados.', style: TextStyle(color: Colors.white70)),
         ),
         Divider(color: Colors.grey, height: 30),
         ListTile(
-          leading: Icon(Icons.looks_two, color: Colors.greenAccent, size: 36),
+          leading: Icon(Icons.looks_two, color: Colors.blueAccent, size: 36),
           title: Text('Crie Pratos Compostos', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
           subtitle: Text('Em "Meus Pratos", combine as comidas cadastradas para formar pratos completos, como "Salada de Frango" ou "Vitamina de Banana".', style: TextStyle(color: Colors.white70)),
         ),
         Divider(color: Colors.grey, height: 30),
         ListTile(
-          leading: Icon(Icons.looks_3, color: Colors.greenAccent, size: 36),
+          leading: Icon(Icons.looks_3, color: Colors.blueAccent, size: 36),
           title: Text('Monte as Refeições', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
           subtitle: Text('Em "Minhas Refeições", agrupe pratos e/ou comidas para formar uma refeição completa, como um "Café da Manhã" ou "Almoço".', style: TextStyle(color: Colors.white70)),
         ),
         Divider(color: Colors.grey, height: 30),
         ListTile(
-          leading: Icon(Icons.looks_4, color: Colors.greenAccent, size: 36),
+          leading: Icon(Icons.looks_4, color: Colors.blueAccent, size: 36),
           title: Text('Crie o Cardápio do Dia', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
           subtitle: Text('Finalmente, em "Meus Cardápios Diários", selecione as refeições que irão compor a dieta de um dia específico da semana.', style: TextStyle(color: Colors.white70)),
         ),
@@ -1043,7 +1043,7 @@ class _NutritionState extends State<Nutrition>
         ListTile(
           leading: Icon(Icons.notification_important, color: Colors.orangeAccent, size: 36),
           title: Text('Atenção às Alterações', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-          subtitle: Text('As estruturas são independentes. Se você editar ou apagar uma Comida, os Pratos, Refeições ou Cardápios que a utilizam não serão atualizados automaticamente. Você precisará editá-los manualmente para refletir a mudança.', style: TextStyle(color: Colors.white70)),
+          subtitle: Text('As estruturas são dependentes, mas elas nao atualizam automaticamente. Se você editar ou apagar uma Comida, Pratos, Refeições ou Cardápios, você precisará atualizar a página arrastando-a para baixo para atualizar.', style: TextStyle(color: Colors.white70)),
         ),
       ],
     );
@@ -1062,7 +1062,7 @@ class _NutritionState extends State<Nutrition>
                 controller: _tabController,
                 labelColor: Colors.white,
                 unselectedLabelColor: Colors.grey[400],
-                indicatorColor: Colors.greenAccent,
+                indicatorColor: Colors.blueAccent,
                 indicatorWeight: 3.0,
                 tabs: clientData!.isNutritionist
                     ? const [
@@ -1092,7 +1092,7 @@ class _NutritionState extends State<Nutrition>
                 _buildTutorialSection(),
               ],
             )
-          : const Center(child: CircularProgressIndicator(color: Colors.greenAccent)),
+          : const Center(child: CircularProgressIndicator(color: Colors.blueAccent)),
     );
   }
 
@@ -1109,7 +1109,7 @@ class _NutritionState extends State<Nutrition>
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             margin: const EdgeInsets.only(bottom: 16),
             child: ExpansionTile(
-              iconColor: Colors.greenAccent,
+              iconColor: Colors.blueAccent,
               collapsedIconColor: Colors.white70,
               title: Text(client.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               subtitle: const Text("Toque para ver cardápios", style: TextStyle(color: Colors.white70)),
@@ -1118,7 +1118,7 @@ class _NutritionState extends State<Nutrition>
                   future: DailyMenuService.listDailyMenus(client.id),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Padding(padding: const EdgeInsets.all(16.0), child: Center(child: CircularProgressIndicator(color: Colors.greenAccent)));
+                      return const Padding(padding: const EdgeInsets.all(16.0), child: Center(child: CircularProgressIndicator(color: Colors.blueAccent)));
                     }
                     if (snapshot.hasError) return Padding(padding: const EdgeInsets.all(16.0), child: Text("Erro: ${snapshot.error}", style: const TextStyle(color: Colors.redAccent)));
                     if (!snapshot.hasData || snapshot.data!.isEmpty) return const Padding(padding: const EdgeInsets.all(16.0), child: Text("Nenhum cardápio para este cliente.", style: TextStyle(color: Colors.white70)));

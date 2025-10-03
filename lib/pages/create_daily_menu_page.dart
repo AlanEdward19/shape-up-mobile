@@ -66,7 +66,7 @@ class _CreateDailyMenuPageState extends State<CreateDailyMenuPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cardápio diário criado com sucesso!'), backgroundColor: Colors.green),
+          const SnackBar(content: Text('Cardápio diário criado com sucesso!'), backgroundColor: Colors.blue),
         );
         Navigator.of(context).pop(true);
       }
@@ -112,14 +112,14 @@ class _CreateDailyMenuPageState extends State<CreateDailyMenuPage> {
         elevation: 0,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.greenAccent))
+          ? const Center(child: CircularProgressIndicator(color: Colors.blueAccent))
           : _buildForm(),
-      bottomNavigationBar: Padding(
+      bottomNavigationBar: SafeArea(child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ElevatedButton(
           onPressed: _isSaving ? null : _createDailyMenu,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.greenAccent,
+            backgroundColor: Colors.blueAccent,
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
@@ -127,7 +127,7 @@ class _CreateDailyMenuPageState extends State<CreateDailyMenuPage> {
               ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black))
               : const Text('Salvar Cardápio', style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
         ),
-      ),
+      ),)
     );
   }
 
@@ -176,7 +176,7 @@ class _CreateDailyMenuPageState extends State<CreateDailyMenuPage> {
       ),
       child: ExpansionTile(
         title: Text('Refeições (${_selectedMeals.length} selecionadas)', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        iconColor: Colors.greenAccent,
+        iconColor: Colors.blueAccent,
         collapsedIconColor: Colors.white70,
         children: _availableMeals.isEmpty
             ? [const ListTile(title: Text("Nenhuma refeição encontrada.", style: TextStyle(color: Colors.white70)))]
@@ -194,7 +194,7 @@ class _CreateDailyMenuPageState extends State<CreateDailyMenuPage> {
                       }
                     });
                   },
-                  activeColor: Colors.greenAccent,
+                  activeColor: Colors.blueAccent,
                   checkColor: Colors.black,
                 );
               }).toList(),

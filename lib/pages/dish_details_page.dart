@@ -158,7 +158,7 @@ class _DishDetailsPageState extends State<DishDetailsPage> {
                   onPressed: () => Navigator.of(dialogContext).pop(), 
                 ),
                 TextButton(
-                  child: const Text('Adicionar', style: TextStyle(color: Colors.greenAccent)),
+                  child: const Text('Adicionar', style: TextStyle(color: Colors.blueAccent)),
                   onPressed: () {
                     if (selectedFood != null) {
                       final quantity = double.tryParse(quantityController.text) ?? 100.0;
@@ -229,7 +229,7 @@ class _DishDetailsPageState extends State<DishDetailsPage> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Prato "$updatedDishName" atualizado com sucesso!'), backgroundColor: Colors.green),
+          SnackBar(content: Text('Prato "$updatedDishName" atualizado com sucesso!'), backgroundColor: Colors.blue),
         );
         Navigator.pop(context, true); 
       }
@@ -294,7 +294,7 @@ class _DishDetailsPageState extends State<DishDetailsPage> {
                   fillColor: const Color(0xFF2A2A3D),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
                   enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey[700]!)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.greenAccent)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.blueAccent)),
                   floatingLabelBehavior: FloatingLabelBehavior.auto,
                 ),
                 validator: (value) {
@@ -362,7 +362,7 @@ class _DishDetailsPageState extends State<DishDetailsPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _isSaving ? null : _showAddFoodToDishDialog,
-        backgroundColor: _isSaving ? Colors.grey : Colors.greenAccent,
+        backgroundColor: _isSaving ? Colors.grey : Colors.blueAccent,
         tooltip: 'Adicionar Comida',
         child: const Icon(Icons.add, color: Colors.black),
       ),
